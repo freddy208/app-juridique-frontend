@@ -28,7 +28,10 @@ jobs:
 
       # 3️⃣ Installer les dépendances
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm install
+          npm install tar
+          npm ci
 
       # 4️⃣ Linter (optionnel mais conseillé)
       - name: Lint code
