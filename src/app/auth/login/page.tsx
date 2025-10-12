@@ -4,10 +4,7 @@ import { useAuth } from "../context/AuthProvider";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Scale, Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight, Shield, Award, CheckCircle } from "lucide-react";
-<<<<<<< HEAD
 import Image from "next/image";
-=======
->>>>>>> develop
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -46,7 +43,6 @@ export default function LoginPage() {
         
         {/* Image d'arrière-plan */}
         <div className="absolute inset-0 opacity-500">
-<<<<<<< HEAD
         <Image
           src="/background1.webp"
           alt="Cabinet juridique"
@@ -55,13 +51,7 @@ export default function LoginPage() {
           className="object-cover"
           sizes="100vw"
         />
-=======
-          <img
-            src="/background1.webp"
-            alt="Cabinet juridique"
-            className="w-full h-full object-cover"
-          />
->>>>>>> develop
+
         </div>
 
         {/* Overlay dégradé */}
