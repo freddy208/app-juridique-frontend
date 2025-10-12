@@ -17,61 +17,85 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
-  // Login page complet 
+  // Login
   const login = async (email: string, motDePasse: string, rememberMe: boolean) => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
       body: JSON.stringify({ email, motDePasse, rememberMe }),
     });
+
     if (!res.ok) {
       throw new Error("Email ou mot de passe incorrect");
     }
+
     const data = await res.json();
+
     setAccessToken(data.access_token);
     setUser(data.user);
+
+    // Stockage du refresh token côté client
+    localStorage.setItem("refresh_token", data.refresh_token);
   };
 
   // Logout
   const logout = async () => {
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/logout`, {
-      method: "POST",
-      credentials: "include",
-    });
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/logout`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+        },
+      });
+    } catch {
+      // ignore errors
+    }
     setAccessToken(null);
     setUser(null);
+    localStorage.removeItem("refresh_token");
   };
 
   // Refresh token
   const refreshAccessToken = async () => {
     try {
+      const refresh_token = localStorage.getItem("refresh_token");
+      if (!refresh_token) {
+        throw new Error("Refresh token manquant");
+      }
+
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/refresh`, {
         method: "POST",
-        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token }),
       });
+
       if (!res.ok) {
         throw new Error("Impossible de rafraîchir le token");
       }
+
       const data = await res.json();
       setAccessToken(data.access_token);
     } catch {
       setAccessToken(null);
       setUser(null);
+      localStorage.removeItem("refresh_token");
     }
   };
 
-  // Auto refresh access token toutes les 14 minutes
+  // Auto refresh toutes les 14 minutes
   useEffect(() => {
     const interval = setInterval(() => {
       if (accessToken) {
         refreshAccessToken();
       }
-    }, 14 * 60 * 1000); // 14 min
+    }, 14 * 60 * 1000);
     return () => clearInterval(interval);
   }, [accessToken]);
+
+  // Tenter de récupérer un token au chargement
   useEffect(() => {
-    refreshAccessToken(); // tente de récupérer un token via le cookie refresh_token
+    refreshAccessToken();
   }, []);
 
   return (
