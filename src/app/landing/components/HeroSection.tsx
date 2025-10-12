@@ -13,7 +13,7 @@ export default function HeroSection() {
       {/* Motif subtil en arrière-plan */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
-          backgroundImage: 'url("./background3.webp")',
+          backgroundImage: 'url("../background3.webp")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
@@ -30,7 +30,7 @@ export default function HeroSection() {
             transition={{ duration: 0.6 }}
             className="inline-flex items-center space-x-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 px-4 py-2 rounded-full mb-8"
           >
-            <Award className="w-4 h-4 text-amber-700" />
+            <Award className="w-3 h-3 text-amber-700" />
             <span className="text-sm font-medium text-amber-900 dark:text-amber-200">
               Solution juridique d&apos;excellence pour le Cameroun
             </span>
