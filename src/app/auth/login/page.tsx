@@ -15,6 +15,8 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +24,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(email, motDePasse);
+      await login(email, motDePasse, rememberMe);
       router.push("/dashboard");
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -249,6 +251,8 @@ export default function LoginPage() {
               <label className="flex items-center space-x-2 cursor-pointer group">
                 <input 
                   type="checkbox" 
+                  checked={rememberMe}            // ✅ lie l’état
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-amber-700 focus:ring-amber-500 dark:focus:ring-amber-600"
                 />
                 <span className="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors">

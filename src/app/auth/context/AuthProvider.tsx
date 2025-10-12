@@ -6,7 +6,7 @@ type User = { id: string; email: string; prenom?: string; nom?: string; role?: s
 type AuthContextType = {
   user: User | null;
   accessToken: string | null;
-  login: (email: string, motDePasse: string) => Promise<void>;
+  login: (email: string, motDePasse: string, rememberMe: boolean) => Promise<void>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<void>;
 };
@@ -18,12 +18,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
   // Login page complet 
-  const login = async (email: string, motDePasse: string) => {
+  const login = async (email: string, motDePasse: string, rememberMe: boolean) => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ email, motDePasse }),
+      body: JSON.stringify({ email, motDePasse, rememberMe }),
     });
     if (!res.ok) {
       throw new Error("Email ou mot de passe incorrect");
@@ -70,6 +70,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, 14 * 60 * 1000); // 14 min
     return () => clearInterval(interval);
   }, [accessToken]);
+  useEffect(() => {
+    refreshAccessToken(); // tente de récupérer un token via le cookie refresh_token
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, accessToken, login, logout, refreshAccessToken }}>
