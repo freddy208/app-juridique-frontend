@@ -13,7 +13,7 @@ export default function HeroSection() {
       {/* Motif subtil en arrière-plan */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
-          backgroundImage: 'url("../background3.webp")',
+          backgroundImage: 'url("./background3.webp")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',

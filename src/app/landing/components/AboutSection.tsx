@@ -30,7 +30,7 @@ export default function AboutSection() {
             Votre partenaire de confiance
           </h2>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Une solution pensée avec et pour les avocats camerounais
+            Une solution pensée avec et pour les avocats, juristes camerounais
           </p>
         </div>
 

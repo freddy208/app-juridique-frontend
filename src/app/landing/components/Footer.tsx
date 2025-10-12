@@ -16,7 +16,7 @@ export default function Footer() {
             </span>
           </div>
           <div className="text-gray-600 dark:text-gray-400 text-sm">
-            <span className="font-medium">KPF Services</span> · Tous droits réservés © {new Date().getFullYear()}
+            <span className="font-medium">KPF Services</span> · Tous droits réservés  © {new Date().getFullYear()}
           </div>
         </div>
       </div>
