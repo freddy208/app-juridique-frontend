@@ -17,7 +17,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
-  // Login
+  // --------------------
+  // LOGIN
+  // --------------------
   const login = async (email: string, motDePasse: string, rememberMe: boolean) => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
       method: "POST",
@@ -35,10 +37,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(data.user);
 
     // Stockage du refresh token côté client
-    localStorage.setItem("refresh_token", data.refresh_token);
+    if (rememberMe) {
+      localStorage.setItem("refresh_token", data.refresh_token);
+    } else {
+      sessionStorage.setItem("refresh_token", data.refresh_token);
+    }
   };
 
-  // Logout
+  // --------------------
+  // LOGOUT
+  // --------------------
   const logout = async () => {
     try {
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/logout`, {
@@ -51,17 +59,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // ignore errors
     }
+
     setAccessToken(null);
     setUser(null);
     localStorage.removeItem("refresh_token");
+    sessionStorage.removeItem("refresh_token");
   };
 
-  // Refresh token
-  const refreshAccessToken = async () => {
+  // --------------------
+  // REFRESH TOKEN
+  // --------------------
+  const refreshAccessToken = async (): Promise<void> => {
     try {
-      const refresh_token = localStorage.getItem("refresh_token");
+      const refresh_token =
+        localStorage.getItem("refresh_token") || sessionStorage.getItem("refresh_token");
       if (!refresh_token) {
-        throw new Error("Refresh token manquant");
+        return;
       }
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/refresh`, {
@@ -69,21 +82,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refresh_token }),
       });
-
       if (!res.ok) {
-        throw new Error("Impossible de rafraîchir le token");
+        throw new Error();
       }
 
       const data = await res.json();
       setAccessToken(data.access_token);
+
+      // ⚡ Récupérer les infos du user
+      const meRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/me`, {
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${data.access_token}`,
+        },
+      });
+      if (!meRes.ok) {
+        throw new Error();
+      }
+
+      const userData = await meRes.json();
+      setUser(userData);
+
     } catch {
       setAccessToken(null);
       setUser(null);
       localStorage.removeItem("refresh_token");
+      sessionStorage.removeItem("refresh_token");
     }
   };
 
+  // --------------------
   // Auto refresh toutes les 14 minutes
+  // --------------------
   useEffect(() => {
     const interval = setInterval(() => {
       if (accessToken) {
@@ -93,7 +123,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [accessToken]);
 
+  // --------------------
   // Tenter de récupérer un token au chargement
+  // --------------------
   useEffect(() => {
     refreshAccessToken();
   }, []);
@@ -105,6 +137,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// --------------------
+// HOOK
+// --------------------
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {

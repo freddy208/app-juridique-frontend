@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../auth/context/AuthProvider";
@@ -15,26 +14,28 @@ export default function LandingPage() {
   const { user, refreshAccessToken } = useAuth();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
+  // Vérifie si l'utilisateur est connecté
   useEffect(() => {
     const checkAuth = async () => {
-      if (!user) {
-        await refreshAccessToken(); // tente de restaurer la session
-      }
-      if (user) {
-        router.replace("/dashboard"); // redirige si connecté
-      } else {
-        setIsCheckingAuth(false); // sinon, on affiche la LandingPage
-      }
+      await refreshAccessToken();
+      setIsCheckingAuth(false);
     };
     checkAuth();
-  }, [user, router, refreshAccessToken]);
+  }, [refreshAccessToken]);
+
+  // Redirection automatique si user est défini
+  useEffect(() => {
+    if (user) {
+      router.replace("/dashboard");
+    }
+  }, [user, router]);
 
   if (isCheckingAuth) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="w-12 h-12 border-4 border-amber-700 border-t-transparent rounded-full animate-spin"></div>
       </div>
-    ); // loader simple
+    );
   }
 
   return (
