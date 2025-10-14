@@ -1,14 +1,12 @@
-// ============================================
-// 2. app/(dashboard)/page.tsx
-// Page d'accueil du dashboard (widgets KPIs)
-// ============================================
 "use client";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../auth/context/AuthProvider";
 import { motion } from "framer-motion";
 import {
   FolderOpen,
   Users,
   FileText,
-  CheckSquare,
   Calendar,
   TrendingUp,
   Clock,
@@ -19,6 +17,30 @@ import {
 } from "lucide-react";
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { user, isLoading } = useAuth();
+
+  // ⚡ PROTECTION : Redirection si non connecté
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.replace("/login");
+    }
+  }, [user, isLoading, router]);
+
+  // Afficher le loader pendant la vérification
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="w-12 h-12 border-4 border-amber-700 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Si pas d'utilisateur, ne rien afficher (redirection en cours)
+  if (!user) {
+    return null;
+  }
+
   // Données mockées (à remplacer par vraies données API)
   const stats = [
     {
@@ -159,7 +181,7 @@ export default function DashboardPage() {
           transition={{ delay: 0.1 }}
           className="text-gray-600 dark:text-gray-400 mt-2"
         >
-          Vue d&apos;ensemble de votre activité
+          Bienvenue {user.prenom || user.email} - Vue d&apos;ensemble de votre activité
         </motion.p>
       </div>
 

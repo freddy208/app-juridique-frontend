@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../auth/context/AuthProvider";
 import DashboardLayout from "../dashboard/components/layout/dashboardLayout";
@@ -10,27 +10,17 @@ export default function DashboardRootLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { user, refreshAccessToken } = useAuth();
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const { user, isLoading } = useAuth();
 
-  // Vérifie si l'utilisateur est connecté
+  // ⚡ PROTECTION : Redirection si pas connecté
   useEffect(() => {
-    const checkAuth = async () => {
-      await refreshAccessToken();
-      setIsCheckingAuth(false);
-    };
-    checkAuth();
-  }, [refreshAccessToken]);
-
-  // Redirection si pas connecté
-  useEffect(() => {
-    if (!isCheckingAuth && !user) {
+    if (!isLoading && !user) {
       router.replace("/login");
     }
-  }, [user, isCheckingAuth, router]);
+  }, [user, isLoading, router]);
 
   // Loading state pendant vérification
-  if (isCheckingAuth) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
@@ -41,11 +31,11 @@ export default function DashboardRootLayout({
     );
   }
 
-  // Si pas d'utilisateur, afficher rien (redirection en cours)
+  // Si pas d'utilisateur, ne rien afficher (redirection en cours)
   if (!user) {
     return null;
   }
 
-  // Rendu normal avec le layout
+  // Utilisateur connecté : afficher le layout avec sidebar + topbar
   return <DashboardLayout>{children}</DashboardLayout>;
 }
