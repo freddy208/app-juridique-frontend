@@ -79,9 +79,7 @@ export function useMultiplePermissions(
   }, [modules, context]);
 }
 
-/**
- * Hook pour vérifier si le user est admin
- */
+
 export function useIsAdmin(): boolean {
   const { permissions } = usePermissionsContext();
   
