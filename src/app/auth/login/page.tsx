@@ -305,7 +305,7 @@ export default function LoginPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            href="/inscription"
+            href="/test-permissions"
             className="block w-full text-center py-3.5 border-2 border-gray-300 dark:border-gray-700 rounded-xl font-semibold text-gray-700 dark:text-gray-300 hover:border-amber-700 dark:hover:border-amber-600 hover:text-amber-700 dark:hover:text-amber-600 hover:bg-amber-50/50 dark:hover:bg-amber-950/20 transition-all duration-300"
           >
             Créer un compte professionnel
