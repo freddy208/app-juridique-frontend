@@ -1,6 +1,6 @@
 /**
- * Sidebar principale du dashboard
- * Design harmonieux avec palette professionnelle
+ * Sidebar Premium - Design Juridique Sophistiqué
+ * Inspiration : Cabinets d'avocats de luxe
  */
 
 "use client";
@@ -32,17 +32,14 @@ export default function Sidebar({
   const { hasAccess, isLoading } = usePermissionsContext();
   const pathname = usePathname();
 
-  // Filtrer la navigation selon les permissions
   const navigation = getFilteredNavigation(hasAccess);
 
-  // Fermer la sidebar mobile quand on change de page
   useEffect(() => {
     if (isMobileOpen && onMobileClose) {
       onMobileClose();
     }
   }, [isMobileOpen, onMobileClose, pathname]);
 
-  // Fermer si clic sur overlay (mobile)
   const handleOverlayClick = () => {
     if (onMobileClose) {
       onMobileClose();
@@ -53,12 +50,12 @@ export default function Sidebar({
     return (
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 h-full border-r border-gray-200 bg-white transition-all duration-300 hidden lg:block",
+          "fixed left-0 top-0 z-40 h-full border-r border-slate-800 bg-slate-900 transition-all duration-300 hidden lg:block",
           isCollapsed ? "w-20" : "w-72"
         )}
       >
         <div className="flex h-full items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-600 border-t-transparent"></div>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent"></div>
         </div>
       </aside>
     );
@@ -69,15 +66,18 @@ export default function Sidebar({
       {/* Overlay mobile */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
           onClick={handleOverlayClick}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar Premium */}
       <aside
         className={cn(
-          "fixed left-0 top-0 h-full border-r border-gray-200 bg-white transition-all duration-300",
+          "fixed left-0 top-0 h-full transition-all duration-300",
+          // Style Premium : Fond bleu marine foncé
+          "bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950",
+          "border-r border-slate-800/50",
           // Desktop
           "hidden lg:block lg:z-40",
           isCollapsed ? "lg:w-20" : "lg:w-72",
@@ -87,10 +87,11 @@ export default function Sidebar({
         )}
       >
         <div className="flex h-full flex-col">
-          {/* Header avec logo */}
+          {/* Header Premium avec logo */}
           <div
             className={cn(
-              "flex h-16 items-center border-b border-gray-200 px-4 bg-gradient-to-r from-gray-50 to-white transition-all duration-300",
+              "flex h-16 items-center border-b border-slate-800/50 px-4 transition-all duration-300",
+              "bg-gradient-to-r from-slate-900 to-slate-800/50",
               isCollapsed ? "justify-center px-2" : "justify-between"
             )}
           >
@@ -102,35 +103,39 @@ export default function Sidebar({
                 isCollapsed && "justify-center"
               )}
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-amber-600 to-amber-700 shadow-md transition-transform group-hover:scale-105">
-                <Scale className="h-6 w-6 text-white" strokeWidth={2.5} />
+              {/* Logo or avec effet luxe */}
+              <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 shadow-lg shadow-amber-900/30 transition-transform group-hover:scale-105 group-hover:shadow-xl group-hover:shadow-amber-900/40">
+                <Scale className="h-6 w-6 text-white drop-shadow-md" strokeWidth={2.5} />
+                {/* Effet brillance */}
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-white/20 to-transparent opacity-50"></div>
               </div>
+              
               {!isCollapsed && (
                 <div className="flex flex-col">
-                  <span className="text-lg font-serif font-bold text-gray-900">
+                  <span className="text-lg font-serif font-bold text-white tracking-tight">
                     Cabinet 237
                   </span>
-                  <span className="text-xs text-gray-600">
+                  <span className="text-xs text-slate-400 font-medium tracking-wide">
                     Gestion Juridique
                   </span>
                 </div>
               )}
             </Link>
 
-            {/* Bouton toggle (desktop uniquement) */}
+            {/* Bouton toggle premium */}
             {!isCollapsed && (
               <button
                 onClick={onToggle}
-                className="hidden lg:flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                className="hidden lg:flex h-8 w-8 items-center justify-center rounded-lg border border-slate-700/50 bg-slate-800/50 hover:bg-slate-700/50 hover:border-slate-600 transition-all"
                 title="Réduire la sidebar"
               >
-                <ChevronLeft className="h-4 w-4 text-gray-700" />
+                <ChevronLeft className="h-4 w-4 text-slate-400" />
               </button>
             )}
           </div>
 
-          {/* Navigation scrollable */}
-          <nav className="flex-1 overflow-y-auto px-3 py-6 bg-gradient-to-b from-white to-gray-50">
+          {/* Navigation scrollable avec style premium */}
+          <nav className="flex-1 overflow-y-auto px-3 py-6 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900">
             {navigation.map((section) => (
               <SidebarSection
                 key={section.id}
@@ -152,41 +157,42 @@ export default function Sidebar({
             ))}
           </nav>
 
-          {/* Footer avec info user */}
+          {/* Footer Premium avec info user */}
           <div
             className={cn(
-              "border-t border-gray-200 p-4 bg-gray-50",
+              "border-t border-slate-800/50 p-4",
+              "bg-gradient-to-r from-slate-900 to-slate-800/50",
               isCollapsed && "p-2"
             )}
           >
             {isCollapsed ? (
-              // Mode collapsed : juste l'avatar
+              // Mode collapsed
               <div className="flex flex-col items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-600 to-amber-700 text-sm font-bold text-white shadow-md">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-sm font-bold text-white shadow-md ring-2 ring-amber-500/20">
                   {user?.prenom?.[0] || user?.email[0].toUpperCase()}
                 </div>
                 {/* Bouton expand */}
                 <button
                   onClick={onToggle}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-700/50 bg-slate-800/50 hover:bg-slate-700/50 transition-all"
                   title="Agrandir la sidebar"
                 >
-                  <ChevronRight className="h-4 w-4 text-gray-700" />
+                  <ChevronRight className="h-4 w-4 text-slate-400" />
                 </button>
               </div>
             ) : (
-              // Mode expanded : infos complètes
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-600 to-amber-700 text-sm font-bold text-white shadow-md">
+              // Mode expanded avec style premium
+              <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors cursor-pointer">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-sm font-bold text-white shadow-md ring-2 ring-amber-500/20">
                   {user?.prenom?.[0] || user?.email[0].toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="truncate text-sm font-semibold text-gray-900">
+                  <p className="truncate text-sm font-semibold text-white">
                     {user?.prenom && user?.nom
                       ? `${user.prenom} ${user.nom}`
                       : user?.email}
                   </p>
-                  <p className="truncate text-xs text-gray-600">
+                  <p className="truncate text-xs text-slate-400">
                     {user?.role || "Utilisateur"}
                   </p>
                 </div>
