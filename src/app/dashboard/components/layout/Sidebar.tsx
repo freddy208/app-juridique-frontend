@@ -79,11 +79,10 @@ export default function Sidebar({
           "bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950",
           "border-r border-slate-800/50",
           // Desktop
-          "hidden lg:block lg:z-40",
+          "lg:block lg:z-40",
           isCollapsed ? "lg:w-20" : "lg:w-72",
-          // Mobile
-          "lg:translate-x-0",
-          isMobileOpen ? "z-50 block translate-x-0 w-72" : "hidden -translate-x-full"
+          // Mobile - Correction importante ici
+          isMobileOpen ? "z-50 translate-x-0 w-72" : "-translate-x-full lg:translate-x-0"
         )}
       >
         <div className="flex h-full flex-col">
