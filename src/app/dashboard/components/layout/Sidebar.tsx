@@ -1,5 +1,6 @@
 /**
  * Sidebar principale du dashboard
+ * Design harmonieux avec palette professionnelle
  */
 
 "use client";
@@ -39,7 +40,7 @@ export default function Sidebar({
     if (isMobileOpen && onMobileClose) {
       onMobileClose();
     }
-  }, [pathname]);
+  }, [isMobileOpen, onMobileClose, pathname]);
 
   // Fermer si clic sur overlay (mobile)
   const handleOverlayClick = () => {
@@ -68,7 +69,7 @@ export default function Sidebar({
       {/* Overlay mobile */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
           onClick={handleOverlayClick}
         />
       )}
@@ -89,7 +90,7 @@ export default function Sidebar({
           {/* Header avec logo */}
           <div
             className={cn(
-              "flex h-16 items-center border-b border-gray-200 px-4 transition-all duration-300",
+              "flex h-16 items-center border-b border-gray-200 px-4 bg-gradient-to-r from-gray-50 to-white transition-all duration-300",
               isCollapsed ? "justify-center px-2" : "justify-between"
             )}
           >
@@ -101,7 +102,7 @@ export default function Sidebar({
                 isCollapsed && "justify-center"
               )}
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 shadow-lg transition-transform group-hover:scale-110">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-amber-600 to-amber-700 shadow-md transition-transform group-hover:scale-105">
                 <Scale className="h-6 w-6 text-white" strokeWidth={2.5} />
               </div>
               {!isCollapsed && (
@@ -109,7 +110,7 @@ export default function Sidebar({
                   <span className="text-lg font-serif font-bold text-gray-900">
                     Cabinet 237
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-600">
                     Gestion Juridique
                   </span>
                 </div>
@@ -123,13 +124,13 @@ export default function Sidebar({
                 className="hidden lg:flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
                 title="Réduire la sidebar"
               >
-                <ChevronLeft className="h-4 w-4 text-gray-600" />
+                <ChevronLeft className="h-4 w-4 text-gray-700" />
               </button>
             )}
           </div>
 
           {/* Navigation scrollable */}
-          <nav className="flex-1 overflow-y-auto px-3 py-6">
+          <nav className="flex-1 overflow-y-auto px-3 py-6 bg-gradient-to-b from-white to-gray-50">
             {navigation.map((section) => (
               <SidebarSection
                 key={section.id}
@@ -154,14 +155,14 @@ export default function Sidebar({
           {/* Footer avec info user */}
           <div
             className={cn(
-              "border-t border-gray-200 p-4",
+              "border-t border-gray-200 p-4 bg-gray-50",
               isCollapsed && "p-2"
             )}
           >
             {isCollapsed ? (
               // Mode collapsed : juste l'avatar
               <div className="flex flex-col items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-sm font-bold text-white shadow-md">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-600 to-amber-700 text-sm font-bold text-white shadow-md">
                   {user?.prenom?.[0] || user?.email[0].toUpperCase()}
                 </div>
                 {/* Bouton expand */}
@@ -170,13 +171,13 @@ export default function Sidebar({
                   className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
                   title="Agrandir la sidebar"
                 >
-                  <ChevronRight className="h-4 w-4 text-gray-600" />
+                  <ChevronRight className="h-4 w-4 text-gray-700" />
                 </button>
               </div>
             ) : (
               // Mode expanded : infos complètes
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-sm font-bold text-white shadow-md">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-600 to-amber-700 text-sm font-bold text-white shadow-md">
                   {user?.prenom?.[0] || user?.email[0].toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -185,7 +186,7 @@ export default function Sidebar({
                       ? `${user.prenom} ${user.nom}`
                       : user?.email}
                   </p>
-                  <p className="truncate text-xs text-gray-500">
+                  <p className="truncate text-xs text-gray-600">
                     {user?.role || "Utilisateur"}
                   </p>
                 </div>
