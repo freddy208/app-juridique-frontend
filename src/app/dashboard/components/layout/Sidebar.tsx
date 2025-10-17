@@ -1,6 +1,5 @@
 /**
  * Sidebar principale du dashboard
- * S'adapte dynamiquement aux permissions de l'utilisateur
  */
 
 "use client";
@@ -40,7 +39,7 @@ export default function Sidebar({
     if (isMobileOpen && onMobileClose) {
       onMobileClose();
     }
-  }, [isMobileOpen, onMobileClose, pathname]);
+  }, [pathname]);
 
   // Fermer si clic sur overlay (mobile)
   const handleOverlayClick = () => {
@@ -51,17 +50,12 @@ export default function Sidebar({
 
   if (isLoading) {
     return (
-        <aside
+      <aside
         className={cn(
-            "fixed left-0 top-0 h-full border-r border-gray-200 bg-white transition-all duration-300",
-            // Desktop
-            "hidden lg:block z-40",
-            isCollapsed ? "lg:w-20" : "lg:w-72",
-            // Mobile
-            isMobileOpen ? "z-50 block translate-x-0 w-72" : "z-0 hidden -translate-x-full",
-            "lg:!translate-x-0 lg:!block"
+          "fixed left-0 top-0 z-40 h-full border-r border-gray-200 bg-white transition-all duration-300 hidden lg:block",
+          isCollapsed ? "w-20" : "w-72"
         )}
-        >
+      >
         <div className="flex h-full items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-600 border-t-transparent"></div>
         </div>
@@ -76,27 +70,26 @@ export default function Sidebar({
         <div
           className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
           onClick={handleOverlayClick}
-        ></div>
+        />
       )}
 
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 h-full border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-300",
+          "fixed left-0 top-0 h-full border-r border-gray-200 bg-white transition-all duration-300",
           // Desktop
-          "hidden lg:block",
+          "hidden lg:block lg:z-40",
           isCollapsed ? "lg:w-20" : "lg:w-72",
           // Mobile
           "lg:translate-x-0",
-          isMobileOpen ? "translate-x-0 w-72" : "-translate-x-full",
-          "lg:!translate-x-0"
+          isMobileOpen ? "z-50 block translate-x-0 w-72" : "hidden -translate-x-full"
         )}
       >
         <div className="flex h-full flex-col">
           {/* Header avec logo */}
           <div
             className={cn(
-              "flex h-16 items-center border-b border-gray-200 dark:border-gray-800 px-4 transition-all duration-300",
+              "flex h-16 items-center border-b border-gray-200 px-4 transition-all duration-300",
               isCollapsed ? "justify-center px-2" : "justify-between"
             )}
           >
@@ -113,10 +106,10 @@ export default function Sidebar({
               </div>
               {!isCollapsed && (
                 <div className="flex flex-col">
-                  <span className="text-lg font-serif font-bold text-gray-900 dark:text-gray-100">
+                  <span className="text-lg font-serif font-bold text-gray-900">
                     Cabinet 237
                   </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-xs text-gray-500">
                     Gestion Juridique
                   </span>
                 </div>
@@ -127,10 +120,10 @@ export default function Sidebar({
             {!isCollapsed && (
               <button
                 onClick={onToggle}
-                className="hidden lg:flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="hidden lg:flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
                 title="Réduire la sidebar"
               >
-                <ChevronLeft className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                <ChevronLeft className="h-4 w-4 text-gray-600" />
               </button>
             )}
           </div>
@@ -161,7 +154,7 @@ export default function Sidebar({
           {/* Footer avec info user */}
           <div
             className={cn(
-              "border-t border-gray-200 dark:border-gray-800 p-4",
+              "border-t border-gray-200 p-4",
               isCollapsed && "p-2"
             )}
           >
@@ -174,10 +167,10 @@ export default function Sidebar({
                 {/* Bouton expand */}
                 <button
                   onClick={onToggle}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
                   title="Agrandir la sidebar"
                 >
-                  <ChevronRight className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                  <ChevronRight className="h-4 w-4 text-gray-600" />
                 </button>
               </div>
             ) : (
@@ -187,12 +180,12 @@ export default function Sidebar({
                   {user?.prenom?.[0] || user?.email[0].toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  <p className="truncate text-sm font-semibold text-gray-900">
                     {user?.prenom && user?.nom
                       ? `${user.prenom} ${user.nom}`
                       : user?.email}
                   </p>
-                  <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                  <p className="truncate text-xs text-gray-500">
                     {user?.role || "Utilisateur"}
                   </p>
                 </div>

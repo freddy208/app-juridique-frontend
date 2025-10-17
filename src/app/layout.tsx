@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${inter.variable} ${playfair.variable}`}
       suppressHydrationWarning
     >
-      <body className="bg-white text-gray-900 antialiased">
+      <body className="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 antialiased">
         {/* ☝️ J'ai enlevé les classes dark: */}
         <AuthProvider>
           <PermissionsProvider>
