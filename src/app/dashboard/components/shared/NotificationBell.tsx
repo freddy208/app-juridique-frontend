@@ -70,10 +70,10 @@ export default function NotificationBell() {
 
   const getTypeColor = (type: string) => {
     const colors: Record<string, string> = {
-      tache: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-      audience: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
-      facture: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-      message: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+      tache: "bg-blue-100 text-blue-800",
+      audience: "bg-purple-100 text-purple-800",
+      facture: "bg-red-100 text-red-800",
+      message: "bg-green-100 text-green-800",
     };
     return colors[type] || colors.message;
   };
@@ -85,11 +85,11 @@ export default function NotificationBell() {
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "relative rounded-lg p-2 transition-colors",
-          "hover:bg-gray-100 dark:hover:bg-gray-800",
-          isOpen && "bg-gray-100 dark:bg-gray-800"
+          "hover:bg-gray-100",
+          isOpen && "bg-gray-100"
         )}
       >
-        <Bell className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+        <Bell className="h-5 w-5 text-gray-700" />
 
         {/* Badge count */}
         {unreadCount > 0 && (
@@ -99,15 +99,21 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {/* Dropdown */}
+      {/* Dropdown - RESPONSIVE */}
       {isOpen && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-96 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl">
+        <div className={cn(
+          "absolute top-full z-50 mt-2 rounded-xl border border-gray-200 bg-white shadow-xl",
+          // Mobile : pleine largeur, à droite de l'écran
+          "right-0 w-screen max-w-[calc(100vw-2rem)]",
+          // Desktop : taille fixe
+          "sm:w-96 sm:right-0"
+        )}>
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 p-4">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+          <div className="flex items-center justify-between border-b border-gray-200 p-4">
+            <h3 className="font-semibold text-gray-900">
               Notifications
               {unreadCount > 0 && (
-                <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                <span className="ml-2 text-sm text-gray-500">
                   ({unreadCount} non {unreadCount > 1 ? "lues" : "lue"})
                 </span>
               )}
@@ -116,7 +122,7 @@ export default function NotificationBell() {
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
-                className="text-xs font-medium text-amber-700 dark:text-amber-600 hover:text-amber-800 dark:hover:text-amber-500"
+                className="text-xs font-medium text-amber-700 hover:text-amber-800"
               >
                 Tout marquer lu
               </button>
@@ -127,8 +133,8 @@ export default function NotificationBell() {
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="p-8 text-center">
-                <Bell className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" />
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                <Bell className="mx-auto h-12 w-12 text-gray-300" />
+                <p className="mt-2 text-sm text-gray-500">
                   Aucune notification
                 </p>
               </div>
@@ -137,8 +143,8 @@ export default function NotificationBell() {
                 <div
                   key={notification.id}
                   className={cn(
-                    "group relative border-b border-gray-100 dark:border-gray-800 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-850",
-                    !notification.read && "bg-amber-50/50 dark:bg-amber-950/10"
+                    "group relative border-b border-gray-100 p-4 transition-colors hover:bg-gray-50",
+                    !notification.read && "bg-amber-50/50"
                   )}
                 >
                   {/* Indicateur non lu */}
@@ -159,17 +165,17 @@ export default function NotificationBell() {
                       </span>
 
                       {/* Titre */}
-                      <h4 className="mt-1 font-semibold text-sm text-gray-900 dark:text-gray-100">
+                      <h4 className="mt-1 font-semibold text-sm text-gray-900">
                         {notification.title}
                       </h4>
 
                       {/* Message */}
-                      <p className="mt-0.5 text-sm text-gray-600 dark:text-gray-400">
+                      <p className="mt-0.5 text-sm text-gray-600">
                         {notification.message}
                       </p>
 
                       {/* Time */}
-                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                      <p className="mt-1 text-xs text-gray-500">
                         {notification.time}
                       </p>
                     </div>
@@ -179,18 +185,18 @@ export default function NotificationBell() {
                       {!notification.read && (
                         <button
                           onClick={() => markAsRead(notification.id)}
-                          className="rounded p-1 hover:bg-gray-200 dark:hover:bg-gray-700"
+                          className="rounded p-1 hover:bg-gray-200"
                           title="Marquer comme lu"
                         >
-                          <Check className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                          <Check className="h-4 w-4 text-gray-600" />
                         </button>
                       )}
                       <button
                         onClick={() => deleteNotification(notification.id)}
-                        className="rounded p-1 hover:bg-red-100 dark:hover:bg-red-950/30"
+                        className="rounded p-1 hover:bg-red-100"
                         title="Supprimer"
                       >
-                        <X className="h-4 w-4 text-red-600 dark:text-red-400" />
+                        <X className="h-4 w-4 text-red-600" />
                       </button>
                     </div>
                   </div>
@@ -201,8 +207,8 @@ export default function NotificationBell() {
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="border-t border-gray-200 dark:border-gray-700 p-3">
-              <button className="w-full rounded-lg py-2 text-sm font-medium text-amber-700 dark:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-colors">
+            <div className="border-t border-gray-200 p-3">
+              <button className="w-full rounded-lg py-2 text-sm font-medium text-amber-700 hover:bg-amber-50 transition-colors">
                 Voir toutes les notifications
               </button>
             </div>

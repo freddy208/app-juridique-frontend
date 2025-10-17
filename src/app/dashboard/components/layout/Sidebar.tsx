@@ -51,12 +51,17 @@ export default function Sidebar({
 
   if (isLoading) {
     return (
-      <aside
+        <aside
         className={cn(
-          "fixed left-0 top-0 z-50 h-full border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-300",
-          isCollapsed ? "w-20" : "w-72"
+            "fixed left-0 top-0 h-full border-r border-gray-200 bg-white transition-all duration-300",
+            // Desktop
+            "hidden lg:block z-40",
+            isCollapsed ? "lg:w-20" : "lg:w-72",
+            // Mobile
+            isMobileOpen ? "z-50 block translate-x-0 w-72" : "z-0 hidden -translate-x-full",
+            "lg:!translate-x-0 lg:!block"
         )}
-      >
+        >
         <div className="flex h-full items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-600 border-t-transparent"></div>
         </div>

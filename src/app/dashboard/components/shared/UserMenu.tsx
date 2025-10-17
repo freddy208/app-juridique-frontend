@@ -110,7 +110,13 @@ export default function UserMenu() {
 
       {/* Menu dropdown */}
       {isOpen && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl">
+       <div className={cn(
+        "absolute top-full z-50 mt-2 rounded-xl border border-gray-200 bg-white shadow-xl",
+        // Mobile : pleine largeur
+        "right-0 w-screen max-w-[calc(100vw-2rem)]",
+        // Desktop : taille fixe
+        "sm:w-72 sm:right-0"
+      )}>
           {/* Header avec info user */}
           <div className="border-b border-gray-200 dark:border-gray-700 p-4">
             <div className="flex items-start gap-3">
