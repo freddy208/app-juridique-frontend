@@ -38,7 +38,7 @@ export default function Sidebar({
     if (isMobileOpen && onMobileClose) {
       onMobileClose();
     }
-  }, [isMobileOpen, onMobileClose, pathname]);
+  }, [pathname]);
 
   const handleOverlayClick = () => {
     if (onMobileClose) {
@@ -63,7 +63,7 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Overlay mobile */}
+      {/* Overlay mobile - doit être AVANT la sidebar */}
       {isMobileOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
@@ -74,15 +74,17 @@ export default function Sidebar({
       {/* Sidebar Premium */}
       <aside
         className={cn(
-          "fixed left-0 top-0 h-full transition-all duration-300",
+          "fixed left-0 top-0 h-full transition-all duration-300 z-50",
           // Style Premium : Fond bleu marine foncé
           "bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950",
           "border-r border-slate-800/50",
           // Desktop
-          "lg:block lg:z-40",
+          "lg:z-40",
           isCollapsed ? "lg:w-20" : "lg:w-72",
-          // Mobile - Correction importante ici
-          isMobileOpen ? "z-50 translate-x-0 w-72" : "-translate-x-full lg:translate-x-0"
+          // Mobile - Animation de glissement
+          isMobileOpen ? "translate-x-0 w-72" : "-translate-x-full lg:translate-x-0",
+          // Masquer complètement sur mobile quand fermé
+          !isMobileOpen && "lg:block"
         )}
       >
         <div className="flex h-full flex-col">
