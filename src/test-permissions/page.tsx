@@ -1,6 +1,6 @@
 "use client";
-import { usePermissions } from "../auth/hooks/usePermissions";
-import { useAuth } from "../auth/context/AuthProvider";
+import { usePermissions } from "../hooks/usePermissions";
+import { useAuth } from "../app/auth/context/AuthProvider";
 
 export default function TestPermissions() {
   const { user } = useAuth();

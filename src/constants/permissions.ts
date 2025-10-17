@@ -73,11 +73,11 @@ export const DEFAULT_PERMISSIONS: Record<RoleUtilisateur, PermissionsMatrix> = {
   // ========================================
   AVOCAT: {
     dashboard: READ_ONLY,
-    dossiers: READ_WRITE,
+    dossiers: FULL_ACCESS,
     clients: READ_WRITE,
-    documents: READ_WRITE,
+    documents: FULL_ACCESS,
     taches: READ_WRITE,
-    calendrier: READ_WRITE,
+    calendrier: FULL_ACCESS,
     messages: FULL_ACCESS,
     facturation: READ_WRITE,
     reporting: READ_ONLY,
@@ -93,7 +93,7 @@ export const DEFAULT_PERMISSIONS: Record<RoleUtilisateur, PermissionsMatrix> = {
   // ========================================
   SECRETAIRE: {
     dashboard: READ_ONLY,
-    dossiers: READ_ONLY,
+    dossiers: FULL_ACCESS,
     clients: READ_WRITE,
     documents: READ_WRITE,
     taches: READ_WRITE,

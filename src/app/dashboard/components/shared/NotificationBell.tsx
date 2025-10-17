@@ -1,0 +1,214 @@
+/**
+ * Cloche de notifications dans la topbar
+ */
+
+"use client";
+import { useState, useRef, useEffect } from "react";
+import { Bell, Check, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+// Mock notifications (à remplacer par vraies données API)
+const MOCK_NOTIFICATIONS = [
+  {
+    id: "1",
+    type: "tache",
+    title: "Nouvelle tâche assignée",
+    message: "Préparer mémoire en défense - Dossier #2024-089",
+    time: "Il y a 5 min",
+    read: false,
+  },
+  {
+    id: "2",
+    type: "audience",
+    title: "Audience demain",
+    message: "TPI Douala - Salle 3 à 14h30",
+    time: "Il y a 1h",
+    read: false,
+  },
+  {
+    id: "3",
+    type: "facture",
+    title: "Facture impayée",
+    message: "Facture #2024-003 en retard de 5 jours",
+    time: "Il y a 2h",
+    read: true,
+  },
+];
+
+export default function NotificationBell() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  // Fermer si clic en dehors
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const markAsRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
+
+  const markAllAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const deleteNotification = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  const getTypeColor = (type: string) => {
+    const colors: Record<string, string> = {
+      tache: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+      audience: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+      facture: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+      message: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+    };
+    return colors[type] || colors.message;
+  };
+
+  return (
+    <div className="relative" ref={menuRef}>
+      {/* Bouton cloche */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "relative rounded-lg p-2 transition-colors",
+          "hover:bg-gray-100 dark:hover:bg-gray-800",
+          isOpen && "bg-gray-100 dark:bg-gray-800"
+        )}
+      >
+        <Bell className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+
+        {/* Badge count */}
+        {unreadCount > 0 && (
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-600 px-1 text-xs font-bold text-white">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {/* Dropdown */}
+      {isOpen && (
+        <div className="absolute right-0 top-full z-50 mt-2 w-96 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 p-4">
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+              Notifications
+              {unreadCount > 0 && (
+                <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                  ({unreadCount} non {unreadCount > 1 ? "lues" : "lue"})
+                </span>
+              )}
+            </h3>
+
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllAsRead}
+                className="text-xs font-medium text-amber-700 dark:text-amber-600 hover:text-amber-800 dark:hover:text-amber-500"
+              >
+                Tout marquer lu
+              </button>
+            )}
+          </div>
+
+          {/* Liste notifications */}
+          <div className="max-h-96 overflow-y-auto">
+            {notifications.length === 0 ? (
+              <div className="p-8 text-center">
+                <Bell className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" />
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  Aucune notification
+                </p>
+              </div>
+            ) : (
+              notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className={cn(
+                    "group relative border-b border-gray-100 dark:border-gray-800 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-850",
+                    !notification.read && "bg-amber-50/50 dark:bg-amber-950/10"
+                  )}
+                >
+                  {/* Indicateur non lu */}
+                  {!notification.read && (
+                    <div className="absolute left-2 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-amber-600"></div>
+                  )}
+
+                  <div className="ml-2 flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      {/* Type badge */}
+                      <span
+                        className={cn(
+                          "inline-block rounded-full px-2 py-0.5 text-xs font-semibold",
+                          getTypeColor(notification.type)
+                        )}
+                      >
+                        {notification.type}
+                      </span>
+
+                      {/* Titre */}
+                      <h4 className="mt-1 font-semibold text-sm text-gray-900 dark:text-gray-100">
+                        {notification.title}
+                      </h4>
+
+                      {/* Message */}
+                      <p className="mt-0.5 text-sm text-gray-600 dark:text-gray-400">
+                        {notification.message}
+                      </p>
+
+                      {/* Time */}
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                        {notification.time}
+                      </p>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {!notification.read && (
+                        <button
+                          onClick={() => markAsRead(notification.id)}
+                          className="rounded p-1 hover:bg-gray-200 dark:hover:bg-gray-700"
+                          title="Marquer comme lu"
+                        >
+                          <Check className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => deleteNotification(notification.id)}
+                        className="rounded p-1 hover:bg-red-100 dark:hover:bg-red-950/30"
+                        title="Supprimer"
+                      >
+                        <X className="h-4 w-4 text-red-600 dark:text-red-400" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Footer */}
+          {notifications.length > 0 && (
+            <div className="border-t border-gray-200 dark:border-gray-700 p-3">
+              <button className="w-full rounded-lg py-2 text-sm font-medium text-amber-700 dark:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-colors">
+                Voir toutes les notifications
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

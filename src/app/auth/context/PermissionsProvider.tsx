@@ -5,10 +5,10 @@ import {
   Module,
   PermissionsMatrix,
   PermissionsContextType,
-} from "../types/permissions.type";
-import { getPermissionsByRole } from "../services/permissions.service";
-import { MINIMAL_PERMISSIONS } from "../constants/permissions";
-import { RoleUtilisateur } from "../types/permissions.type";
+} from "../../../types/permissions.type";
+import { getPermissionsByRole } from "../../../services/permissions.service";
+import { MINIMAL_PERMISSIONS } from "../../../constants/permissions";
+import { RoleUtilisateur } from "../../../types/permissions.type";
 
 const PermissionsContext = createContext<PermissionsContextType | undefined>(undefined);
 

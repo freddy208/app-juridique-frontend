@@ -1,0 +1,337 @@
+/**
+ * Service API pour les Clients
+ */
+
+import { BaseService } from "./base.service";
+import {
+  Client,
+  CreateClientDto,
+  UpdateClientDto,
+  ClientFilters,
+  StatutClient,
+} from "@/types/client.types";
+import { PaginatedResponse, PaginationParams } from "@/types/api.types";
+import api from "@/lib/api";
+import { handleApiError } from "@/utils/error-handler";
+
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== "false";
+
+// Types pour les relations
+interface ClientDossier {
+  id: string;
+  numeroUnique: string;
+  titre: string;
+  type: string;
+  statut: string;
+}
+
+interface ClientFacture {
+  id: string;
+  montant: number;
+  statut: string;
+  dateEcheance: string;
+  payee: boolean;
+}
+
+interface ClientNote {
+  id: string;
+  contenu: string;
+  utilisateurId: string;
+  creeLe: string;
+  modifieLe: string;
+}
+
+class ClientsService extends BaseService {
+  constructor() {
+    super("/clients");
+  }
+
+  /**
+   * Récupérer tous les clients avec filtres
+   */
+  async getClients(
+    filters?: ClientFilters,
+    pagination?: PaginationParams
+  ): Promise<PaginatedResponse<Client>> {
+    if (USE_MOCK) {
+      console.log("[MOCK] getClients", filters, pagination);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      return {
+        data: MOCK_CLIENTS,
+        pagination: {
+          page: pagination?.page || 1,
+          limit: pagination?.limit || 10,
+          total: MOCK_CLIENTS.length,
+          totalPages: Math.ceil(MOCK_CLIENTS.length / (pagination?.limit || 10)),
+        },
+      };
+    }
+
+    return this.getAllPaginated<Client>({ ...filters, ...pagination });
+  }
+
+  /**
+   * Récupérer un client par ID
+   */
+  async getClientById(id: string): Promise<Client> {
+    if (USE_MOCK) {
+      console.log("[MOCK] getClientById", id);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const client = MOCK_CLIENTS.find((c) => c.id === id);
+      if (!client) {
+        throw new Error("Client non trouvé");
+      }
+      return client;
+    }
+
+    return this.getById<Client>(id);
+  }
+
+  /**
+   * Créer un nouveau client
+   */
+  async createClient(data: CreateClientDto): Promise<Client> {
+    if (USE_MOCK) {
+      console.log("[MOCK] createClient", data);
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      const newClient: Client = {
+        id: `mock-client-${Date.now()}`,
+        prenom: data.prenom,
+        nom: data.nom,
+        nomEntreprise: data.nomEntreprise,
+        telephone: data.telephone,
+        email: data.email,
+        adresse: data.adresse,
+        statut: "ACTIF",
+        creeLe: new Date().toISOString(),
+        modifieLe: new Date().toISOString(),
+      };
+
+      return newClient;
+    }
+
+    return this.create<Client, CreateClientDto>(data);
+  }
+
+  /**
+   * Mettre à jour un client
+   */
+  async updateClient(id: string, data: UpdateClientDto): Promise<Client> {
+    if (USE_MOCK) {
+      console.log("[MOCK] updateClient", id, data);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const client = MOCK_CLIENTS.find((c) => c.id === id);
+      if (!client) {
+        throw new Error("Client non trouvé");
+      }
+
+      const updated: Client = {
+        ...client,
+        ...(data.prenom && { prenom: data.prenom }),
+        ...(data.nom && { nom: data.nom }),
+        ...(data.nomEntreprise !== undefined && { nomEntreprise: data.nomEntreprise }),
+        ...(data.telephone !== undefined && { telephone: data.telephone }),
+        ...(data.email !== undefined && { email: data.email }),
+        ...(data.adresse !== undefined && { adresse: data.adresse }),
+        ...(data.statut && { statut: data.statut }),
+        modifieLe: new Date().toISOString(),
+      };
+
+      return updated;
+    }
+
+    return this.update<Client, UpdateClientDto>(id, data);
+  }
+
+  /**
+   * Supprimer un client
+   */
+  async deleteClient(id: string): Promise<void> {
+    if (USE_MOCK) {
+      console.log("[MOCK] deleteClient", id);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return;
+    }
+
+    return this.delete(id);
+  }
+
+  /**
+   * Changer le statut d'un client
+   */
+  async changeStatut(id: string, statut: StatutClient): Promise<Client> {
+    if (USE_MOCK) {
+      console.log("[MOCK] changeStatut", id, statut);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const client = MOCK_CLIENTS.find((c) => c.id === id);
+      if (!client) {
+        throw new Error("Client non trouvé");
+      }
+
+      return { ...client, statut, modifieLe: new Date().toISOString() };
+    }
+
+    try {
+      const response = await api.patch(`${this.endpoint}/${id}/status`, { statut });
+      return response.data.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Récupérer les dossiers d'un client
+   */
+  async getClientDossiers(id: string): Promise<ClientDossier[]> {
+    if (USE_MOCK) {
+      console.log("[MOCK] getClientDossiers", id);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return [];
+    }
+
+    try {
+      const response = await api.get(`${this.endpoint}/${id}/dossiers`);
+      return response.data.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Récupérer les factures d'un client
+   */
+  async getClientFactures(id: string): Promise<ClientFacture[]> {
+    if (USE_MOCK) {
+      console.log("[MOCK] getClientFactures", id);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return [];
+    }
+
+    try {
+      const response = await api.get(`${this.endpoint}/${id}/factures`);
+      return response.data.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Récupérer les notes d'un client
+   */
+  async getClientNotes(id: string): Promise<ClientNote[]> {
+    if (USE_MOCK) {
+      console.log("[MOCK] getClientNotes", id);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return [];
+    }
+
+    try {
+      const response = await api.get(`${this.endpoint}/${id}/notes`);
+      return response.data.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Ajouter une note à un client
+   */
+  async addClientNote(id: string, contenu: string): Promise<ClientNote> {
+    if (USE_MOCK) {
+      console.log("[MOCK] addClientNote", id, contenu);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return {
+        id: `note-${Date.now()}`,
+        contenu,
+        utilisateurId: "user-1",
+        creeLe: new Date().toISOString(),
+        modifieLe: new Date().toISOString(),
+      };
+    }
+
+    try {
+      const response = await api.post(`${this.endpoint}/${id}/notes`, { contenu });
+      return response.data.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Exporter les clients (Excel/PDF)
+   */
+  async exportClients(filters?: ClientFilters, format: "excel" | "pdf" = "excel"): Promise<Blob> {
+    if (USE_MOCK) {
+      console.log("[MOCK] exportClients", filters, format);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return new Blob(["Mock export data"], { type: "application/octet-stream" });
+    }
+
+    try {
+      const response = await api.get(`${this.endpoint}/export`, {
+        params: { ...filters, format },
+        responseType: "blob",
+      });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+}
+
+// Données mockées
+const MOCK_CLIENTS: Client[] = [
+  {
+    id: "client-1",
+    prenom: "Jean",
+    nom: "MBIDA",
+    email: "jean.mbida@email.cm",
+    telephone: "+237 677 123 456",
+    adresse: "Douala, Akwa",
+    statut: "ACTIF",
+    creeLe: "2024-01-10T08:00:00Z",
+    modifieLe: "2024-01-10T08:00:00Z",
+    _count: {
+      dossiers: 3,
+      factures: 5,
+    },
+  },
+  {
+    id: "client-2",
+    prenom: "Marie",
+    nom: "NGONO",
+    email: "marie.ngono@email.cm",
+    telephone: "+237 699 987 654",
+    adresse: "Yaoundé, Bastos",
+    statut: "ACTIF",
+    creeLe: "2024-02-01T09:00:00Z",
+    modifieLe: "2024-02-01T09:00:00Z",
+    _count: {
+      dossiers: 1,
+      factures: 2,
+    },
+  },
+  {
+    id: "client-3",
+    prenom: "",
+    nom: "TEKAM",
+    nomEntreprise: "SARL TEKAM Industries",
+    email: "contact@tekam.cm",
+    telephone: "+237 233 456 789",
+    adresse: "Douala, Bonabéri Zone Industrielle",
+    statut: "ACTIF",
+    creeLe: "2024-03-15T10:30:00Z",
+    modifieLe: "2024-03-15T10:30:00Z",
+    _count: {
+      dossiers: 2,
+      factures: 8,
+    },
+  },
+];
+
+export const clientsService = new ClientsService();

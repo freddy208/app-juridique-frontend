@@ -1,8 +1,10 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../auth/context/AuthProvider";
-import DashboardLayout from "../dashboard/components/layout/dashboardLayout";
+import { useSidebar } from "@/hooks/useSidebar";
+import Sidebar from "./components/layout/Sidebar";
+import Topbar from "./components/layout/Topbar";
 
 export default function DashboardRootLayout({
   children,
@@ -11,6 +13,8 @@ export default function DashboardRootLayout({
 }) {
   const router = useRouter();
   const { user, isLoading } = useAuth();
+  const { isCollapsed, toggle } = useSidebar();
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   // ⚡ PROTECTION : Redirection si pas connecté
   useEffect(() => {
@@ -37,5 +41,28 @@ export default function DashboardRootLayout({
   }
 
   // Utilisateur connecté : afficher le layout avec sidebar + topbar
-  return <DashboardLayout>{children}</DashboardLayout>;
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      {/* Sidebar */}
+      <Sidebar
+        isCollapsed={isCollapsed}
+        onToggle={toggle}
+        isMobileOpen={isMobileOpen}
+        onMobileClose={() => setIsMobileOpen(false)}
+      />
+
+      {/* Main Content */}
+      <div
+        className={`transition-all duration-300 ${
+          isCollapsed ? "lg:ml-20" : "lg:ml-72"
+        }`}
+      >
+        {/* Topbar */}
+        <Topbar onToggleSidebar={() => setIsMobileOpen(true)} />
+
+        {/* Page Content */}
+        <main className="p-4 md:p-6 lg:p-8">{children}</main>
+      </div>
+    </div>
+  );
 }
