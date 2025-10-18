@@ -1,0 +1,205 @@
+/**
+ * Service API pour les Notifications
+ */
+
+import { BaseService } from "./base.service";
+import {
+  Notification,
+  CreateNotificationDto,
+  UpdateNotificationDto,
+  NotificationFilters,
+  PaginatedNotifications,
+} from "@/types/notification.types";
+import api from "@/lib/api";
+import { handleApiError } from "@/utils/error-handler";
+
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== "false";
+
+class NotificationsService extends BaseService {
+  constructor() {
+    super("/notifications");
+  }
+
+  /**
+   * Récupérer les notifications (paginated)
+   */
+  async getNotifications(
+    filters?: NotificationFilters,
+    pagination?: { page?: number; limit?: number }
+  ): Promise<PaginatedNotifications> {
+    if (USE_MOCK) {
+      console.log("[MOCK] getNotifications", filters, pagination);
+      await new Promise((r) => setTimeout(r, 300));
+      const items = MOCK_NOTIFICATIONS.filter((n) =>
+        filters?.utilisateurId ? n.utilisateurId === filters.utilisateurId : true
+      ).filter((n) => (filters?.lu === undefined ? true : n.lu === filters.lu));
+
+      const page = pagination?.page || 1;
+      const limit = pagination?.limit || 10;
+      const start = (page - 1) * limit;
+      const paged = items.slice(start, start + limit);
+
+      return {
+        data: paged,
+        pagination: {
+          page,
+          limit,
+          total: items.length,
+          totalPages: Math.max(1, Math.ceil(items.length / limit)),
+        },
+      };
+    }
+
+    // réel
+    try {
+      const response = await api.get(this.endpoint, {
+        params: { ...filters, ...pagination },
+      });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Récupérer une notification par id
+   */
+  async getNotificationById(id: string): Promise<Notification> {
+    if (USE_MOCK) {
+      console.log("[MOCK] getNotificationById", id);
+      await new Promise((r) => setTimeout(r, 200));
+      const found = MOCK_NOTIFICATIONS.find((n) => n.id === id);
+      if (!found) throw new Error("Notification non trouvée");
+      return found;
+    }
+
+    try {
+      const response = await api.get(`${this.endpoint}/${id}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Créer une notification
+   */
+  async createNotification(data: CreateNotificationDto): Promise<Notification> {
+    if (USE_MOCK) {
+      console.log("[MOCK] createNotification", data);
+      await new Promise((r) => setTimeout(r, 300));
+      const newNotification: Notification = {
+        id: `notif-${Date.now()}`,
+        utilisateurId: data.utilisateurId,
+        titre: data.titre,
+        message: data.message,
+        type: (data.type as Notification["type"]) || "INFO",
+        lien: data.lien ?? null,
+        lu: false,
+        creeLe: new Date().toISOString(),
+      };
+      MOCK_NOTIFICATIONS.unshift(newNotification);
+      return newNotification;
+    }
+
+    try {
+      const response = await api.post(this.endpoint, data);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Mettre à jour une notification (ex: marquer comme lue)
+   */
+  async updateNotification(id: string, data: UpdateNotificationDto): Promise<Notification> {
+    if (USE_MOCK) {
+      console.log("[MOCK] updateNotification", id, data);
+      await new Promise((r) => setTimeout(r, 200));
+      const idx = MOCK_NOTIFICATIONS.findIndex((n) => n.id === id);
+      if (idx === -1) throw new Error("Notification non trouvée");
+      MOCK_NOTIFICATIONS[idx] = { ...MOCK_NOTIFICATIONS[idx], ...data };
+      return MOCK_NOTIFICATIONS[idx];
+    }
+
+    try {
+      const response = await api.put(`${this.endpoint}/${id}`, data);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Marquer une notification comme lue
+   */
+  async markAsRead(id: string): Promise<Notification> {
+    return this.updateNotification(id, { lu: true });
+  }
+
+  /**
+   * Supprimer une notification
+   */
+  async deleteNotification(id: string): Promise<void> {
+    if (USE_MOCK) {
+      console.log("[MOCK] deleteNotification", id);
+      await new Promise((r) => setTimeout(r, 200));
+      const idx = MOCK_NOTIFICATIONS.findIndex((n) => n.id === id);
+      if (idx !== -1) MOCK_NOTIFICATIONS.splice(idx, 1);
+      return;
+    }
+
+    try {
+      await api.delete(`${this.endpoint}/${id}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Compter les notifications non lues pour un utilisateur
+   */
+  async getUnreadCount(utilisateurId: string): Promise<number> {
+    if (USE_MOCK) {
+      return MOCK_NOTIFICATIONS.filter((n) => n.utilisateurId === utilisateurId && !n.lu).length;
+    }
+
+    try {
+      const response = await api.get(`${this.endpoint}/unread-count`, {
+        params: { utilisateurId },
+      });
+      return response.data.count;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+}
+
+/**
+ * Données mockées
+ */
+const MOCK_NOTIFICATIONS: Notification[] = [
+  {
+    id: "notif-1",
+    utilisateurId: "user-1",
+    titre: "Nouvelle facture disponible",
+    message: "La facture #F-2025-001 est disponible pour consultation.",
+    type: "FACTURE",
+    lien: "/factures/1",
+    lu: false,
+    creeLe: "2025-01-10T10:00:00Z",
+  },
+  {
+    id: "notif-2",
+    utilisateurId: "user-1",
+    titre: "Audience programmée",
+    message: "Audience pour le dossier #D-2024-12 le 2025-02-15.",
+    type: "AUDIENCE",
+    lien: "/dossiers/D-2024-12",
+    lu: true,
+    creeLe: "2025-02-01T08:30:00Z",
+  },
+];
+
+export const notificationsService = new NotificationsService();

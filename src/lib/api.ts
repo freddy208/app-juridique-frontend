@@ -199,3 +199,21 @@ export const clearAuthToken = () => {
 };
 
 export default api;
+
+// Helper pour construire les query params (TYPÉ CORRECTEMENT)
+export const buildQueryString = (params: Record<string, string | number | boolean | undefined | null>): string => {
+  const filtered = Object.entries(params)
+    .filter(([_, value]) => value !== undefined && value !== null && value !== '')
+    .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`)
+    .join('&');
+  
+  return filtered ? `?${filtered}` : '';
+};
+
+// Type pour les réponses paginées
+export type PaginatedResponse<T> = {
+  data: T[];
+  total: number;
+  skip: number;
+  take: number;
+};

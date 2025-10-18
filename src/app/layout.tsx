@@ -3,6 +3,7 @@ import './globals.css';
 import { Inter, Playfair_Display } from "next/font/google";
 import { AuthProvider } from './auth/context/AuthProvider';
 import { PermissionsProvider } from './auth/context/PermissionsProvider';
+import { Providers } from "./providers";
 
 // Polices Google
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -22,11 +23,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-400 antialiased">
         {/* ☝️ J'ai enlevé les classes dark: */}
-        <AuthProvider>
-          <PermissionsProvider>
-            {children}
-          </PermissionsProvider>
-        </AuthProvider>
+        <Providers>
+          <AuthProvider>
+            <PermissionsProvider>
+              {children}
+            </PermissionsProvider>
+          </AuthProvider>
+        </Providers>
       </body>
     </html>
   );

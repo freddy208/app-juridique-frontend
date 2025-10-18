@@ -97,3 +97,4 @@ export function useIsAdmin(): boolean {
 export function useAllPermissions() {
   return usePermissionsContext();
 }
+

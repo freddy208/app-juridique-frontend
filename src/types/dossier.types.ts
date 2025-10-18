@@ -36,6 +36,8 @@ export interface Dossier {
   statut: StatutDossier;
   creeLe: string;
   modifieLe: string;
+  // ✅ Ajout de la propriété detailsSpecifiques
+  detailsSpecifiques?: Record<string, unknown>;
 
   client?: {
     id: string;

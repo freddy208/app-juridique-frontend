@@ -35,7 +35,7 @@ export default function UserMenu() {
 
   const handleLogout = async () => {
     await logout();
-    router.push("/login");
+    router.push("auth/login");
   };
 
   if (!user) return null;
