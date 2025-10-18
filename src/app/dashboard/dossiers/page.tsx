@@ -1,6 +1,6 @@
 /**
- * Page Liste des Dossiers - VERSION AMÉLIORÉE PREMIUM
- * Filtres avancés, recherche, pagination, vues multiples, actions en masse
+ * Page Liste des Dossiers - VERSION ULTRA PREMIUM
+ * Design professionnel avec modals customisées et tableau spacieux
  */
 "use client";
 
@@ -28,6 +28,8 @@ import {
   AlertCircle,
   MoreVertical,
   ChevronDown,
+  AlertTriangle,
+  X,
 } from "lucide-react";
 import {
   useDossiers,
@@ -38,7 +40,7 @@ import {
 } from "@/hooks";
 import type { Dossier, TypeDossier, StatutDossier } from "@/types/dossier.types";
 
-// Types pour les filtres
+// Types
 type ViewMode = "list" | "grid";
 type FilterState = {
   search: string;
@@ -50,6 +52,13 @@ type FilterState = {
   take: number;
 };
 
+type ModalType = "delete" | "archive" | "bulkDelete" | "bulkArchive" | null;
+type ModalData = {
+  id?: string;
+  titre?: string;
+  count?: number;
+};
+
 export default function DossiersPage() {
   const router = useRouter();
   const { canWrite, canDelete } = usePermissions("dossiers");
@@ -59,6 +68,8 @@ export default function DossiersPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedDossiers, setSelectedDossiers] = useState<string[]>([]);
   const [showActionsMenu, setShowActionsMenu] = useState<string | null>(null);
+  const [modalType, setModalType] = useState<ModalType>(null);
+  const [modalData, setModalData] = useState<ModalData>({});
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     skip: 0,
@@ -104,72 +115,80 @@ export default function DossiersPage() {
     setFilters((prev) => ({ ...prev, skip: newSkip }));
   };
 
-  const handleDelete = async (id: string, titre: string) => {
-    if (!confirm(`⚠️ Êtes-vous sûr de vouloir supprimer le dossier "${titre}" ?`))
-      return;
+  // Modal handlers
+  const openDeleteModal = (id: string, titre: string) => {
+    setModalType("delete");
+    setModalData({ id, titre });
+    setShowActionsMenu(null);
+  };
+
+  const openArchiveModal = (id: string, titre: string) => {
+    setModalType("archive");
+    setModalData({ id, titre });
+    setShowActionsMenu(null);
+  };
+
+  const openBulkDeleteModal = () => {
+    setModalType("bulkDelete");
+    setModalData({ count: selectedDossiers.length });
+  };
+
+  const openBulkArchiveModal = () => {
+    setModalType("bulkArchive");
+    setModalData({ count: selectedDossiers.length });
+  };
+
+  const closeModal = () => {
+    setModalType(null);
+    setModalData({});
+  };
+
+  const confirmDelete = async () => {
+    if (!modalData.id) return;
     try {
-      await deleteMutation.mutateAsync(id);
-      alert("✅ Dossier supprimé avec succès");
-      setShowActionsMenu(null);
+      await deleteMutation.mutateAsync(modalData.id);
+      closeModal();
     } catch (error) {
       console.error("Erreur suppression:", error);
-      alert("❌ Erreur lors de la suppression");
     }
   };
 
-  const handleArchive = async (id: string, titre: string) => {
-    if (!confirm(`Archiver le dossier "${titre}" ?`)) return;
+  const confirmArchive = async () => {
+    if (!modalData.id) return;
     try {
-      await updateStatutMutation.mutateAsync({ id, statut: "ARCHIVE" });
-      alert("✅ Dossier archivé avec succès");
-      setShowActionsMenu(null);
+      await updateStatutMutation.mutateAsync({
+        id: modalData.id,
+        statut: "ARCHIVE",
+      });
+      closeModal();
     } catch (error) {
       console.error("Erreur archivage:", error);
-      alert("❌ Erreur lors de l'archivage");
     }
   };
 
-  const handleBulkArchive = async () => {
-    if (
-      !confirm(
-        `Archiver ${selectedDossiers.length} dossier${
-          selectedDossiers.length > 1 ? "s" : ""
-        } ?`
-      )
-    )
-      return;
+  const confirmBulkDelete = async () => {
+    try {
+      await Promise.all(
+        selectedDossiers.map((id) => deleteMutation.mutateAsync(id))
+      );
+      setSelectedDossiers([]);
+      closeModal();
+    } catch (error) {
+      console.error("Erreur suppression en masse:", error);
+    }
+  };
+
+  const confirmBulkArchive = async () => {
     try {
       await Promise.all(
         selectedDossiers.map((id) =>
           updateStatutMutation.mutateAsync({ id, statut: "ARCHIVE" })
         )
       );
-      alert("✅ Dossiers archivés avec succès");
       setSelectedDossiers([]);
+      closeModal();
     } catch (error) {
       console.error("Erreur archivage en masse:", error);
-      alert("❌ Erreur lors de l'archivage");
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (
-      !confirm(
-        `⚠️ ATTENTION : Supprimer définitivement ${selectedDossiers.length} dossier${
-          selectedDossiers.length > 1 ? "s" : ""
-        } ?`
-      )
-    )
-      return;
-    try {
-      await Promise.all(
-        selectedDossiers.map((id) => deleteMutation.mutateAsync(id))
-      );
-      alert("✅ Dossiers supprimés avec succès");
-      setSelectedDossiers([]);
-    } catch (error) {
-      console.error("Erreur suppression en masse:", error);
-      alert("❌ Erreur lors de la suppression");
     }
   };
 
@@ -201,7 +220,7 @@ export default function DossiersPage() {
     });
   };
 
-  // Badges de statut
+  // Badges
   const getStatutBadge = (statut: StatutDossier) => {
     const badges = {
       OUVERT: { class: "bg-blue-100 text-blue-800 border-blue-200", icon: Clock },
@@ -228,9 +247,59 @@ export default function DossiersPage() {
   };
 
   const hasActiveFilters = filters.type || filters.statut || filters.search;
+  const totalCount = data?.total ?? data?.data?.length ?? 0;
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="min-h-screen bg-slate-50/50 space-y-6 pb-8">
+      {/* Modals */}
+      <ConfirmModal
+        isOpen={modalType === "delete"}
+        onClose={closeModal}
+        onConfirm={confirmDelete}
+        title="Supprimer le dossier"
+        message={`Êtes-vous sûr de vouloir supprimer définitivement le dossier "${modalData.titre}" ?`}
+        confirmText="Supprimer"
+        type="danger"
+        isLoading={deleteMutation.isPending}
+      />
+
+      <ConfirmModal
+        isOpen={modalType === "archive"}
+        onClose={closeModal}
+        onConfirm={confirmArchive}
+        title="Archiver le dossier"
+        message={`Voulez-vous archiver le dossier "${modalData.titre}" ?`}
+        confirmText="Archiver"
+        type="warning"
+        isLoading={updateStatutMutation.isPending}
+      />
+
+      <ConfirmModal
+        isOpen={modalType === "bulkDelete"}
+        onClose={closeModal}
+        onConfirm={confirmBulkDelete}
+        title="Suppression multiple"
+        message={`Êtes-vous sûr de vouloir supprimer ${modalData.count} dossier${
+          (modalData.count ?? 0) > 1 ? "s" : ""
+        } ?`}
+        confirmText="Supprimer tout"
+        type="danger"
+        isLoading={deleteMutation.isPending}
+      />
+
+      <ConfirmModal
+        isOpen={modalType === "bulkArchive"}
+        onClose={closeModal}
+        onConfirm={confirmBulkArchive}
+        title="Archivage multiple"
+        message={`Voulez-vous archiver ${modalData.count} dossier${
+          (modalData.count ?? 0) > 1 ? "s" : ""
+        } ?`}
+        confirmText="Archiver tout"
+        type="warning"
+        isLoading={updateStatutMutation.isPending}
+      />
+
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
@@ -246,18 +315,18 @@ export default function DossiersPage() {
           </motion.div>
           <div className="flex items-center gap-3 mt-2">
             <p className="text-slate-600 flex items-center gap-2">
-              <span className="px-3 py-1 bg-slate-100 rounded-lg font-bold text-slate-900">
-                {data?.total || 0}
+              <span className="px-3 py-1 bg-gradient-to-r from-amber-100 to-amber-50 rounded-lg font-bold text-amber-900 border border-amber-200">
+                {totalCount}
               </span>
               <span>
-                dossier{(data?.total || 0) !== 1 ? "s" : ""} au total
+                dossier{totalCount !== 1 ? "s" : ""} au total
               </span>
             </p>
             <button
               onClick={() => router.push("/dashboard/dossiers/archives")}
-              className="text-sm text-slate-600 hover:text-slate-900 font-semibold underline"
+              className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 rounded-lg text-sm font-semibold transition-all border border-slate-200"
             >
-              Voir les archives
+              📦 Archives
             </button>
           </div>
         </div>
@@ -280,7 +349,6 @@ export default function DossiersPage() {
       {/* Toolbar */}
       <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          {/* Search */}
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
@@ -292,9 +360,7 @@ export default function DossiersPage() {
             />
           </div>
 
-          {/* Actions */}
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Filters toggle */}
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all ${
@@ -312,7 +378,6 @@ export default function DossiersPage() {
               )}
             </button>
 
-            {/* View mode */}
             <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200">
               <button
                 onClick={() => setViewMode("list")}
@@ -338,7 +403,6 @@ export default function DossiersPage() {
               </button>
             </div>
 
-            {/* Export */}
             <button
               onClick={handleExport}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-semibold hover:bg-slate-200 transition-all"
@@ -347,7 +411,6 @@ export default function DossiersPage() {
               <span className="hidden sm:inline">Export</span>
             </button>
 
-            {/* Refresh */}
             <button
               onClick={() => refetch()}
               className="p-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all"
@@ -358,7 +421,6 @@ export default function DossiersPage() {
           </div>
         </div>
 
-        {/* Advanced Filters */}
         <AnimatePresence>
           {showFilters && (
             <motion.div
@@ -368,7 +430,6 @@ export default function DossiersPage() {
               className="overflow-hidden"
             >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-slate-200">
-                {/* Type filter */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Type de dossier
@@ -390,7 +451,6 @@ export default function DossiersPage() {
                   </select>
                 </div>
 
-                {/* Statut filter */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Statut
@@ -408,7 +468,6 @@ export default function DossiersPage() {
                   </select>
                 </div>
 
-                {/* Pagination size */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Résultats par page
@@ -428,7 +487,6 @@ export default function DossiersPage() {
                 </div>
               </div>
 
-              {/* Clear filters button */}
               {hasActiveFilters && (
                 <div className="mt-4 pt-4 border-t border-slate-200">
                   <button
@@ -445,7 +503,6 @@ export default function DossiersPage() {
         </AnimatePresence>
       </div>
 
-      {/* Selected actions */}
       <AnimatePresence>
         {selectedDossiers.length > 0 && (
           <motion.div
@@ -464,18 +521,18 @@ export default function DossiersPage() {
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={handleBulkArchive}
+                onClick={openBulkArchiveModal}
                 disabled={updateStatutMutation.isPending}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-100 text-blue-900 text-sm font-semibold hover:bg-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-100 text-blue-900 text-sm font-semibold hover:bg-blue-200 transition-all disabled:opacity-50"
               >
                 <Archive className="w-4 h-4" />
                 <span>Archiver</span>
               </button>
               {canDelete && (
                 <button
-                  onClick={handleBulkDelete}
+                  onClick={openBulkDeleteModal}
                   disabled={deleteMutation.isPending}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-100 text-red-900 text-sm font-semibold hover:bg-red-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-100 text-red-900 text-sm font-semibold hover:bg-red-200 transition-all disabled:opacity-50"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span>Supprimer</span>
@@ -484,7 +541,6 @@ export default function DossiersPage() {
               <button
                 onClick={() => setSelectedDossiers([])}
                 className="p-2 rounded-lg hover:bg-amber-200 transition-all"
-                title="Désélectionner tout"
               >
                 <XCircle className="w-4 h-4 text-amber-700" />
               </button>
@@ -493,13 +549,10 @@ export default function DossiersPage() {
         )}
       </AnimatePresence>
 
-      {/* Content */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-slate-200">
           <div className="w-16 h-16 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-slate-600 font-semibold">
-            Chargement des dossiers...
-          </p>
+          <p className="text-slate-600 font-semibold">Chargement des dossiers...</p>
         </div>
       ) : viewMode === "list" ? (
         <ListeView
@@ -509,8 +562,8 @@ export default function DossiersPage() {
           toggleSelectAll={toggleSelectAll}
           getStatutBadge={getStatutBadge}
           getTypeBadge={getTypeBadge}
-          handleDelete={handleDelete}
-          handleArchive={handleArchive}
+          openDeleteModal={openDeleteModal}
+          openArchiveModal={openArchiveModal}
           canDelete={canDelete}
           canWrite={canWrite}
           router={router}
@@ -526,10 +579,9 @@ export default function DossiersPage() {
         />
       )}
 
-      {/* Pagination */}
-      {data && data.total > filters.take && (
+      {data && totalCount > filters.take && (
         <Pagination
-          total={data.total}
+          total={totalCount}
           skip={filters.skip}
           take={filters.take}
           onPageChange={handlePageChange}
@@ -539,10 +591,118 @@ export default function DossiersPage() {
   );
 }
 
-// ============================================
-// LIST VIEW COMPONENT
-// ============================================
+// CONFIRM MODAL
+interface ConfirmModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmText: string;
+  type: "danger" | "warning";
+  isLoading?: boolean;
+}
 
+function ConfirmModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText,
+  type,
+  isLoading,
+}: ConfirmModalProps) {
+  const colors = {
+    danger: {
+      bg: "bg-red-50",
+      border: "border-red-200",
+      icon: "text-red-600",
+      button: "bg-red-600 hover:bg-red-700",
+    },
+    warning: {
+      bg: "bg-amber-50",
+      border: "border-amber-200",
+      icon: "text-amber-600",
+      button: "bg-amber-600 hover:bg-amber-700",
+    },
+  };
+
+  const style = colors[type];
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+          />
+
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+            >
+              <div className={`${style.bg} ${style.border} border-b p-6`}>
+                <div className="flex items-start gap-4">
+                  <div className={`${style.bg} p-3 rounded-xl`}>
+                    <AlertTriangle className={`w-6 h-6 ${style.icon}`} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-slate-900 mb-1">
+                      {title}
+                    </h3>
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                      {message}
+                    </p>
+                  </div>
+                  <button
+                    onClick={onClose}
+                    className="p-1 hover:bg-white/50 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 flex items-center gap-3">
+                <button
+                  onClick={onClose}
+                  disabled={isLoading}
+                  className="flex-1 px-4 py-3 rounded-xl border-2 border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 transition-all disabled:opacity-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={onConfirm}
+                  disabled={isLoading}
+                  className={`flex-1 px-4 py-3 rounded-xl text-white font-semibold transition-all disabled:opacity-50 ${style.button} shadow-lg`}
+                >
+                  {isLoading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Traitement...
+                    </span>
+                  ) : (
+                    confirmText
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// LIST VIEW
 interface StatutBadge {
   class: string;
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
@@ -555,15 +715,14 @@ interface ListeViewProps {
   toggleSelectAll: () => void;
   getStatutBadge: (statut: StatutDossier) => StatutBadge;
   getTypeBadge: (type: TypeDossier) => string;
-  handleDelete: (id: string, titre: string) => void;
-  handleArchive: (id: string, titre: string) => void;
+  openDeleteModal: (id: string, titre: string) => void;
+  openArchiveModal: (id: string, titre: string) => void;
   canDelete: boolean;
   canWrite: boolean;
   router: ReturnType<typeof useRouter>;
   showActionsMenu: string | null;
   setShowActionsMenu: (id: string | null) => void;
 }
-
 
 function ListeView({
   dossiers,
@@ -572,8 +731,8 @@ function ListeView({
   toggleSelectAll,
   getStatutBadge,
   getTypeBadge,
-  handleDelete,
-  handleArchive,
+  openDeleteModal,
+  openArchiveModal,
   canDelete,
   canWrite,
   router,
@@ -583,16 +742,24 @@ function ListeView({
   return (
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full table-fixed">
+          <colgroup>
+            <col className="w-12" />
+            <col className="w-32" />
+            <col className="w-64" />
+            <col className="w-48" />
+            <col className="w-52" />
+            <col className="w-40" />
+            <col className="w-48" />
+            <col className="w-40" />
+            <col className="w-32" />
+          </colgroup>
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr>
               <th className="px-6 py-4 text-left">
                 <input
                   type="checkbox"
-                  checked={
-                    selectedDossiers.length === dossiers.length &&
-                    dossiers.length > 0
-                  }
+                  checked={selectedDossiers.length === dossiers.length && dossiers.length > 0}
                   onChange={toggleSelectAll}
                   className="w-4 h-4 rounded border-slate-300 text-amber-700 focus:ring-amber-600 cursor-pointer"
                 />
@@ -616,7 +783,7 @@ function ListeView({
                 Responsable
               </th>
               <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Date création
+                Créé le
               </th>
               <th className="px-6 py-4 text-right text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Actions
@@ -628,12 +795,8 @@ function ListeView({
               <tr>
                 <td colSpan={9} className="px-6 py-16 text-center">
                   <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                  <p className="text-slate-500 font-semibold mb-2">
-                    Aucun dossier trouvé
-                  </p>
-                  <p className="text-sm text-slate-400">
-                    Essayez de modifier vos filtres de recherche
-                  </p>
+                  <p className="text-slate-500 font-semibold mb-2">Aucun dossier trouvé</p>
+                  <p className="text-sm text-slate-400">Essayez de modifier vos filtres de recherche</p>
                 </td>
               </tr>
             ) : (
@@ -650,10 +813,7 @@ function ListeView({
                     className="hover:bg-slate-50 transition-colors cursor-pointer group"
                     onClick={() => router.push(`/dashboard/dossiers/${dossier.id}`)}
                   >
-                    <td
-                      className="px-6 py-4"
-                      onClick={(e) => e.stopPropagation()}
-                    >
+                    <td className="px-6 py-5" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={selectedDossiers.includes(dossier.id)}
@@ -661,76 +821,71 @@ function ListeView({
                         className="w-4 h-4 rounded border-slate-300 text-amber-700 focus:ring-amber-600 cursor-pointer"
                       />
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-5">
                       <div className="flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm font-bold text-slate-900">
+                        <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                        <span className="text-sm font-bold text-slate-900 whitespace-nowrap">
                           #{dossier.numeroUnique}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm font-semibold text-slate-900 group-hover:text-amber-700 transition-colors">
+                    <td className="px-6 py-5">
+                      <span className="text-sm font-semibold text-slate-900 group-hover:text-amber-700 transition-colors line-clamp-2">
                         {dossier.titre}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-5">
                       <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm text-slate-700">
+                        <User className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                        <span className="text-sm text-slate-700 truncate">
                           {dossier.client?.prenom} {dossier.client?.nom}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-5">
                       <span
-                        className={`inline-block px-3 py-1 rounded-lg text-xs font-bold border ${getTypeBadge(
+                        className={`inline-block px-3 py-1.5 rounded-lg text-xs font-bold border whitespace-nowrap ${getTypeBadge(
                           dossier.type
                         )}`}
                       >
                         {dossier.type.replace(/_/g, " ")}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-5">
                       <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold border ${statutBadge.class}`}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border whitespace-nowrap ${statutBadge.class}`}
                       >
-                        <StatutIcon className="w-3.5 h-3.5" />
+                        <StatutIcon className="w-3.5 h-3.5 flex-shrink-0" />
                         {dossier.statut.replace(/_/g, " ")}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-5">
                       {dossier.responsable ? (
-                        <span className="text-sm text-slate-700">
+                        <span className="text-sm text-slate-700 truncate block">
                           {dossier.responsable.prenom} {dossier.responsable.nom}
                         </span>
                       ) : (
-                        <span className="text-sm text-slate-400 italic">
+                        <span className="text-sm text-slate-400 italic whitespace-nowrap">
                           Non assigné
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Calendar className="w-4 h-4" />
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2 text-sm text-slate-600 whitespace-nowrap">
+                        <Calendar className="w-4 h-4 flex-shrink-0" />
                         <span>
                           {new Date(dossier.creeLe).toLocaleDateString("fr-FR", {
-                            day: "numeric",
-                            month: "short",
+                            day: "2-digit",
+                            month: "2-digit",
                             year: "numeric",
                           })}
                         </span>
                       </div>
                     </td>
-                    <td
-                      className="px-6 py-4"
-                      onClick={(e) => e.stopPropagation()}
-                    >
+                    <td className="px-6 py-5" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() =>
-                            router.push(`/dashboard/dossiers/${dossier.id}`)
-                          }
+                          onClick={() => router.push(`/dashboard/dossiers/${dossier.id}`)}
                           className="p-2 rounded-lg hover:bg-blue-100 transition-colors group/btn"
                           title="Voir les détails"
                         >
@@ -740,9 +895,7 @@ function ListeView({
                         {canWrite && (
                           <button
                             onClick={() =>
-                              router.push(
-                                `/dashboard/dossiers/${dossier.id}/modifier`
-                              )
+                              router.push(`/dashboard/dossiers/${dossier.id}/modifier`)
                             }
                             className="p-2 rounded-lg hover:bg-amber-100 transition-colors group/btn"
                             title="Modifier"
@@ -751,14 +904,11 @@ function ListeView({
                           </button>
                         )}
 
-                        {/* Menu actions */}
                         <div className="relative">
                           <button
                             onClick={() =>
                               setShowActionsMenu(
-                                showActionsMenu === dossier.id
-                                  ? null
-                                  : dossier.id
+                                showActionsMenu === dossier.id ? null : dossier.id
                               )
                             }
                             className="p-2 rounded-lg hover:bg-slate-200 transition-colors"
@@ -777,7 +927,7 @@ function ListeView({
                               >
                                 <button
                                   onClick={() =>
-                                    handleArchive(dossier.id, dossier.titre)
+                                    openArchiveModal(dossier.id, dossier.titre)
                                   }
                                   className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm font-semibold text-blue-700 hover:bg-blue-50 transition-colors"
                                 >
@@ -788,7 +938,7 @@ function ListeView({
                                 {canDelete && (
                                   <button
                                     onClick={() =>
-                                      handleDelete(dossier.id, dossier.titre)
+                                      openDeleteModal(dossier.id, dossier.titre)
                                     }
                                     className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm font-semibold text-red-700 hover:bg-red-50 transition-colors border-t border-slate-200"
                                   >
@@ -813,11 +963,7 @@ function ListeView({
   );
 }
 
-// ============================================
-// GRID VIEW COMPONENT
-// ============================================
-
-
+// GRID VIEW
 interface GridViewProps {
   dossiers: Dossier[];
   getStatutBadge: (statut: StatutDossier) => StatutBadge;
@@ -825,23 +971,14 @@ interface GridViewProps {
   router: ReturnType<typeof useRouter>;
 }
 
-function GridView({
-  dossiers,
-  getStatutBadge,
-  getTypeBadge,
-  router,
-}: GridViewProps) {
+function GridView({ dossiers, getStatutBadge, getTypeBadge, router }: GridViewProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {dossiers.length === 0 ? (
         <div className="col-span-full bg-white rounded-2xl border border-slate-200 p-16 text-center">
           <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-          <p className="text-slate-500 font-semibold mb-2">
-            Aucun dossier trouvé
-          </p>
-          <p className="text-sm text-slate-400">
-            Essayez de modifier vos filtres de recherche
-          </p>
+          <p className="text-slate-500 font-semibold mb-2">Aucun dossier trouvé</p>
+          <p className="text-sm text-slate-400">Essayez de modifier vos filtres de recherche</p>
         </div>
       ) : (
         dossiers.map((dossier: Dossier, index: number) => {
@@ -858,7 +995,6 @@ function GridView({
               className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-xl hover:border-amber-300 transition-all cursor-pointer"
               onClick={() => router.push(`/dashboard/dossiers/${dossier.id}`)}
             >
-              {/* Header */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-slate-400" />
@@ -874,12 +1010,10 @@ function GridView({
                 </span>
               </div>
 
-              {/* Title */}
               <h3 className="text-lg font-bold text-slate-900 mb-3 line-clamp-2 min-h-[56px]">
                 {dossier.titre}
               </h3>
 
-              {/* Type */}
               <span
                 className={`inline-block px-3 py-1 rounded-lg text-xs font-bold border mb-4 ${getTypeBadge(
                   dossier.type
@@ -888,9 +1022,8 @@ function GridView({
                 {dossier.type.replace(/_/g, " ")}
               </span>
 
-              {/* Client */}
               <div className="flex items-center gap-3 mb-3 pb-3 border-b border-slate-100">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-white text-sm font-bold shadow-lg">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-white text-sm font-bold shadow-lg flex-shrink-0">
                   {dossier.client?.prenom?.[0]}
                   {dossier.client?.nom?.[0]}
                 </div>
@@ -902,11 +1035,10 @@ function GridView({
                 </div>
               </div>
 
-              {/* Responsable */}
               {dossier.responsable ? (
                 <div className="flex items-center gap-2 mb-4">
-                  <User className="w-4 h-4 text-slate-400" />
-                  <span className="text-xs text-slate-600">
+                  <User className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  <span className="text-xs text-slate-600 truncate">
                     <span className="font-semibold">Responsable:</span>{" "}
                     {dossier.responsable.prenom} {dossier.responsable.nom}
                   </span>
@@ -914,20 +1046,17 @@ function GridView({
               ) : (
                 <div className="flex items-center gap-2 mb-4">
                   <AlertCircle className="w-4 h-4 text-orange-400" />
-                  <span className="text-xs text-orange-600 font-semibold">
-                    Non assigné
-                  </span>
+                  <span className="text-xs text-orange-600 font-semibold">Non assigné</span>
                 </div>
               )}
 
-              {/* Footer */}
               <div className="flex items-center justify-between pt-4 border-t border-slate-200">
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <Calendar className="w-4 h-4" />
                   <span>
                     {new Date(dossier.creeLe).toLocaleDateString("fr-FR", {
-                      day: "numeric",
-                      month: "short",
+                      day: "2-digit",
+                      month: "2-digit",
                       year: "numeric",
                     })}
                   </span>
@@ -945,10 +1074,7 @@ function GridView({
   );
 }
 
-// ============================================
-// PAGINATION COMPONENT
-// ============================================
-
+// PAGINATION
 interface PaginationProps {
   total: number;
   skip: number;
@@ -965,26 +1091,22 @@ function Pagination({ total, skip, take, onPageChange }: PaginationProps) {
     const maxVisible = 5;
 
     if (totalPages <= maxVisible) {
-          for (let i = 1; i <= totalPages; i++) {
-            pages.push(i);
-          }
-        }
-    else if (currentPage <= 3) {
-            for (let i = 1; i <= 4; i++) pages.push(i);
-            pages.push("...");
-            pages.push(totalPages);
-          }
-    else if (currentPage >= totalPages - 2) {
-            pages.push(1);
-            pages.push("...");
-            for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
-          } else {
-            pages.push(1);
-            pages.push("...");
-            for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
-            pages.push("...");
-            pages.push(totalPages);
-          }
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else if (currentPage <= 3) {
+      for (let i = 1; i <= 4; i++) pages.push(i);
+      pages.push("...");
+      pages.push(totalPages);
+    } else if (currentPage >= totalPages - 2) {
+      pages.push(1);
+      pages.push("...");
+      for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      pages.push("...");
+      for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+      pages.push("...");
+      pages.push(totalPages);
+    }
 
     return pages;
   };
@@ -992,7 +1114,6 @@ function Pagination({ total, skip, take, onPageChange }: PaginationProps) {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-        {/* Info */}
         <div className="flex items-center gap-2 text-sm text-slate-600">
           <span className="font-semibold">
             Affichage {skip + 1} à {Math.min(skip + take, total)}
@@ -1004,9 +1125,7 @@ function Pagination({ total, skip, take, onPageChange }: PaginationProps) {
           <span>résultats</span>
         </div>
 
-        {/* Navigation */}
         <div className="flex items-center gap-2">
-          {/* Bouton Précédent */}
           <button
             onClick={() => onPageChange(Math.max(0, skip - take))}
             disabled={currentPage === 1}
@@ -1016,14 +1135,10 @@ function Pagination({ total, skip, take, onPageChange }: PaginationProps) {
             <span className="hidden sm:inline">Précédent</span>
           </button>
 
-          {/* Numéros de page */}
           <div className="hidden md:flex items-center gap-1">
             {getPageNumbers().map((page, index) =>
               page === "..." ? (
-                <span
-                  key={`ellipsis-${index}`}
-                  className="px-3 py-2 text-slate-400"
-                >
+                <span key={`ellipsis-${index}`} className="px-3 py-2 text-slate-400">
                   ...
                 </span>
               ) : (
@@ -1042,12 +1157,10 @@ function Pagination({ total, skip, take, onPageChange }: PaginationProps) {
             )}
           </div>
 
-          {/* Info page mobile */}
           <div className="md:hidden px-4 py-2 text-sm font-semibold text-slate-900">
             Page {currentPage} / {totalPages}
           </div>
 
-          {/* Bouton Suivant */}
           <button
             onClick={() => onPageChange(skip + take)}
             disabled={currentPage === totalPages}
