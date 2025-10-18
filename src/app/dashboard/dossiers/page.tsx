@@ -187,7 +187,7 @@ export default function DossiersPage() {
     if (selectedDossiers.length === data?.data.length) {
       setSelectedDossiers([]);
     } else {
-      setSelectedDossiers(data?.data.map((d) => d.id) || []);
+      setSelectedDossiers(data?.data.map((d: Dossier) => d.id) || []);
     }
   };
 
