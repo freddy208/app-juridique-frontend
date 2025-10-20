@@ -227,7 +227,7 @@ export function useDeleteDossier() {
 }
 
 /**
- * Ajouter une note à un dossier
+ * Ajouter une note à un dossier quelconque 
  */
 export function useAddDossierNote() {
   const queryClient = useQueryClient();
