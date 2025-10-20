@@ -24,10 +24,13 @@ import {
   Image as ImageIcon,
   File,
 } from "lucide-react";
-import { useCreateDossier, useClients } from "@/hooks";
+import { useCreateDossier, useClients, useUploadDossierDocuments } from "@/hooks";
 import type { TypeDossier } from "@/types/dossier.types";
 import type { Client } from "@/types/client.types";
 import Image from "next/image";
+import { useUsers } from "@/hooks/useUsers";
+import { useAuth } from "@/app/auth/context/AuthProvider";
+import api from "@/lib/api";
 
 // Types pour les détails spécifiques
 interface SinistreCorporelDetails {
@@ -68,12 +71,35 @@ interface ContentieuxDetails {
   avocatAdverse?: string;
   objetLitige?: string;
 }
+interface SportDetails {
+  typeEvenement?: string;
+  dateEvenement?: string;
+  lieu?: string;
+  equipeAdverse?: string;
+  resultat?: string;
+}
+// Formulaire Autre
+interface AutreDetails {
+  description?: string;
+}
+// Formulaire Contrat
+interface ContratDetails {
+  typeContrat?: string;
+  dateSignature?: string;
+  parties?: string;
+  duree?: string;
+  montant?: string;
+  objet?: string;
+}
 
 type DetailsSpecifiques = 
   | SinistreCorporelDetails 
   | SinistreMaterielDetails 
   | ImmobilierDetails 
   | ContentieuxDetails 
+  | SportDetails
+  | AutreDetails
+  | ContratDetails
   | Record<string, unknown>;
 
 // Types
@@ -151,6 +177,7 @@ function SuccessModal({ onClose }: { onClose: () => void }) {
 export default function NouveauDossierPage() {
   const router = useRouter();
   const createMutation = useCreateDossier();
+  const uploadDocuments = useUploadDossierDocuments();
   const { data: clients } = useClients({ take: 100 });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -230,13 +257,31 @@ export default function NouveauDossierPage() {
     if (!validateCurrentStep()) return;
 
     try {
-      await createMutation.mutateAsync({
+        const dossierCree = await createMutation.mutateAsync({
         titre: formData.titre,
         type: formData.type as TypeDossier,
         clientId: formData.clientId,
         responsableId: formData.responsableId || undefined,
         description: formData.description || undefined,
+        detailsSpecifiques: formData.detailsSpecifiques as Record<string, unknown>,
       });
+      // ✅ Création des tâches liées si présentes
+        if (formData.taches.length > 0) {
+          await Promise.all(
+            formData.taches.map((tache) =>
+              api.post("/taches", {
+                ...tache,
+                dossierId: dossierCree.id, // liaison dossier
+              })
+            )
+          );
+        }
+      if (formData.documents?.length) {
+        await uploadDocuments.mutateAsync({
+          dossierId: dossierCree.id,
+          files: formData.documents,
+        });
+      }
 
       localStorage.removeItem("dossier_draft");
       router.push("/dashboard/dossiers");
@@ -531,11 +576,14 @@ function Etape1InformationsGenerales({
   clients: Client[];
   errors: Record<string, string>;
 }) {
-  // TODO: Récupérer la liste des utilisateurs (personnel) depuis votre API
-  const personnel = [
-    { id: "USER_ID_FROM_AUTH", nom: "Moi (par défaut)" },
-    // Ajouter d'autres utilisateurs ici
-  ];
+  const { data: users, isLoading } = useUsers();
+  const { user: currentUser } = useAuth(); // contient l'id et nom du user connecté
+
+  useEffect(() => {
+    if (!formData.responsableId && currentUser?.id) {
+      setFormData(prev => ({ ...prev, responsableId: currentUser.id }));
+    }
+  }, [currentUser, formData.responsableId, setFormData]);
 
   return (
     <motion.div
@@ -647,11 +695,15 @@ function Etape1InformationsGenerales({
             }
             className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all bg-amber-50/30"
           >
-            {personnel.map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.nom}
-              </option>
-            ))}
+            {isLoading ? (
+              <option>Chargement...</option>
+            ) : (
+              users?.map(user => (
+                <option key={user.id} value={user.id}>
+                  {user.prenom} {user.nom} {user.id === currentUser?.id ? "(Vous)" : ""}
+                </option>
+              ))
+            )}
           </select>
           <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
             <Info className="w-3 h-3" />
@@ -753,9 +805,21 @@ function Etape2DetailsSpecifiques({
           onChange={updateDetails} 
         />
       )}
+      {formData.type === "SPORT" && (
+        <FormSport data={formData.detailsSpecifiques as SportDetails} onChange={updateDetails} />
+      )}
+
+      {formData.type === "CONTRAT" && (
+        <FormContrat data={formData.detailsSpecifiques as ContratDetails} onChange={updateDetails} />
+      )}
+
+      {formData.type === "AUTRE" && (
+        <FormAutre data={formData.detailsSpecifiques as AutreDetails} onChange={updateDetails} />
+      )}
+
 
       {/* Autres types - Message générique */}
-      {!["SINISTRE_CORPOREL", "SINISTRE_MATERIEL", "IMMOBILIER", "CONTENTIEUX"].includes(
+      {!["SINISTRE_CORPOREL", "SINISTRE_MATERIEL", "IMMOBILIER", "CONTENTIEUX", "SPORT", "CONTRAT", "AUTRE"].includes(
         formData.type
       ) && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
@@ -773,6 +837,211 @@ function Etape2DetailsSpecifiques({
 }
 
 // ==================== FORMULAIRES PAR TYPE ====================
+//Formulaire Sport 
+function FormSport({ data, onChange }: FormDetailsProps<SportDetails>) {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-xl bg-yellow-100 flex items-center justify-center">
+          <span className="text-2xl">⚽</span>
+        </div>
+        <h3 className="text-lg font-bold text-slate-900">
+          Détails du dossier Sport
+        </h3>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">
+            Type d&apos;événement
+          </label>
+          <input
+            type="text"
+            value={data.typeEvenement || ""}
+            onChange={(e) => onChange("typeEvenement", e.target.value)}
+            placeholder="Ex: Match de football"
+            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">
+            Date de l&apos;événement
+          </label>
+          <input
+            type="date"
+            value={data.dateEvenement || ""}
+            onChange={(e) => onChange("dateEvenement", e.target.value)}
+            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">
+            Lieu
+          </label>
+          <input
+            type="text"
+            value={data.lieu || ""}
+            onChange={(e) => onChange("lieu", e.target.value)}
+            placeholder="Ex: Stade Omnisports de Yaoundé"
+            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">
+            Équipe adverse / Participants
+          </label>
+          <input
+            type="text"
+            value={data.equipeAdverse || ""}
+            onChange={(e) => onChange("equipeAdverse", e.target.value)}
+            placeholder="Ex: Lions Indomptables"
+            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+          />
+        </div>
+
+        <div className="lg:col-span-2">
+          <label className="block text-sm font-semibold text-slate-700 mb-2">
+            Résultat / Commentaires
+          </label>
+          <textarea
+            value={data.resultat || ""}
+            onChange={(e) => onChange("resultat", e.target.value)}
+            rows={3}
+            placeholder="Résultat du match ou commentaire"
+            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all resize-none"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+//Formulaire Contrat
+function FormContrat({ data, onChange }: FormDetailsProps<ContratDetails>) {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+          <span className="text-2xl">📄</span>
+        </div>
+        <h3 className="text-lg font-bold text-slate-900">
+          Détails du contrat
+        </h3>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">
+            Type de contrat
+          </label>
+          <input
+            type="text"
+            value={data.typeContrat || ""}
+            onChange={(e) => onChange("typeContrat", e.target.value)}
+            placeholder="Ex: Contrat de prestation"
+            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">
+            Date de signature
+          </label>
+          <input
+            type="date"
+            value={data.dateSignature || ""}
+            onChange={(e) => onChange("dateSignature", e.target.value)}
+            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">
+            Parties impliquées
+          </label>
+          <input
+            type="text"
+            value={data.parties || ""}
+            onChange={(e) => onChange("parties", e.target.value)}
+            placeholder="Ex: Société A - Société B"
+            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">
+            Durée / Validité
+          </label>
+          <input
+            type="text"
+            value={data.duree || ""}
+            onChange={(e) => onChange("duree", e.target.value)}
+            placeholder="Ex: 12 mois"
+            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">
+            Montant (FCFA)
+          </label>
+          <input
+            type="number"
+            value={data.montant || ""}
+            onChange={(e) => onChange("montant", e.target.value)}
+            placeholder="Ex: 1 500 000"
+            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+          />
+        </div>
+
+        <div className="lg:col-span-2">
+          <label className="block text-sm font-semibold text-slate-700 mb-2">
+            Objet du contrat
+          </label>
+          <textarea
+            value={data.objet || ""}
+            onChange={(e) => onChange("objet", e.target.value)}
+            rows={3}
+            placeholder="Résumé / objet du contrat"
+            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all resize-none"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+//Formulaire Autre
+function FormAutre({ data, onChange }: FormDetailsProps<AutreDetails>) {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
+          <span className="text-2xl">📋</span>
+        </div>
+        <h3 className="text-lg font-bold text-slate-900">
+          Détails du dossier
+        </h3>
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-slate-700 mb-2">
+          Description
+        </label>
+        <textarea
+          value={data.description || ""}
+          onChange={(e) => onChange("description", e.target.value)}
+          rows={4}
+          placeholder="Ajouter des détails spécifiques si nécessaire..."
+          className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all resize-none"
+        />
+      </div>
+    </div>
+  );
+}
 
 // Formulaire Sinistre Corporel
 function FormSinistreCorporel({ data, onChange }: FormDetailsProps<SinistreCorporelDetails>) {
@@ -1411,6 +1680,15 @@ function Etape4Taches({
     HAUTE: { color: "bg-orange-100 text-orange-700 border-orange-300", icon: "🟠", label: "Haute" },
     URGENTE: { color: "bg-red-100 text-red-700 border-red-300", icon: "🔴", label: "Urgente" },
   };
+  useUsers();
+  const { user: currentUser } = useAuth();
+  useEffect(() => {
+  if (!newTache.assigneeId && currentUser?.id) {
+    setNewTache(prev => ({ ...prev, assigneeId: currentUser.id }));
+  }
+}, [currentUser, newTache.assigneeId]);
+
+
 
   return (
     <motion.div
@@ -1447,7 +1725,9 @@ function Etape4Taches({
               }}
             />
           </div>
-
+          {/** assigner une tache  */}
+          
+           
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-2">
               Date limite

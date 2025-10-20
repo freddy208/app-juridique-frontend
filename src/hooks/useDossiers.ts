@@ -25,6 +25,7 @@ type CreateDossierDto = {
   clientId: string;
   responsableId?: string;
   description?: string;
+  detailsSpecifiques?: Record<string, unknown>; // ✅ ajouté
 };
 
 type UpdateDossierDto = Partial<CreateDossierDto>;

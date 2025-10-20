@@ -81,6 +81,7 @@ class TachesService extends BaseService {
         creeParId: "user-1",
         dateLimite: data.dateLimite,
         statut: "A_FAIRE",
+        priorite: data.priorite || "MOYENNE", // ✅ ajouté
         creeLe: new Date().toISOString(),
         modifieLe: new Date().toISOString(),
       };
@@ -104,15 +105,17 @@ class TachesService extends BaseService {
         throw new Error("Tâche non trouvée");
       }
 
-      const updated: Tache = {
-        ...tache,
-        ...(data.titre && { titre: data.titre }),
-        ...(data.description !== undefined && { description: data.description }),
-        ...(data.assigneeId !== undefined && { assigneeId: data.assigneeId }),
-        ...(data.dateLimite !== undefined && { dateLimite: data.dateLimite }),
-        ...(data.statut && { statut: data.statut }),
-        modifieLe: new Date().toISOString(),
-      };
+    const updated: Tache = {
+      ...tache,
+      ...(data.titre && { titre: data.titre }),
+      ...(data.description !== undefined && { description: data.description }),
+      ...(data.assigneeId !== undefined && { assigneeId: data.assigneeId }),
+      ...(data.dateLimite !== undefined && { dateLimite: data.dateLimite }),
+      ...(data.statut && { statut: data.statut }),
+      ...(data.priorite && { priorite: data.priorite }), // ✅ ajouté
+      modifieLe: new Date().toISOString(),
+    };
+
 
       return updated;
     }
@@ -240,6 +243,7 @@ const MOCK_TACHES: Tache[] = [
       numeroUnique: "DOS-2024-001",
       titre: "Sinistre corporel - Accident route",
     },
+    priorite: "BASSE"
   },
   {
     id: "tache-2",
@@ -252,6 +256,7 @@ const MOCK_TACHES: Tache[] = [
     statut: "A_FAIRE",
     creeLe: "2024-02-01T10:00:00Z",
     modifieLe: "2024-02-01T10:00:00Z",
+    priorite: "BASSE"
   },
   {
     id: "tache-3",
@@ -263,6 +268,7 @@ const MOCK_TACHES: Tache[] = [
     statut: "A_FAIRE",
     creeLe: "2024-01-20T11:00:00Z",
     modifieLe: "2024-01-20T11:00:00Z",
+    priorite: "BASSE"
   },
 ];
 

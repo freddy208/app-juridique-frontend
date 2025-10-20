@@ -3,6 +3,7 @@
  */
 
 export type StatutTache = "A_FAIRE" | "EN_COURS" | "TERMINEE" | "SUPPRIME";
+export type TachePriorite = "BASSE" | "MOYENNE" | "HAUTE" | "URGENTE";
 
 export interface Tache {
   id: string;
@@ -13,9 +14,10 @@ export interface Tache {
   creeParId: string;
   dateLimite?: string;
   statut: StatutTache;
+  priorite: TachePriorite; // ✅ ajouté
   creeLe: string;
   modifieLe: string;
-  
+
   // Relations
   dossier?: {
     id: string;
@@ -42,10 +44,12 @@ export interface CreateTacheDto {
   description?: string;
   assigneeId?: string;
   dateLimite?: string;
+  priorite?: TachePriorite; // ✅ ajouté
 }
 
 export interface UpdateTacheDto extends Partial<CreateTacheDto> {
   statut?: StatutTache;
+  priorite?: TachePriorite; // ✅ ajouté aussi pour les updates
 }
 
 export interface TacheFilters {
@@ -53,6 +57,7 @@ export interface TacheFilters {
   assigneeId?: string;
   creeParId?: string;
   statut?: StatutTache;
+  priorite?: TachePriorite; // ✅ pour filtrer par priorité si besoin
   dateDebut?: string;
   dateFin?: string;
   enRetard?: boolean;

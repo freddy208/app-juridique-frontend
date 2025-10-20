@@ -242,3 +242,18 @@ export function useDeleteDocumentComment() {
     },
   });
 }
+
+// hook pour upload de fichiers dans cloudinary
+export function useUploadDossierDocuments() {
+  return useMutation({
+    mutationFn: async ({ dossierId, files }: { dossierId: string; files: File[] }) => {
+      const formData = new FormData();
+      files.forEach((f) => formData.append("files", f));
+
+      const response = await api.post(`/dossiers/${dossierId}/documents`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return response.data;
+    },
+  });
+}

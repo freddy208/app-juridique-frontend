@@ -8,7 +8,7 @@ import { handleApiError } from "@/utils/error-handler";
 
 const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== "false";
 
-interface User {
+export interface User {
   id: string;
   prenom: string;
   nom: string;
@@ -19,7 +19,7 @@ interface User {
   modifieLe: string;
 }
 
-interface CreateUserDto {
+export interface CreateUserDto {
   prenom: string;
   nom: string;
   email: string;
@@ -27,7 +27,7 @@ interface CreateUserDto {
   motDePasse: string;
 }
 
-interface UpdateUserDto {
+export interface UpdateUserDto {
   prenom?: string;
   nom?: string;
   email?: string;

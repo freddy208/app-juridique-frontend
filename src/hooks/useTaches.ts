@@ -25,9 +25,12 @@ type CreateTacheDto = {
   dossierId?: string;
   assigneeId?: string;
   dateLimite?: string;
+  priorite?: "BASSE" | "MOYENNE" | "HAUTE" | "URGENTE"; // ✅ ajouté
 };
 
-type UpdateTacheDto = Partial<CreateTacheDto>;
+type UpdateTacheDto = Partial<CreateTacheDto> & {
+  statut?: StatutTache;
+};
 
 // ============================================
 // QUERIES (GET)
