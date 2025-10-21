@@ -4,6 +4,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import { AuthProvider } from './auth/context/AuthProvider';
 import { PermissionsProvider } from './auth/context/PermissionsProvider';
 import { Providers } from "./providers";
+import { ThemeProvider } from "@/components/theme-provider";
 
 // Polices Google
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -21,15 +22,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${inter.variable} ${playfair.variable}`}
       suppressHydrationWarning
     >
-      <body className="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-400 antialiased">
-        {/* ☝️ J'ai enlevé les classes dark: */}
-        <Providers>
-          <AuthProvider>
-            <PermissionsProvider>
-              {children}
-            </PermissionsProvider>
-          </AuthProvider>
-        </Providers>
+      <body className="antialiased">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"  // Définit le thème sombre par défaut
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Providers>
+            <AuthProvider>
+              <PermissionsProvider>
+                {children}
+              </PermissionsProvider>
+            </AuthProvider>
+          </Providers>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -33,13 +33,14 @@ export default function LandingPage() {
     return null;
   }
 
-  return (
-    <main className="bg-white dark:bg-gray-900 overflow-hidden">
-      <HeroSection />
-      <AboutSection />
-      <ModulesSection />
-      <CTASection />
-      <Footer />
-    </main>
-  );
+  // Dans votre composant LandingPage
+return (
+  <main className="bg-background dark:bg-gray-900 overflow-hidden">
+    <HeroSection />
+    <AboutSection />
+    <ModulesSection />
+    <CTASection />
+    <Footer />
+  </main>
+);
 }
