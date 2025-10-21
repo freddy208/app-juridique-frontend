@@ -1,6 +1,6 @@
 /**
  * Page Détails Dossier - VERSION CORRIGÉE
- * 8 Onglets Premium avec fonctionnalités complètes
+ * 8 Onglets Premium avec fonctionnalités complètes de l'app
  */
 "use client";
 

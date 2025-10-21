@@ -1,0 +1,11 @@
+export { default as ClientsTable } from "./ClientsTable";
+export { default as ClientsCards } from "./ClientsCards";
+export { default as ClientOverview } from "./ClientOverview";
+export { default as ClientDossiers } from "./ClientDossiers";
+export { default as ClientDocuments } from "./ClientDocuments";
+export { default as ClientFacturation } from "./ClientFacturation";
+export { default as ClientCorrespondances } from "./ClientCorrespondances";
+export { default as ClientNotes } from "./ClientNotes";
+export { default as ClientAudit } from "./ClientAudit";
+export { default as ClientStatusBadge } from "./ClientStatusBadge";
+export { default as ClientVIPBadge } from "./ClientVIPBadge";

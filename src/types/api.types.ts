@@ -36,6 +36,8 @@ export interface PaginatedResponse<T> {
 export interface PaginationParams {
   page?: number;
   limit?: number;
+  skip?: number;
+  take?: number;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
 }

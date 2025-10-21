@@ -9,37 +9,20 @@ import {
   UpdateClientDto,
   ClientFilters,
   StatutClient,
+  ClientDossier,
+  ClientFacture,
+  ClientNote,
+  ClientCorrespondance,
+  ClientDocument,
+  ClientAudit,
+  BackendPaginatedResponse,
+  ClientExportData,
 } from "@/types/client.types";
-import { PaginatedResponse, PaginationParams } from "@/types/api.types";
+import { PaginationParams } from "@/types/api.types";
 import api from "@/lib/api";
 import { handleApiError } from "@/utils/error-handler";
 
 const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== "false";
-
-// Types pour les relations
-interface ClientDossier {
-  id: string;
-  numeroUnique: string;
-  titre: string;
-  type: string;
-  statut: string;
-}
-
-interface ClientFacture {
-  id: string;
-  montant: number;
-  statut: string;
-  dateEcheance: string;
-  payee: boolean;
-}
-
-interface ClientNote {
-  id: string;
-  contenu: string;
-  utilisateurId: string;
-  creeLe: string;
-  modifieLe: string;
-}
 
 class ClientsService extends BaseService {
   constructor() {
@@ -48,27 +31,35 @@ class ClientsService extends BaseService {
 
   /**
    * Récupérer tous les clients avec filtres
+   * ✅ CORRIGÉ : Gère la structure de réponse backend
    */
   async getClients(
     filters?: ClientFilters,
     pagination?: PaginationParams
-  ): Promise<PaginatedResponse<Client>> {
+  ): Promise<BackendPaginatedResponse<Client>> {
     if (USE_MOCK) {
       console.log("[MOCK] getClients", filters, pagination);
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       return {
+        totalCount: MOCK_CLIENTS.length,
+        skip: pagination?.skip || 0,
+        take: pagination?.take || 10,
         data: MOCK_CLIENTS,
-        pagination: {
-          page: pagination?.page || 1,
-          limit: pagination?.limit || 10,
-          total: MOCK_CLIENTS.length,
-          totalPages: Math.ceil(MOCK_CLIENTS.length / (pagination?.limit || 10)),
-        },
       };
     }
 
-    return this.getAllPaginated<Client>({ ...filters, ...pagination });
+    try {
+      const params = { 
+        ...filters, 
+        skip: pagination?.skip || 0,
+        take: pagination?.take || 10,
+      };
+      const response = await api.get(this.endpoint, { params });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
   }
 
   /**
@@ -161,6 +152,28 @@ class ClientsService extends BaseService {
   }
 
   /**
+   * ✅ NOUVEAU : Suppression en masse
+   */
+  async bulkDeleteClients(ids: string[]): Promise<{ success: boolean; message: string; deletedCount: number }> {
+    if (USE_MOCK) {
+      console.log("[MOCK] bulkDeleteClients", ids);
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      return {
+        success: true,
+        message: `${ids.length} client(s) supprimé(s) avec succès`,
+        deletedCount: ids.length,
+      };
+    }
+
+    try {
+      const response = await api.delete(this.endpoint, { data: { ids } });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
    * Changer le statut d'un client
    */
   async changeStatut(id: string, statut: StatutClient): Promise<Client> {
@@ -178,7 +191,7 @@ class ClientsService extends BaseService {
 
     try {
       const response = await api.patch(`${this.endpoint}/${id}/status`, { statut });
-      return response.data.data;
+      return response.data;
     } catch (error) {
       throw handleApiError(error);
     }
@@ -186,17 +199,58 @@ class ClientsService extends BaseService {
 
   /**
    * Récupérer les dossiers d'un client
+   * ✅ CORRIGÉ : Gère la pagination backend
    */
-  async getClientDossiers(id: string): Promise<ClientDossier[]> {
+  async getClientDossiers(
+    id: string, 
+    skip = 0, 
+    take = 10
+  ): Promise<BackendPaginatedResponse<ClientDossier>> {
     if (USE_MOCK) {
       console.log("[MOCK] getClientDossiers", id);
       await new Promise((resolve) => setTimeout(resolve, 300));
-      return [];
+      return {
+        totalCount: 0,
+        skip,
+        take,
+        data: [],
+      };
     }
 
     try {
-      const response = await api.get(`${this.endpoint}/${id}/dossiers`);
-      return response.data.data;
+      const response = await api.get(`${this.endpoint}/${id}/dossiers`, {
+        params: { skip, take },
+      });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * ✅ NOUVEAU : Récupérer les documents d'un client
+   */
+  async getClientDocuments(
+    id: string,
+    skip = 0,
+    take = 10
+  ): Promise<BackendPaginatedResponse<ClientDocument>> {
+    if (USE_MOCK) {
+      console.log("[MOCK] getClientDocuments", id);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return {
+        totalCount: 0,
+        skip,
+        take,
+        data: [],
+      };
+    }
+
+    try {
+      const response = await api.get(`${this.endpoint}/${id}/documents`, {
+        params: { skip, take },
+      });
+      return response.data;
     } catch (error) {
       throw handleApiError(error);
     }
@@ -204,17 +258,29 @@ class ClientsService extends BaseService {
 
   /**
    * Récupérer les factures d'un client
+   * ✅ CORRIGÉ : Gère la pagination backend
    */
-  async getClientFactures(id: string): Promise<ClientFacture[]> {
+  async getClientFactures(
+    id: string,
+    skip = 0,
+    take = 10
+  ): Promise<BackendPaginatedResponse<ClientFacture>> {
     if (USE_MOCK) {
       console.log("[MOCK] getClientFactures", id);
       await new Promise((resolve) => setTimeout(resolve, 300));
-      return [];
+      return {
+        totalCount: 0,
+        skip,
+        take,
+        data: [],
+      };
     }
 
     try {
-      const response = await api.get(`${this.endpoint}/${id}/factures`);
-      return response.data.data;
+      const response = await api.get(`${this.endpoint}/${id}/factures`, {
+        params: { skip, take },
+      });
+      return response.data;
     } catch (error) {
       throw handleApiError(error);
     }
@@ -222,17 +288,29 @@ class ClientsService extends BaseService {
 
   /**
    * Récupérer les notes d'un client
+   * ✅ CORRIGÉ : Gère la pagination backend
    */
-  async getClientNotes(id: string): Promise<ClientNote[]> {
+  async getClientNotes(
+    id: string,
+    skip = 0,
+    take = 10
+  ): Promise<BackendPaginatedResponse<ClientNote>> {
     if (USE_MOCK) {
       console.log("[MOCK] getClientNotes", id);
       await new Promise((resolve) => setTimeout(resolve, 300));
-      return [];
+      return {
+        totalCount: 0,
+        skip,
+        take,
+        data: [],
+      };
     }
 
     try {
-      const response = await api.get(`${this.endpoint}/${id}/notes`);
-      return response.data.data;
+      const response = await api.get(`${this.endpoint}/${id}/notes`, {
+        params: { skip, take },
+      });
+      return response.data;
     } catch (error) {
       throw handleApiError(error);
     }
@@ -241,22 +319,116 @@ class ClientsService extends BaseService {
   /**
    * Ajouter une note à un client
    */
-  async addClientNote(id: string, contenu: string): Promise<ClientNote> {
+  async addClientNote(id: string, contenu: string, dossierId?: string): Promise<ClientNote> {
     if (USE_MOCK) {
       console.log("[MOCK] addClientNote", id, contenu);
       await new Promise((resolve) => setTimeout(resolve, 500));
       return {
         id: `note-${Date.now()}`,
         contenu,
+        clientId: id,
+        dossierId: dossierId || null,
         utilisateurId: "user-1",
+        statut: "ACTIF",
         creeLe: new Date().toISOString(),
         modifieLe: new Date().toISOString(),
       };
     }
 
     try {
-      const response = await api.post(`${this.endpoint}/${id}/notes`, { contenu });
-      return response.data.data;
+      const response = await api.post(`${this.endpoint}/${id}/notes`, { 
+        contenu,
+        dossierId,
+      });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * ✅ NOUVEAU : Récupérer les correspondances d'un client
+   */
+  async getClientCorrespondances(
+    id: string,
+    skip = 0,
+    take = 10
+  ): Promise<BackendPaginatedResponse<ClientCorrespondance>> {
+    if (USE_MOCK) {
+      console.log("[MOCK] getClientCorrespondances", id);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return {
+        totalCount: 0,
+        skip,
+        take,
+        data: [],
+      };
+    }
+
+    try {
+      const response = await api.get(`${this.endpoint}/${id}/correspondances`, {
+        params: { skip, take },
+      });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * ✅ NOUVEAU : Ajouter une correspondance
+   */
+  async addClientCorrespondance(
+    id: string,
+    data: { type: "APPEL" | "EMAIL" | "RENDEZ_VOUS" | "AUTRE"; contenu?: string }
+  ): Promise<ClientCorrespondance> {
+    if (USE_MOCK) {
+      console.log("[MOCK] addClientCorrespondance", id, data);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return {
+        id: `corresp-${Date.now()}`,
+        clientId: id,
+        utilisateurId: "user-1",
+        type: data.type,
+        contenu: data.contenu || null,
+        statut: "ACTIF",
+        creeLe: new Date().toISOString(),
+        modifieLe: new Date().toISOString(),
+      };
+    }
+
+    try {
+      const response = await api.post(`${this.endpoint}/${id}/correspondances`, data);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * ✅ NOUVEAU : Récupérer l'historique d'audit
+   */
+  async getClientAudit(
+    id: string,
+    skip = 0,
+    take = 20
+  ): Promise<BackendPaginatedResponse<ClientAudit>> {
+    if (USE_MOCK) {
+      console.log("[MOCK] getClientAudit", id);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return {
+        totalCount: 0,
+        skip,
+        take,
+        data: [],
+      };
+    }
+
+    try {
+      const response = await api.get(`${this.endpoint}/${id}/audit`, {
+        params: { skip, take },
+      });
+      return response.data;
     } catch (error) {
       throw handleApiError(error);
     }
@@ -264,18 +436,29 @@ class ClientsService extends BaseService {
 
   /**
    * Exporter les clients (Excel/PDF)
+   * ✅ CORRIGÉ : Utilise le bon endpoint
    */
-  async exportClients(filters?: ClientFilters, format: "excel" | "pdf" = "excel"): Promise<Blob> {
+  async exportClients(filters?: ClientFilters): Promise<ClientExportData[]> {
     if (USE_MOCK) {
-      console.log("[MOCK] exportClients", filters, format);
+      console.log("[MOCK] exportClients", filters);
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      return new Blob(["Mock export data"], { type: "application/octet-stream" });
+      return MOCK_CLIENTS.map(c => ({
+        Prénom: c.prenom,
+        Nom: c.nom,
+        Entreprise: c.nomEntreprise || 'N/A',
+        Email: c.email || 'N/A',
+        Téléphone: c.telephone || 'N/A',
+        Adresse: c.adresse || 'N/A',
+        Statut: c.statut,
+        "Nb Dossiers": c._count?.dossiers || 0,
+        "CA Total": 0,
+        "Créé le": c.creeLe,
+      }));
     }
 
     try {
       const response = await api.get(`${this.endpoint}/export`, {
-        params: { ...filters, format },
-        responseType: "blob",
+        params: filters,
       });
       return response.data;
     } catch (error) {
