@@ -38,7 +38,7 @@ export default function Sidebar({
     if (isMobileOpen && onMobileClose) {
       onMobileClose();
     }
-  }, [pathname]);
+  }, [isMobileOpen, onMobileClose, pathname]);
 
   const handleOverlayClick = () => {
     if (onMobileClose) {

@@ -203,6 +203,7 @@ export default api;
 // Helper pour construire les query params (TYPÉ CORRECTEMENT)
 export const buildQueryString = (params: Record<string, string | number | boolean | undefined | null>): string => {
   const filtered = Object.entries(params)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     .filter(([_, value]) => value !== undefined && value !== null && value !== '')
     .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`)
     .join('&');
