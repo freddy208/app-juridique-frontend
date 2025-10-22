@@ -14,7 +14,7 @@ export type TypeDossier =
   | "CONTENTIEUX"
   | "AUTRE";
 
-export type StatutDossier = "OUVERT" | "EN_COURS" | "CLOS" | "ARCHIVE" | "SUPPRIME";
+export type StatutDossier = "OUVERT" | "EN_COURS" | "CLOS" | "ARCHIVE" | "SUPPRIME"| "BROUILLON";
 
 export type GraviteBlessure = "MINEUR" | "MOYEN" | "GRAVE" | "CRITIQUE";
 
@@ -187,31 +187,46 @@ export interface Contentieux {
 
 // DTOs
 export interface CreateDossierDto {
-  clientId: string;
   titre: string;
   type: TypeDossier;
   description?: string;
+  clientId: string;
   responsableId?: string;
-
-  sinistreCorporel?: Partial<Omit<SinistreCorporel, "id" | "dossierId" | "creeLe" | "modifieLe">>;
-  sinistreMateriel?: Partial<Omit<SinistreMateriel, "id" | "dossierId" | "creeLe" | "modifieLe">>;
-  sinistreMortel?: Partial<Omit<SinistreMortel, "id" | "dossierId" | "creeLe" | "modifieLe">>;
-  immobilier?: Partial<Omit<Immobilier, "id" | "dossierId" | "creeLe" | "modifieLe">>;
-  sport?: Partial<Omit<Sport, "id" | "dossierId" | "creeLe" | "modifieLe">>;
-  contrat?: Partial<Omit<Contrat, "id" | "dossierId" | "creeLe" | "modifieLe">>;
-  contentieux?: Partial<Omit<Contentieux, "id" | "dossierId" | "creeLe" | "modifieLe">>;
+  statut?: StatutDossier;
+  detailsSpecifiques?: Record<string, unknown>;
+  taches?: Array<{
+    titre: string;
+    description?: string;
+    assigneeId?: string;
+    priorite?: 'BASSE' | 'MOYENNE' | 'HAUTE' | 'URGENTE';
+    dateLimite?: Date;
+  }>;
 }
 
 export interface UpdateDossierDto extends Partial<CreateDossierDto> {
-  statut?: StatutDossier;
+  documents?: unknown[];
+  taches?: Array<{
+    titre: string;
+    description?: string;
+    assigneeId?: string;
+    priorite?: 'BASSE' | 'MOYENNE' | 'HAUTE' | 'URGENTE';
+    dateLimite?: Date;
+  }>;
+  utilisateurId?: string;
 }
 
 export interface DossierFilters {
-  type?: TypeDossier;
   statut?: StatutDossier;
+  type?: TypeDossier;
   clientId?: string;
   responsableId?: string;
-  dateDebut?: string;
-  dateFin?: string;
+  skip?: number;
+  take?: number;
   search?: string;
+  sortBy?: string;
+  sortOrder?: string;
+  dateCreationDebut?: string;
+  dateCreationFin?: string;
+  dateModificationDebut?: string;
+  dateModificationFin?: string;
 }

@@ -21,8 +21,16 @@ export interface ApiError {
   timestamp: string;
 }
 
-// Réponse paginée
+// Réponse paginée (format du backend)
 export interface PaginatedResponse<T> {
+  totalCount: number;
+  skip: number;
+  take: number;
+  data: T[];
+}
+
+// Réponse paginée alternative (format frontend)
+export interface PaginatedResponseAlt<T> {
   data: T[];
   pagination: {
     page: number;
