@@ -1,3 +1,5 @@
+'use client'
+
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import apiClient from '@/lib/api/client'
 import { authEndpoints } from '@/lib/api/endpoints'

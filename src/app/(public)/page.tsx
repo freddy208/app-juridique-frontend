@@ -246,8 +246,8 @@ export default function LandingPage() {
               <h4 className="font-semibold mb-4">Contact</h4>
               <ul className="space-y-2 text-slate-400">
                 <li>contact@cabinetjuridique237.cm</li>
-                <li>+237 123 456 789</li>
-                <li>Yaoundé, Cameroun</li>
+                <li>+237 620 187 495</li>
+                <li>Douala, Cameroun</li>
               </ul>
             </div>
           </div>
