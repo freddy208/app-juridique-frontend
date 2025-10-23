@@ -1,8 +1,13 @@
-"use client";
+import { Suspense } from "react";
+import { ResetPasswordForm } from "./ResetPasswordForm";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+
 export const dynamic = "force-dynamic";
 
-import ResetPasswordForm from './ResetPasswordForm';
-
 export default function ResetPasswordPage() {
-  return <ResetPasswordForm />;
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <ResetPasswordForm />
+    </Suspense>
+  );
 }
