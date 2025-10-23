@@ -6,12 +6,12 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
+import { motion } from 'framer-motion'
 import { useAuth } from '@/lib/hooks/useAuth'
-import { Mail, Lock, Eye, EyeOff, Shield, CheckCircle } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, Shield, Scale, Award, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'react-hot-toast'
+import { InputEnhanced } from '@/components/ui/InputEnhanced'
 
 const loginSchema = z.object({
   email: z.string().email('Adresse email invalide'),
@@ -53,142 +53,246 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Partie Gauche */}
+    <div className="min-h-screen flex bg-slate-950">
+      {/* Partie Gauche - Élégance et Inspiration */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        {/* Fond avec image et overlay */}
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: "url('../../../../public/background2.webp')"
+            backgroundImage: "url('https://images.unsplash.com/photo-1586953208448-b95a79798f07?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80')"
           }}
         ></div>
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-900/90 to-bordeaux-900/90"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-900/95 via-bordeaux-900/90 to-slate-900/95"></div>
+        
+        {/* Particules animées */}
+        {[...Array(15)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-gold-500 rounded-full opacity-60"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -50, 0],
+              opacity: [0, 1, 0],
+            }}
+            transition={{
+              duration: 5 + Math.random() * 10,
+              repeat: Infinity,
+              delay: Math.random() * 5,
+            }}
+          />
+        ))}
         
         <div className="relative z-10 flex flex-col justify-center items-center text-white p-12">
-          <div className="max-w-md text-center">
-            <h1 className="font-serif text-4xl font-bold mb-6 text-gold-500">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
+            className="max-w-md text-center"
+          >
+            {/* Logo et titre */}
+            <div className="flex justify-center mb-8">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="relative"
+              >
+                <Scale className="h-20 w-20 text-gold-500" />
+                <motion.div
+                  className="absolute inset-0 rounded-full border-2 border-gold-500"
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    opacity: [1, 0.5, 1],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                  }}
+                />
+              </motion.div>
+            </div>
+            
+            <h1 className="font-serif text-4xl font-bold mb-4 bg-gradient-to-r from-gold-400 via-gold-500 to-gold-600 bg-clip-text text-transparent">
               Cabinet Juridique 237
             </h1>
-            <div className="mb-8">
-              <p className="text-xl italic mb-4">
+            <div className="w-32 h-1 bg-gradient-to-r from-transparent via-gold-500 to-transparent mx-auto mb-8"></div>
+            
+            {/* Citation inspirante */}
+            <div className="mb-10">
+              <p className="text-xl italic mb-4 text-primary-100">
                 &quot;La justice est la constante et perpétuelle volonté de donner à chacun son droit.&quot;
               </p>
-              <p className="text-sm">- Ulpian</p>
+              <p className="text-gold-400">— Ulpian</p>
             </div>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <CheckCircle className="h-5 w-5 text-gold-500" />
-                <p>Gestion complète des dossiers juridiques</p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <CheckCircle className="h-5 w-5 text-gold-500" />
-                <p>Suivi des procédures et échéances</p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <CheckCircle className="h-5 w-5 text-gold-500" />
-                <p>Base de données de jurisprudence camerounaise</p>
-              </div>
+            
+            {/* Valeurs */}
+            <div className="space-y-6">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+                className="flex items-center space-x-3"
+              >
+                <Award className="h-6 w-6 text-gold-500" />
+                <p className="text-lg">Excellence juridique au service du droit camerounais</p>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.6 }}
+                className="flex items-center space-x-3"
+              >
+                <Scale className="h-6 w-6 text-gold-500" />
+                <p className="text-lg">Intégrité et éthique professionnelle</p>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.8 }}
+                className="flex items-center space-x-3"
+              >
+                <Shield className="h-6 w-6 text-gold-500" />
+                <p className="text-lg">Sécurité et confidentialité des données</p>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
-      {/* Partie Droite */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
-        <div className="w-full max-w-md">
-          <Card className="shadow-premium">
-            <CardHeader className="text-center pb-6">
-              <h2 className="font-serif text-3xl font-bold text-primary-900 mb-2">
-                Connexion à votre espace
-              </h2>
-              <p className="text-slate-600">
-                Accédez à votre cabinet en quelques secondes
-              </p>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                <Input
-                  label="Adresse email"
-                  type="email"
-                  placeholder="votre.email@cabinet.cm"
-                  icon={<Mail className="h-5 w-5" />}
-                  error={errors.email?.message}
-                  {...register('email')}
-                  autoFocus
+      {/* Partie Droite - Formulaire de Connexion */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gradient-to-br from-slate-50 to-primary-50">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="w-full max-w-md"
+        >
+          {/* En-tête du formulaire */}
+          <div className="text-center mb-8">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6 }}
+              className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-600 to-bordeaux-600 rounded-full mb-4"
+            >
+              <Scale className="h-8 w-8 text-white" />
+            </motion.div>
+            <h2 className="font-serif text-3xl font-bold text-slate-900 mb-2">
+              Connexion à votre espace
+            </h2>
+            <p className="text-slate-600">
+              Accédez à votre cabinet juridique en toute sécurité
+            </p>
+          </div>
+
+          {/* Formulaire */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Champ Email */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <InputEnhanced
+                label="Adresse email"
+                type="email"
+                placeholder="votre.email@cabinet.cm"
+                icon={<Mail className="h-5 w-5" />}
+                error={errors.email?.message}
+                {...register('email')}
+                autoFocus
+              />
+            </motion.div>
+
+            {/* Champ Mot de passe */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >  
+            <InputEnhanced
+                label="Mot de passe"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                icon={<Lock className="h-5 w-5" />}
+                actionIcon={showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                onActionClick={() => setShowPassword(!showPassword)}
+                error={errors.motDePasse?.message}
+                {...register('motDePasse')}
+              />
+            </motion.div>
+
+            {/* Options supplémentaires */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="flex items-center justify-between"
+            >
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-slate-300 rounded"
+                  {...register('rememberMe')}
                 />
-
-                <div>
-                  <Input
-                    label="Mot de passe"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    icon={<Lock className="h-5 w-5" />}
-                    iconPosition="left"
-                    error={errors.motDePasse?.message}
-                    {...register('motDePasse')}
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center mt-7"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5 text-slate-400" />
-                    ) : (
-                      <Eye className="h-5 w-5 text-slate-400" />
-                    )}
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <input
-                      id="remember-me"
-                      type="checkbox"
-                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-slate-300 rounded"
-                      {...register('rememberMe')}
-                    />
-                    <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-700">
-                      Rester connecté sur cet appareil
-                    </label>
-                  </div>
-                  <Link href="/forgot-password" className="text-sm text-primary-600 hover:text-primary-800">
-                    Mot de passe oublié ?
-                  </Link>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full"
-                  loading={isLoading}
-                >
-                  Se connecter
-                </Button>
-              </form>
-
-              <div className="mt-6">
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-300"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-slate-500">OU</span>
-                  </div>
-                </div>
-
-                <div className="mt-6 text-center text-sm text-slate-600">
-                  <p>Vous n&apos;avez pas encore de compte ?</p>
-                  <p>Contactez votre administrateur pour obtenir un accès.</p>
-                </div>
-
-                <div className="mt-6 flex items-center justify-center">
-                  <Shield className="h-4 w-4 text-success mr-2" />
-                  <span className="text-xs text-slate-500">Connexion sécurisée SSL</span>
-                </div>
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-700">
+                  Rester connecté
+                </label>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <Link href="/forgot-password" className="text-sm text-primary-600 hover:text-primary-800 font-medium">
+                Mot de passe oublié ?
+              </Link>
+            </motion.div>
+
+            {/* Bouton de connexion */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-primary-600 to-bordeaux-600 hover:from-primary-700 hover:to-bordeaux-700 text-white font-semibold shadow-premium py-3 rounded-lg group"
+                loading={isLoading}
+              >
+                Se connecter
+                <ChevronRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </motion.div>
+          </form>
+
+          {/* Informations supplémentaires */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="mt-8"
+          >
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-gradient-to-br from-slate-50 to-primary-50 text-slate-500">OU</span>
+              </div>
+            </div>
+
+            <div className="mt-6 text-center text-sm text-slate-600">
+              <p>Vous n&apos;avez pas encore de compte ?</p>
+              <p className="font-medium">Contactez votre administrateur pour obtenir un accès.</p>
+            </div>
+
+            <div className="mt-6 flex items-center justify-center">
+              <Shield className="h-4 w-4 text-success mr-2" />
+              <span className="text-xs text-slate-500">Connexion sécurisée avec chiffrement SSL</span>
+            </div>
+          </motion.div>
+        </motion.div>
       </div>
     </div>
   )
