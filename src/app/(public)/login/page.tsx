@@ -60,10 +60,10 @@ export default function LoginPage() {
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1586953208448-b95a79798f07?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80')"
+            backgroundImage: "url('/images/background1.webp')"
           }}
         ></div>
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-900/95 via-bordeaux-900/90 to-slate-900/95"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-900/95 to-slate-900/95"></div>
         
         {/* Particules animées */}
         {[...Array(15)].map((_, i) => (
@@ -177,7 +177,7 @@ export default function LoginPage() {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.6 }}
-              className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-600 to-bordeaux-600 rounded-full mb-4"
+              className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-bordeaux-600 to-bordeaux-600 rounded-full mb-4"
             >
               <Scale className="h-8 w-8 text-white" />
             </motion.div>
@@ -257,7 +257,7 @@ export default function LoginPage() {
             >
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-primary-600 to-bordeaux-600 hover:from-primary-700 hover:to-bordeaux-700 text-white font-semibold shadow-premium py-3 rounded-lg group"
+                className="w-full bg-gradient-to-r from-bordeaux-600 to-bordeaux-600 hover:from-bordeaux-700 hover:to-bordeaux-700 text-white font-semibold shadow-premium py-3 rounded-lg group"
                 loading={isLoading}
               >
                 Se connecter
