@@ -1,11 +1,12 @@
 import axios from 'axios'
 
+// src/lib/client.ts
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
+  baseURL: `${process.env.NEXT_PUBLIC_API_URL}/api/v1`, // <-- ajoute /api/v1 ici
   headers: {
     'Content-Type': 'application/json',
   },
-})
+});
 
 // Intercepteur pour ajouter le token d'authentification
 apiClient.interceptors.request.use(
