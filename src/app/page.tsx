@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+/*import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -9,4 +9,7 @@ export default function Home() {
   }, [router]);
 
   return null; // ou un loader si tu veux
-}
+}*/
+// src/app/page.tsx
+export { default } from "./(public)/page";
+
