@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 export default function Home() {
   const router = useRouter();
   useEffect(() => {
-    router.replace("/landing");
+    router.replace("/(public)");
   }, [router]);
 
   return null; // ou un loader si tu veux
