@@ -44,7 +44,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (!authLoading && isAuthenticated && !hasRedirected.current) {
       hasRedirected.current = true
-      router.replace('/parametres/utilisateur') // ✅ replace au lieu de push
+      router.replace('/parametres/utilisateurs') // ✅ replace au lieu de push
     }
   }, [isAuthenticated, authLoading, router])
 
