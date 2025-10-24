@@ -1,7 +1,6 @@
-// src/app/(public)/login/page.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -25,7 +24,7 @@ type LoginFormData = z.infer<typeof loginSchema>
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const { login, isLoading: authLoading } = useAuth() // ✅ Supprimé isAuthenticated ici
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()
 
   const {
@@ -39,20 +38,19 @@ export default function LoginPage() {
     },
   })
 
-  // ✅ SUPPRIMÉ le useEffect qui cause le problème
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.replace('/parametres/utilisateurs')
+    }
+  }, [isAuthenticated, authLoading, router])
 
-  // 🚀 Connexion + redirection
+  // ✅ Correction principale : appeler login avec les données du formulaire
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     try {
-      await login(data.email, data.motDePasse)
-      toast.success('Connexion réussie ✅')
-      
-      // ✅ Attendre un peu que le state se mette à jour
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
-      // ✅ Redirection
-      router.push('/parametres/utilisateurs')
+      await login(data.email, data.motDePasse) // ✅ login réel
+      toast.success('Connexion réussie')
+      router.replace('/parametres/utilisateurs')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Email ou mot de passe incorrect')
@@ -61,7 +59,6 @@ export default function LoginPage() {
     }
   }
 
-  // Loader pendant la vérification initiale
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
@@ -72,6 +69,9 @@ export default function LoginPage() {
       </div>
     )
   }
+
+  if (isAuthenticated) return null
+
   return (
     <div className="min-h-screen flex bg-slate-950">
       {/* ... Le reste de votre code JSX reste identique ... */}
