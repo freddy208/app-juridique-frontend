@@ -43,7 +43,7 @@ export default function LoginPage() {
     try {
       await login(data.email, data.motDePasse)
       toast.success('Connexion réussie')
-      router.push('/dashboard')
+      router.push('/parametres/utilisateur')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Email ou mot de passe incorrect')
