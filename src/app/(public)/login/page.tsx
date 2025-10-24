@@ -1,6 +1,7 @@
+// src/app/(public)/login/page.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -26,6 +27,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const { login, isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()
+  const hasRedirected = useRef(false) // ✅ Pour éviter les boucles
 
   const {
     register,
@@ -38,10 +40,11 @@ export default function LoginPage() {
     },
   })
 
-  // ✅ AJOUT : Rediriger si déjà authentifié
+  // ✅ Rediriger uniquement au chargement initial si déjà authentifié
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      router.push('/parametres/utilisateur')
+    if (!authLoading && isAuthenticated && !hasRedirected.current) {
+      hasRedirected.current = true
+      router.replace('/parametres/utilisateur') // ✅ replace au lieu de push
     }
   }, [isAuthenticated, authLoading, router])
 
@@ -50,7 +53,8 @@ export default function LoginPage() {
     try {
       await login(data.email, data.motDePasse)
       toast.success('Connexion réussie')
-      router.push('/parametres/utilisateur')
+      hasRedirected.current = true // ✅ Marquer comme redirigé
+      router.replace('/parametres/utilisateurs') // ✅ replace au lieu de push
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Email ou mot de passe incorrect')
@@ -59,7 +63,7 @@ export default function LoginPage() {
     }
   }
 
-  // ✅ AJOUT : Afficher un loader pendant la vérification de l'auth
+  // ✅ Afficher un loader pendant la vérification de l'auth
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
@@ -71,16 +75,15 @@ export default function LoginPage() {
     )
   }
 
-  // ✅ AJOUT : Ne rien afficher si déjà authentifié (redirection en cours)
+  // ✅ Ne rien afficher si déjà authentifié
   if (isAuthenticated) {
     return null
   }
 
   return (
     <div className="min-h-screen flex bg-slate-950">
-      {/* Partie Gauche - Élégance et Inspiration */}
+      {/* ... Le reste de votre code JSX reste identique ... */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        {/* Fond avec image et overlay */}
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
@@ -89,7 +92,6 @@ export default function LoginPage() {
         ></div>
         <div className="absolute inset-0 bg-gradient-to-br from-primary-900/95 to-slate-900/95"></div>
         
-        {/* Particules animées */}
         {[...Array(15)].map((_, i) => (
           <motion.div
             key={i}
@@ -117,7 +119,6 @@ export default function LoginPage() {
             transition={{ duration: 1 }}
             className="max-w-md text-center"
           >
-            {/* Logo et titre */}
             <div className="flex justify-center mb-8">
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
@@ -145,7 +146,6 @@ export default function LoginPage() {
             </h1>
             <div className="w-32 h-1 bg-gradient-to-r from-transparent via-gold-500 to-transparent mx-auto mb-8"></div>
             
-            {/* Citation inspirante */}
             <div className="mb-10">
               <p className="text-xl italic mb-4 text-primary-100">
                 &quot;La justice est la constante et perpétuelle volonté de donner à chacun son droit.&quot;
@@ -153,7 +153,6 @@ export default function LoginPage() {
               <p className="text-gold-400">— Ulpian</p>
             </div>
             
-            {/* Valeurs */}
             <div className="space-y-6">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -187,7 +186,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Partie Droite - Formulaire de Connexion */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gradient-to-br from-slate-50 to-primary-50">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -195,7 +193,6 @@ export default function LoginPage() {
           transition={{ duration: 0.8 }}
           className="w-full max-w-md"
         >
-          {/* En-tête du formulaire */}
           <div className="text-center mb-8">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
@@ -213,9 +210,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Formulaire */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Champ Email */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -232,7 +227,6 @@ export default function LoginPage() {
               />
             </motion.div>
 
-            {/* Champ Mot de passe */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -250,7 +244,6 @@ export default function LoginPage() {
               />
             </motion.div>
 
-            {/* Options supplémentaires */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -273,7 +266,6 @@ export default function LoginPage() {
               </Link>
             </motion.div>
 
-            {/* Bouton de connexion */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -290,7 +282,6 @@ export default function LoginPage() {
             </motion.div>
           </form>
 
-          {/* Informations supplémentaires */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
