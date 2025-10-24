@@ -27,7 +27,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const { login, isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()
-  const hasRedirected = useRef(false) // ✅ Pour éviter les boucles
+  const hasCheckedAuth = useRef(false) // ✅ Pour vérifier une seule fois
 
   const {
     register,
@@ -40,21 +40,23 @@ export default function LoginPage() {
     },
   })
 
-  // ✅ Rediriger uniquement au chargement initial si déjà authentifié
+  // ✅ Redirection UNIQUEMENT si déjà authentifié au chargement initial
   useEffect(() => {
-    if (!authLoading && isAuthenticated && !hasRedirected.current) {
-      hasRedirected.current = true
-      router.replace('/parametres/utilisateurs') // ✅ replace au lieu de push
+    if (!authLoading && isAuthenticated && !hasCheckedAuth.current) {
+      hasCheckedAuth.current = true
+      console.log('👤 Déjà authentifié, redirection...')
+      router.replace('/parametres/utilisateurs')
     }
-  }, [isAuthenticated, authLoading, router])
+  }, [authLoading, isAuthenticated, router])
 
+  // 🚀 Connexion + redirection
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     try {
       await login(data.email, data.motDePasse)
-      toast.success('Connexion réussie')
-      hasRedirected.current = true // ✅ Marquer comme redirigé
-      router.replace('/parametres/utilisateurs') // ✅ replace au lieu de push
+      toast.success('Connexion réussie ✅')
+      // ✅ Redirection immédiate (pas de setTimeout)
+      router.replace('/parametres/utilisateurs')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Email ou mot de passe incorrect')
@@ -63,7 +65,7 @@ export default function LoginPage() {
     }
   }
 
-  // ✅ Afficher un loader pendant la vérification de l'auth
+  // Loader pendant la vérification initiale
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
@@ -75,11 +77,17 @@ export default function LoginPage() {
     )
   }
 
-  // ✅ Ne rien afficher si déjà authentifié
+  // Loader si déjà authentifié (redirection en cours)
   if (isAuthenticated) {
-    return null
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-gold-500 mx-auto mb-4"></div>
+          <p className="text-slate-300">Redirection en cours...</p>
+        </div>
+      </div>
+    )
   }
-
   return (
     <div className="min-h-screen flex bg-slate-950">
       {/* ... Le reste de votre code JSX reste identique ... */}
