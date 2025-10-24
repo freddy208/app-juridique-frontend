@@ -1,7 +1,7 @@
 // src/app/(public)/login/page.tsx
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -25,9 +25,8 @@ type LoginFormData = z.infer<typeof loginSchema>
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const { login, isAuthenticated, isLoading: authLoading } = useAuth()
+  const { login, isLoading: authLoading } = useAuth() // ✅ Supprimé isAuthenticated ici
   const router = useRouter()
-  const hasCheckedAuth = useRef(false) // ✅ Pour vérifier une seule fois
 
   const {
     register,
@@ -40,14 +39,7 @@ export default function LoginPage() {
     },
   })
 
-  // ✅ Redirection UNIQUEMENT si déjà authentifié au chargement initial
-  useEffect(() => {
-    if (!authLoading && isAuthenticated && !hasCheckedAuth.current) {
-      hasCheckedAuth.current = true
-      console.log('👤 Déjà authentifié, redirection...')
-      router.replace('/parametres/utilisateurs')
-    }
-  }, [authLoading, isAuthenticated, router])
+  // ✅ SUPPRIMÉ le useEffect qui cause le problème
 
   // 🚀 Connexion + redirection
   const onSubmit = async (data: LoginFormData) => {
@@ -55,8 +47,12 @@ export default function LoginPage() {
     try {
       await login(data.email, data.motDePasse)
       toast.success('Connexion réussie ✅')
-      // ✅ Redirection immédiate (pas de setTimeout)
-      router.replace('/parametres/utilisateurs')
+      
+      // ✅ Attendre un peu que le state se mette à jour
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // ✅ Redirection
+      router.push('/parametres/utilisateurs')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Email ou mot de passe incorrect')
@@ -72,18 +68,6 @@ export default function LoginPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-gold-500 mx-auto mb-4"></div>
           <p className="text-slate-300">Vérification de votre session...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Loader si déjà authentifié (redirection en cours)
-  if (isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-gold-500 mx-auto mb-4"></div>
-          <p className="text-slate-300">Redirection en cours...</p>
         </div>
       </div>
     )
