@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -24,7 +24,7 @@ type LoginFormData = z.infer<typeof loginSchema>
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const { login } = useAuth()
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()
 
   const {
@@ -38,6 +38,13 @@ export default function LoginPage() {
     },
   })
 
+  // ✅ AJOUT : Rediriger si déjà authentifié
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.push('/parametres/utilisateur')
+    }
+  }, [isAuthenticated, authLoading, router])
+
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     try {
@@ -50,6 +57,23 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // ✅ AJOUT : Afficher un loader pendant la vérification de l'auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-gold-500 mx-auto mb-4"></div>
+          <p className="text-slate-300">Vérification de votre session...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // ✅ AJOUT : Ne rien afficher si déjà authentifié (redirection en cours)
+  if (isAuthenticated) {
+    return null
   }
 
   return (
