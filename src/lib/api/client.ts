@@ -4,7 +4,7 @@ import { authEndpoints } from './endpoints';
 
 const apiClient = axios.create({
   baseURL: `${process.env.NEXT_PUBLIC_API_URL}/api/v1`,
-  withCredentials: true, // ✅ Déjà bon - envoie les cookies automatiquement
+  withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -29,40 +29,45 @@ apiClient.interceptors.response.use(
   async error => {
     const originalRequest = error.config;
 
+    // ✅ Ne PAS intercepter les 401 sur /auth/profile si on est sur /login
+    const isProfileRequest = originalRequest.url === authEndpoints.profile;
+    const isOnLoginPage = typeof window !== 'undefined' && window.location.pathname === '/login';
+    
+    if (isProfileRequest && isOnLoginPage && error.response?.status === 401) {
+      // ✅ Laisser passer l'erreur sans essayer de refresh
+      return Promise.reject(error);
+    }
+
+    // ✅ Ne PAS essayer de refresh si le refresh lui-même échoue
+    if (originalRequest.url === authEndpoints.refresh && error.response?.status === 401) {
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+      return Promise.reject(error);
+    }
+
     // ✅ Gérer les erreurs 401 (token expiré)
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        // Queue les requêtes pendant le refresh
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
-          .then(() => {
-            // ✅ MODIFICATION : Plus besoin de passer le token, les cookies sont déjà envoyés
-            return apiClient(originalRequest);
-          })
-          .catch(err => {
-            return Promise.reject(err);
-          });
+          .then(() => apiClient(originalRequest))
+          .catch(err => Promise.reject(err));
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
 
       try {
-        // ✅ Appeler le endpoint refresh (les cookies sont envoyés automatiquement)
         await apiClient.post(authEndpoints.refresh);
-
-        // ✅ MODIFICATION : Plus besoin de gérer les tokens manuellement
-        // Les nouveaux cookies sont automatiquement définis par le backend
         processQueue(null);
-
-        // Rejouer la requête originale
         return apiClient(originalRequest);
       } catch (err) {
         processQueue(err);
-
-        // Si refresh échoue, rediriger vers login
+        
         if (typeof window !== 'undefined') {
+          console.log('🔴 Session expirée, redirection vers login...');
           window.location.href = '/login';
         }
         return Promise.reject(err);
