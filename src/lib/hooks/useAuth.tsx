@@ -16,7 +16,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (token: string, password: string) => Promise<void>;
@@ -45,6 +45,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const fetchProfile = async () => {
     try {
       const response = await apiClient.get(authEndpoints.profile);
+      console.log('Utilisateur récupéré:', response.data.utilisateur);
       setUser(response.data.utilisateur);
     } catch (error) {
       console.error('Utilisateur non authentifié :', error);
@@ -59,17 +60,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   // ✅ MODIFICATION ICI : Récupérer le profil après le login
-    const login = async (email: string, password: string) => {
-      try {
-        await apiClient.post(authEndpoints.login, { email, motDePasse: password });
-        const profileResponse = await apiClient.get(authEndpoints.profile);
-        setUser(profileResponse.data.utilisateur);
-        return profileResponse.data.utilisateur; // ✅ retourner le user pour garantir la synchronicité
-      } catch (error) {
-        console.error('Erreur de connexion:', error);
-        throw error;
-      }
-    };
+  const login = async (email: string, password: string): Promise<User> => {
+    try {
+      console.log('Envoi des identifiants au backend');
+      await apiClient.post(authEndpoints.login, { email, motDePasse: password });
+      
+      console.log('Récupération du profil utilisateur');
+      const profileResponse = await apiClient.get(authEndpoints.profile);
+      const userData = profileResponse.data.utilisateur;
+      
+      console.log('Mise à jour de l\'état utilisateur:', userData);
+      setUser(userData);
+      
+      return userData; // ✅ retourner le user pour garantir la synchronicité
+    } catch (error) {
+      console.error('Erreur de connexion:', error);
+      throw error;
+    }
+  };
 
   // ✅ Déconnexion : supprime le cookie HTTPOnly côté backend
   const logout = async () => {

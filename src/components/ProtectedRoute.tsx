@@ -1,4 +1,4 @@
-//src/components/ProtectedRoute.tsx
+// src/components/ProtectedRoute.tsx
 'use client';
 
 import { useEffect, useRef } from 'react';
@@ -10,18 +10,22 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
-  const hasRedirected = useRef(false); // ✅ Éviter les boucles
+  const hasRedirected = useRef(false);
 
   useEffect(() => {
+    console.log('ProtectedRoute - isLoading:', isLoading);
+    console.log('ProtectedRoute - isAuthenticated:', isAuthenticated);
+    console.log('ProtectedRoute - user:', user);
+    
     if (!isLoading && !isAuthenticated && !hasRedirected.current) {
       hasRedirected.current = true;
-      router.replace('/login'); // ✅ replace au lieu de push
+      console.log('ProtectedRoute - Redirection vers /login');
+      router.replace('/login');
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, user]);
 
-  // Afficher un loader pendant la vérification
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-950">
@@ -33,7 +37,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  // Si pas authentifié, ne rien afficher (la redirection se fait)
   if (!isAuthenticated) {
     return null;
   }

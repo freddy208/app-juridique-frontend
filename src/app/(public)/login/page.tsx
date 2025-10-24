@@ -24,6 +24,7 @@ type LoginFormData = z.infer<typeof loginSchema>
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [loginSuccess, setLoginSuccess] = useState(false) // ✅ Nouvel état pour suivre la connexion
   const { login, isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()
 
@@ -40,25 +41,36 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
+      console.log('Redirection vers /parametres/utilisateurs - isAuthenticated:', isAuthenticated)
       router.replace('/parametres/utilisateurs')
     }
   }, [isAuthenticated, authLoading, router])
 
-  // ✅ Correction principale : appeler login avec les données du formulaire
+  // ✅ Correction principale : attendre la réponse de login avant de rediriger
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     try {
-      await login(data.email, data.motDePasse) // ✅ login réel
+      console.log('Tentative de connexion avec:', data.email)
+      const user = await login(data.email, data.motDePasse)
+      console.log('Connexion réussie, utilisateur:', user)
       toast.success('Connexion réussie')
-      router.replace('/parametres/utilisateurs')
+      setLoginSuccess(true) // ✅ Marquer la connexion comme réussie
+      
+      // ✅ Forcer la redirection avec un petit délai pour s'assurer que l'état est mis à jour
+      setTimeout(() => {
+        console.log('Redirection forcée après connexion')
+        window.location.href = '/parametres/utilisateurs'
+      }, 500)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
+      console.error('Erreur de connexion:', error)
       toast.error(error.response?.data?.message || 'Email ou mot de passe incorrect')
     } finally {
       setIsLoading(false)
     }
   }
 
+  // ✅ Afficher un loader pendant la vérification de l'authentification
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
@@ -70,7 +82,17 @@ export default function LoginPage() {
     )
   }
 
-  if (isAuthenticated) return null
+  // ✅ Si déjà authentifié ou connexion réussie, afficher un loader
+  if (isAuthenticated || loginSuccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-gold-500 mx-auto mb-4"></div>
+          <p className="text-slate-300">Redirection en cours...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen flex bg-slate-950">
