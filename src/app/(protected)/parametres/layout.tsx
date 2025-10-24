@@ -1,3 +1,4 @@
+//src/app/(protected)/parametres/layout.tsx
 'use client';
 
 import { ProtectedRoute } from '@/components/ProtectedRoute';
