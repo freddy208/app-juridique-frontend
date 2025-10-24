@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -24,6 +25,8 @@ import { useUserProfile } from '@/lib/hooks/useUsers';
 import { UpdateProfileForm, ChangePasswordForm } from '@/lib/types/user.types';
 import { formatDate } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
+
+export const dynamic = 'force-dynamic';
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
