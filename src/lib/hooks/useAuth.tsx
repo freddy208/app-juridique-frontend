@@ -57,11 +57,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     fetchProfile();
   }, []);
 
-  // ✅ Connexion : backend renvoie cookie HTTPOnly automatiquement
+  // ✅ MODIFICATION ICI : Récupérer le profil après le login
   const login = async (email: string, password: string) => {
     try {
-      const response = await apiClient.post(authEndpoints.login, { email, motDePasse: password });
-      setUser(response.data.utilisateur);
+      // Étape 1 : Envoyer les credentials au backend
+      await apiClient.post(authEndpoints.login, { 
+        email, 
+        motDePasse: password 
+      });
+
+      // Étape 2 : Récupérer le profil utilisateur (le cookie est maintenant défini)
+      const profileResponse = await apiClient.get(authEndpoints.profile);
+      setUser(profileResponse.data.utilisateur);
     } catch (error) {
       console.error('Erreur de connexion:', error);
       throw error;
@@ -92,7 +99,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // ✅ Réinitialisation du mot de passe
   const resetPassword = async (token: string, password: string) => {
     try {
-      await apiClient.post(authEndpoints.resetPassword, { token, motDePasse: password });
+      await apiClient.post(authEndpoints.resetPassword, { 
+        token, 
+        motDePasse: password 
+      });
     } catch (error) {
       console.error('Erreur lors de la réinitialisation du mot de passe:', error);
       throw error;
