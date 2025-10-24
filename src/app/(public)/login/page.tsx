@@ -24,7 +24,6 @@ type LoginFormData = z.infer<typeof loginSchema>
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [loginSuccess, setLoginSuccess] = useState(false) // ✅ Nouvel état pour suivre la connexion
   const { login, isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()
 
@@ -39,38 +38,39 @@ export default function LoginPage() {
     },
   })
 
+  // ✅ Redirection si déjà authentifié (au chargement de la page)
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      console.log('Redirection vers /parametres/utilisateurs - isAuthenticated:', isAuthenticated)
+      console.log('👤 Utilisateur déjà authentifié, redirection...')
       router.replace('/parametres/utilisateurs')
     }
   }, [isAuthenticated, authLoading, router])
 
-  // ✅ Correction principale : attendre la réponse de login avant de rediriger
+  // ✅ Fonction de soumission simplifiée
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     try {
-      console.log('Tentative de connexion avec:', data.email)
-      const user = await login(data.email, data.motDePasse)
-      console.log('Connexion réussie, utilisateur:', user)
-      toast.success('Connexion réussie')
-      setLoginSuccess(true) // ✅ Marquer la connexion comme réussie
+      console.log('🔵 Tentative de connexion avec:', data.email)
       
-      // ✅ Forcer la redirection avec un petit délai pour s'assurer que l'état est mis à jour
-      setTimeout(() => {
-        console.log('Redirection forcée après connexion')
-        window.location.href = '/parametres/utilisateurs'
-      }, 500)
+      // Attendre que le login soit complètement terminé
+      await login(data.email, data.motDePasse)
+      
+      console.log('✅ Connexion réussie')
+      toast.success('Connexion réussie')
+      
+      // ✅ Redirection immédiate après succès
+      router.push('/parametres/utilisateurs')
+      
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.error('Erreur de connexion:', error)
+      console.error('❌ Erreur de connexion:', error)
       toast.error(error.response?.data?.message || 'Email ou mot de passe incorrect')
     } finally {
       setIsLoading(false)
     }
   }
 
-  // ✅ Afficher un loader pendant la vérification de l'authentification
+  // ✅ Afficher un loader pendant la vérification initiale
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
@@ -82,8 +82,8 @@ export default function LoginPage() {
     )
   }
 
-  // ✅ Si déjà authentifié ou connexion réussie, afficher un loader
-  if (isAuthenticated || loginSuccess) {
+  // ✅ Ne pas afficher le formulaire si déjà authentifié
+  if (isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
         <div className="text-center">
@@ -96,7 +96,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex bg-slate-950">
-      {/* ... Le reste de votre code JSX reste identique ... */}
+      {/* Section gauche - Image et citation */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center"
@@ -200,6 +200,7 @@ export default function LoginPage() {
         </div>
       </div>
 
+      {/* Section droite - Formulaire de connexion */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gradient-to-br from-slate-50 to-primary-50">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -225,61 +226,87 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Email */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <InputEnhanced
-                label="Adresse email"
-                type="email"
-                placeholder="votre.email@cabinet.cm"
-                icon={<Mail className="h-5 w-5" />}
-                error={errors.email?.message}
-                {...register('email')}
-                autoFocus
-              />
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Adresse email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <InputEnhanced
+                  {...register('email')}
+                  type="email"
+                  placeholder="exemple@cabinet237.com"
+                  className="pl-10"
+                  disabled={isLoading}
+                />
+              </div>
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+              )}
             </motion.div>
 
+            {/* Mot de passe */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-            >  
-            <InputEnhanced
-                label="Mot de passe"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••"
-                icon={<Lock className="h-5 w-5" />}
-                actionIcon={showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                onActionClick={() => setShowPassword(!showPassword)}
-                error={errors.motDePasse?.message}
-                {...register('motDePasse')}
-              />
+            >
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Mot de passe
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <InputEnhanced
+                  {...register('motDePasse')}
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Entrez votre mot de passe"
+                  className="pl-10 pr-10"
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+              {errors.motDePasse && (
+                <p className="mt-1 text-sm text-red-600">{errors.motDePasse.message}</p>
+              )}
             </motion.div>
 
+            {/* Se souvenir de moi et Mot de passe oublié */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.4 }}
               className="flex items-center justify-between"
             >
-              <div className="flex items-center">
+              <label className="flex items-center space-x-2 cursor-pointer">
                 <input
-                  id="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-slate-300 rounded"
                   {...register('rememberMe')}
+                  type="checkbox"
+                  className="w-4 h-4 rounded border-slate-300 text-bordeaux-600 focus:ring-bordeaux-500"
+                  disabled={isLoading}
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-700">
-                  Rester connecté
-                </label>
-              </div>
-              <Link href="/forgot-password" className="text-sm text-primary-600 hover:text-primary-800 font-medium">
+                <span className="text-sm text-slate-600">Se souvenir de moi</span>
+              </label>
+              <Link
+                href="/forgot-password"
+                className="text-sm text-bordeaux-600 hover:text-bordeaux-700 font-medium transition-colors"
+              >
                 Mot de passe oublié ?
               </Link>
             </motion.div>
 
+            {/* Bouton de connexion */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -287,38 +314,43 @@ export default function LoginPage() {
             >
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-bordeaux-600 to-bordeaux-600 hover:from-bordeaux-700 hover:to-bordeaux-700 text-white font-semibold shadow-premium py-3 rounded-lg group"
-                loading={isLoading}
+                variant="primary"
+                size="lg"
+                className="w-full"
+                disabled={isLoading}
               >
-                Se connecter
-                <ChevronRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <motion.div
+                      className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    />
+                    <span className="ml-2">Connexion en cours...</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center">
+                    Se connecter
+                    <ChevronRight className="ml-2 h-5 w-5" />
+                  </span>
+                )}
               </Button>
             </motion.div>
           </form>
 
+          {/* Message de sécurité */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="mt-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="mt-8 p-4 bg-primary-50 border border-primary-200 rounded-lg"
           >
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-gradient-to-br from-slate-50 to-primary-50 text-slate-500">OU</span>
-              </div>
-            </div>
-
-            <div className="mt-6 text-center text-sm text-slate-600">
-              <p>Vous n&apos;avez pas encore de compte ?</p>
-              <p className="font-medium">Contactez votre administrateur pour obtenir un accès.</p>
-            </div>
-
-            <div className="mt-6 flex items-center justify-center">
-              <Shield className="h-4 w-4 text-success mr-2" />
-              <span className="text-xs text-slate-500">Connexion sécurisée avec chiffrement SSL</span>
+            <div className="flex items-start space-x-3">
+              <Shield className="h-5 w-5 text-primary-600 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-slate-600">
+                Votre connexion est sécurisée et vos données sont protégées conformément 
+                aux normes de confidentialité juridique.
+              </p>
             </div>
           </motion.div>
         </motion.div>

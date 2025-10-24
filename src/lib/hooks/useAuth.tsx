@@ -1,17 +1,17 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // src/lib/hooks/useAuth.tsx
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import apiClient from '@/lib/api/client';
 import { authEndpoints } from '@/lib/api/endpoints';
 
-interface User {
+export interface User {
   id: string;
-  prenom: string;
   nom: string;
+  prenom: string;
   email: string;
   role: string;
-  statut: string;
 }
 
 interface AuthContextType {
@@ -23,13 +23,16 @@ interface AuthContextType {
   changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
   isLoading: boolean;
   isAuthenticated: boolean;
+  refetchUser: () => Promise<void>; // ✅ Nouvelle fonction pour forcer le rechargement
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within an AuthProvider');
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
   return context;
 };
 
@@ -37,54 +40,70 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // ✅ Vérifie si l'utilisateur est authentifié via le cookie HTTPOnly
+  // ✅ Fonction pour récupérer le profil utilisateur
   const fetchProfile = async () => {
     try {
       const response = await apiClient.get(authEndpoints.profile);
-      console.log('Utilisateur récupéré:', response.data.utilisateur);
+      console.log('✅ Utilisateur récupéré:', response.data.utilisateur);
       setUser(response.data.utilisateur);
+      return response.data.utilisateur;
     } catch (error) {
-      console.error('Utilisateur non authentifié :', error);
+      console.log('ℹ️ Utilisateur non authentifié');
       setUser(null);
+      return null;
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ✅ Vérification initiale de l'authentification
   useEffect(() => {
     fetchProfile();
   }, []);
 
-  // ✅ MODIFICATION ICI : Récupérer le profil après le login
+  // ✅ Fonction de login améliorée
   const login = async (email: string, password: string): Promise<User> => {
     try {
-      console.log('Envoi des identifiants au backend');
-      await apiClient.post(authEndpoints.login, { email, motDePasse: password });
+      console.log('🔵 Envoi des identifiants au backend');
       
-      console.log('Récupération du profil utilisateur');
+      // Étape 1 : Connexion
+      await apiClient.post(authEndpoints.login, { email, motDePasse: password });
+      console.log('✅ Authentification réussie');
+      
+      // Étape 2 : Récupération du profil
       const profileResponse = await apiClient.get(authEndpoints.profile);
       const userData = profileResponse.data.utilisateur;
+      console.log('✅ Profil utilisateur récupéré:', userData);
       
-      console.log('Mise à jour de l\'état utilisateur:', userData);
+      // Étape 3 : Mise à jour de l'état de manière synchrone
       setUser(userData);
+      setIsLoading(false);
       
-      return userData; // ✅ retourner le user pour garantir la synchronicité
+      return userData;
     } catch (error) {
-      console.error('Erreur de connexion:', error);
+      console.error('❌ Erreur de connexion:', error);
+      setUser(null);
       throw error;
     }
   };
 
-  // ✅ Déconnexion : supprime le cookie HTTPOnly côté backend
+  // ✅ Fonction pour recharger le profil manuellement
+  const refetchUser = async () => {
+    setIsLoading(true);
+    await fetchProfile();
+  };
+
+  // ✅ Déconnexion
   const logout = async () => {
     try {
       await apiClient.post(authEndpoints.logout);
+      console.log('✅ Déconnexion réussie');
     } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
+      console.error('❌ Erreur lors de la déconnexion:', error);
     } finally {
       setUser(null);
     }
@@ -113,7 +132,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  // ✅ Changement du mot de passe (auth requis)
+  // ✅ Changement du mot de passe
   const changePassword = async (oldPassword: string, newPassword: string) => {
     try {
       await apiClient.post(authEndpoints.changePassword, {
@@ -135,6 +154,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     changePassword,
     isLoading,
     isAuthenticated: !!user,
+    refetchUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

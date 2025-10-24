@@ -10,22 +10,26 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const hasRedirected = useRef(false);
 
   useEffect(() => {
-    console.log('ProtectedRoute - isLoading:', isLoading);
-    console.log('ProtectedRoute - isAuthenticated:', isAuthenticated);
-    console.log('ProtectedRoute - user:', user);
+    console.log('🔒 ProtectedRoute - Vérification:', { 
+      isLoading, 
+      isAuthenticated,
+      hasRedirected: hasRedirected.current 
+    });
     
+    // ✅ Rediriger vers login si non authentifié
     if (!isLoading && !isAuthenticated && !hasRedirected.current) {
       hasRedirected.current = true;
-      console.log('ProtectedRoute - Redirection vers /login');
+      console.log('🔴 Utilisateur non authentifié - Redirection vers /login');
       router.replace('/login');
     }
-  }, [isAuthenticated, isLoading, router, user]);
+  }, [isAuthenticated, isLoading, router]);
 
+  // ✅ Afficher le loader pendant la vérification
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-950">
@@ -37,9 +41,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
+  // ✅ Ne rien afficher si non authentifié (évite le flash de contenu)
   if (!isAuthenticated) {
     return null;
   }
 
+  // ✅ Afficher le contenu protégé si authentifié
   return <>{children}</>;
 }
