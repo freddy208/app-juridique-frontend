@@ -104,22 +104,6 @@ export default function UsersPage() {
     isDeleting 
   } = useUsers(queryParams);
 
-  // Logs à chaque rendu
-  useEffect(() => {
-    console.group('🎨 [UsersPage] Rendu de la page');
-    console.log('État des filtres:', filters);
-    console.log('Query params:', queryParams);
-    console.log('Loading:', isLoading);
-    console.log('Error:', error);
-    console.log('Utilisateurs reçus:', {
-      count: users.length,
-      isArray: Array.isArray(users),
-      premiers3: users.slice(0, 3),
-    });
-    console.log('Pagination:', pagination);
-    console.groupEnd();
-  }, [filters, queryParams, isLoading, error, users, pagination]);
-
   // Export Excel
   const handleExport = () => {
     console.log('📥 [UsersPage] Export Excel - Début');
@@ -183,27 +167,6 @@ export default function UsersPage() {
     });
   };
 
-  // Debug panel (à retirer en production)
-  const DebugPanel = () => (
-    <div className="bg-slate-900 text-white p-4 rounded-lg mb-6 font-mono text-xs">
-      <div className="font-bold mb-2">🐛 DEBUG PANEL</div>
-      <div>Loading: {String(isLoading)}</div>
-      <div>Error: {error ? String(error) : 'null'}</div>
-      <div>Users count: {users.length}</div>
-      <div>Users isArray: {String(Array.isArray(users))}</div>
-      <div>Filters: {JSON.stringify(filters)}</div>
-      <div>Query params: {JSON.stringify(queryParams)}</div>
-      <div>Pagination: {JSON.stringify(pagination)}</div>
-      {users.length > 0 && (
-        <div className="mt-2">
-          <div>Premier utilisateur:</div>
-          <pre className="bg-slate-800 p-2 rounded mt-1 overflow-auto max-h-40">
-            {JSON.stringify(users[0], null, 2)}
-          </pre>
-        </div>
-      )}
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-primary-50/20">
@@ -234,9 +197,6 @@ export default function UsersPage() {
             </motion.button>
           </div>
         </motion.div>
-
-        {/* Debug Panel - RETIREZ EN PRODUCTION */}
-        <DebugPanel />
 
         {/* Stats Cards */}
         <motion.div
