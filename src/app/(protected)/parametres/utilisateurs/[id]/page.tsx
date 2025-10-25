@@ -1,3 +1,5 @@
+// src/app/(protected)/parametres/utilisateurs/[id]/page.tsx
+
 'use client';
 
 import { useState } from 'react';
@@ -20,7 +22,7 @@ import {
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Avatar } from '@/components/ui/Avatar';
+import { UserAvatar } from '@/components/ui/Avatar';
 import { useUser } from '@/lib/hooks/useUsers';
 import { RoleUtilisateur, StatutUtilisateur } from '@/lib/types/user.types';
 import { formatDate } from '@/lib/utils';
@@ -222,12 +224,12 @@ export default function UserDetailPage() {
         {/* Informations principales */}
         <Card className="shadow-premium">
           <CardHeader className="bg-gradient-to-r from-primary-600 to-bordeaux-600 text-white">
-            <div className="flex items-center space-x-4">
-              <Avatar className="h-16 w-16 border-2 border-white">
-                <span className="text-2xl font-bold">
-                  {user.prenom.charAt(0)}{user.nom.charAt(0)}
-                </span>
-              </Avatar>
+            <div className="flex items-center space-x-4"><UserAvatar 
+                  user={user}
+                  size="xl"
+                  showCrown={true}
+                  className="border-2 border-white"
+                />
               <div>
                 <h2 className="text-2xl font-bold">
                   {user.prenom} {user.nom}

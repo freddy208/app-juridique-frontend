@@ -1,3 +1,16 @@
+// src/lib/api/endpoints.ts (MISE À JOUR)
+
+/**
+ * ============================================
+ * API ENDPOINTS
+ * ============================================
+ * Tous les endpoints de l'API avec typage strict
+ */
+
+// ============================================
+// AUTH ENDPOINTS
+// ============================================
+
 export const authEndpoints = {
   login: '/auth/login',
   register: '/auth/register',
@@ -7,17 +20,41 @@ export const authEndpoints = {
   resetPassword: '/auth/reset-password',
   changePassword: '/auth/change-password',
   profile: '/auth/profile',
-}
+} as const;
+
+// ============================================
+// USERS ENDPOINTS (✅ CORRIGÉ AVEC /me)
+// ============================================
 
 export const usersEndpoints = {
+  // Liste et recherche
   getAll: '/users',
-  getById: (id: string) => `/users/${id}`,
+  search: '/users/search',
+  
+  // Stats et performance
+  stats: '/users/stats',
+  performance: '/users/performance',
+  roles: '/users/roles',
+  statuses: '/users/statuses',
+  
+  // Profil utilisateur connecté (✅ CORRECTION: /me au lieu de /profile)
+  getMyProfile: '/users/me',
+  updateMyProfile: '/users/me',
+  
+  // CRUD utilisateurs
   create: '/users',
+  getById: (id: string) => `/users/${id}`,
   update: (id: string) => `/users/${id}`,
   delete: (id: string) => `/users/${id}`,
-  updateProfile: '/users/profile',
+  
+  // Actions spéciales
   changeStatus: (id: string) => `/users/${id}/status`,
-}
+  bulkAction: '/users/bulk-action',
+} as const;
+
+// ============================================
+// CLIENTS ENDPOINTS
+// ============================================
 
 export const clientsEndpoints = {
   getAll: '/clients',
@@ -30,7 +67,11 @@ export const clientsEndpoints = {
   getDossiers: (id: string) => `/clients/${id}/dossiers`,
   getDocuments: (id: string) => `/clients/${id}/documents`,
   getFinances: (id: string) => `/clients/${id}/finances`,
-}
+} as const;
+
+// ============================================
+// DOSSIERS ENDPOINTS
+// ============================================
 
 export const dossiersEndpoints = {
   getAll: '/dossiers',
@@ -44,7 +85,11 @@ export const dossiersEndpoints = {
   getTimeline: (id: string) => `/dossiers/${id}/timeline`,
   getFinances: (id: string) => `/dossiers/${id}/finances`,
   getProcedures: (id: string) => `/dossiers/${id}/procedures`,
-}
+} as const;
+
+// ============================================
+// DOCUMENTS ENDPOINTS
+// ============================================
 
 export const documentsEndpoints = {
   getAll: '/documents',
@@ -55,7 +100,11 @@ export const documentsEndpoints = {
   search: '/documents/search',
   getVersions: (id: string) => `/documents/${id}/versions`,
   download: (id: string) => `/documents/${id}/download`,
-}
+} as const;
+
+// ============================================
+// TACHES ENDPOINTS
+// ============================================
 
 export const tachesEndpoints = {
   getAll: '/taches',
@@ -67,7 +116,11 @@ export const tachesEndpoints = {
   updateStatus: (id: string) => `/taches/${id}/status`,
   getMyTasks: '/taches/my-tasks',
   getTeamTasks: '/taches/team-tasks',
-}
+} as const;
+
+// ============================================
+// CALENDRIER ENDPOINTS
+// ============================================
 
 export const calendrierEndpoints = {
   getAll: '/calendrier',
@@ -78,7 +131,11 @@ export const calendrierEndpoints = {
   getEvents: '/calendrier/events',
   syncWithGoogle: '/calendrier/sync-google',
   exportICal: '/calendrier/export-ical',
-}
+} as const;
+
+// ============================================
+// FINANCES ENDPOINTS
+// ============================================
 
 export const financesEndpoints = {
   getOverview: '/finances/overview',
@@ -95,4 +152,17 @@ export const financesEndpoints = {
   createFacture: '/finances/factures',
   approveDepense: (id: string) => `/finances/depenses/${id}/approve`,
   validatePaiement: (id: string) => `/finances/paiements/${id}/validate`,
-}
+} as const;
+
+// ============================================
+// TYPE EXPORTS
+// ============================================
+
+export type AuthEndpoint = typeof authEndpoints[keyof typeof authEndpoints];
+export type UsersEndpoint = typeof usersEndpoints[keyof typeof usersEndpoints];
+export type ClientsEndpoint = typeof clientsEndpoints[keyof typeof clientsEndpoints];
+export type DossiersEndpoint = typeof dossiersEndpoints[keyof typeof dossiersEndpoints];
+export type DocumentsEndpoint = typeof documentsEndpoints[keyof typeof documentsEndpoints];
+export type TachesEndpoint = typeof tachesEndpoints[keyof typeof tachesEndpoints];
+export type CalendrierEndpoint = typeof calendrierEndpoints[keyof typeof calendrierEndpoints];
+export type FinancesEndpoint = typeof financesEndpoints[keyof typeof financesEndpoints];

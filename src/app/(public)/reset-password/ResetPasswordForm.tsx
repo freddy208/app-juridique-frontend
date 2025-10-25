@@ -86,7 +86,10 @@ export function ResetPasswordForm() {
   const onSubmit = async (data: ResetPasswordFormData) => {
     setIsLoading(true);
     try {
-      await resetPassword(data.token, data.motDePasse);
+      await resetPassword({ 
+        token: data.token, 
+        motDePasse: data.motDePasse 
+      });
       setIsSuccess(true);
       toast.success('Mot de passe réinitialisé avec succès');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -123,7 +126,6 @@ export function ResetPasswordForm() {
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
                     icon={<Lock className="h-5 w-5" />}
-                    iconPosition="left"
                     error={errors.motDePasse?.message}
                     {...register('motDePasse')}
                   />
@@ -165,7 +167,6 @@ export function ResetPasswordForm() {
                     type={showConfirmPassword ? 'text' : 'password'}
                     placeholder="••••••••"
                     icon={<Lock className="h-5 w-5" />}
-                    iconPosition="left"
                     error={errors.confirmerMotDePasse?.message}
                     {...register('confirmerMotDePasse')}
                   />

@@ -46,14 +46,17 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, authLoading, router])
 
-  // ✅ Fonction de soumission simplifiée
+  // ✅ Fonction de soumission corrigée - passer l'objet complet
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     try {
       console.log('🔵 Tentative de connexion avec:', data.email)
       
-      // Attendre que le login soit complètement terminé
-      await login(data.email, data.motDePasse)
+      // ✅ CORRECTION: Passer l'objet credentials complet
+      await login({
+        email: data.email,
+        motDePasse: data.motDePasse,
+      })
       
       console.log('✅ Connexion réussie')
       toast.success('Connexion réussie')
@@ -64,7 +67,7 @@ export default function LoginPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('❌ Erreur de connexion:', error)
-      toast.error(error.response?.data?.message || 'Email ou mot de passe incorrect')
+      toast.error(error.message || 'Email ou mot de passe incorrect')
     } finally {
       setIsLoading(false)
     }

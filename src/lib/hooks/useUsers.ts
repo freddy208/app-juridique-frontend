@@ -1,119 +1,237 @@
-
+// src/lib/hooks/useUsers.tsx
 'use client';
+
+/**
+ * ============================================
+ * HOOK: useUsers
+ * ============================================
+ * Gestion complète des utilisateurs avec React Query
+ * - Liste avec pagination et filtres
+ * - CRUD complet
+ * - Actions en masse
+ * - Gestion optimiste des mises à jour
+ */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import apiClient from '@/lib/api/client';
-import { 
-  UserFilters, 
-  CreateUserForm, 
-  UpdateUserForm, 
-  UpdateProfileForm,
-  ChangePasswordForm,
+import { usersEndpoints } from '@/lib/api/endpoints';
+import type {
+  User,
+  UserFilters,
+  CreateUserForm,
+  UpdateUserForm,
+  ChangeStatusForm,
   BulkActionForm,
   PaginationParams,
+  PaginatedResponse,
 } from '@/lib/types/user.types';
+
+// ============================================
+// QUERY KEYS
+// ============================================
+
+export const userKeys = {
+  all: ['users'] as const,
+  lists: () => [...userKeys.all, 'list'] as const,
+  list: (filters: PaginationParams & UserFilters) => 
+    [...userKeys.lists(), filters] as const,
+  details: () => [...userKeys.all, 'detail'] as const,
+  detail: (id: string) => [...userKeys.details(), id] as const,
+  stats: () => [...userKeys.all, 'stats'] as const,
+  performance: () => [...userKeys.all, 'performance'] as const,
+  roles: () => [...userKeys.all, 'roles'] as const,
+  statuses: () => [...userKeys.all, 'statuses'] as const,
+  search: (query: string) => [...userKeys.all, 'search', query] as const,
+};
+
+// ============================================
+// HOOK: useUsers (Liste avec pagination)
+// ============================================
 
 export function useUsers(params: PaginationParams & UserFilters = {}) {
   const queryClient = useQueryClient();
 
+  // Requête pour la liste des utilisateurs
   const {
     data: usersData,
     isLoading,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['users', params],
-    queryFn: () => 
-      apiClient.get('/users', { params }).then(res => res.data),
+  } = useQuery<PaginatedResponse<User>>({
+    queryKey: userKeys.list(params),
+    queryFn: async () => {
+      const response = await apiClient.get<PaginatedResponse<User>>(
+        usersEndpoints.getAll,
+        { params }
+      );
+      return response.data;
+    },
   });
 
+  // Mutation: Créer un utilisateur
   const createMutation = useMutation({
-    mutationFn: (userData: CreateUserForm) => 
-      apiClient.post('/users', userData),
+    mutationFn: async (userData: CreateUserForm) => {
+      const response = await apiClient.post<User>(
+        usersEndpoints.create,
+        userData
+      );
+      return response.data;
+    },
     onSuccess: () => {
       toast.success('Utilisateur créé avec succès');
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      queryClient.invalidateQueries({ queryKey: ['userStats'] });
+      // Invalider les requêtes concernées
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: userKeys.stats() });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Erreur lors de la création de l\'utilisateur');
+      const message = error.response?.data?.message || 
+        'Erreur lors de la création de l\'utilisateur';
+      toast.error(message);
     },
   });
 
+  // Mutation: Mettre à jour un utilisateur
   const updateMutation = useMutation({
-    mutationFn: ({ id, userData }: { id: string; userData: UpdateUserForm }) => 
-      apiClient.patch(`/users/${id}`, userData),
-    onSuccess: () => {
+    mutationFn: async ({ 
+      id, 
+      userData 
+    }: { 
+      id: string; 
+      userData: UpdateUserForm 
+    }) => {
+      const response = await apiClient.patch<User>(
+        usersEndpoints.update(id),
+        userData
+      );
+      return response.data;
+    },
+    onSuccess: (data, variables) => {
       toast.success('Utilisateur mis à jour avec succès');
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      // Mise à jour optimiste
+      queryClient.setQueryData<User>(
+        userKeys.detail(variables.id),
+        data
+      );
+      // Invalider les listes
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour de l\'utilisateur');
+      const message = error.response?.data?.message || 
+        'Erreur lors de la mise à jour de l\'utilisateur';
+      toast.error(message);
     },
   });
 
+  // Mutation: Supprimer un utilisateur
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => 
-      apiClient.delete(`/users/${id}`),
+    mutationFn: async (id: string) => {
+      const response = await apiClient.delete(usersEndpoints.delete(id));
+      return response.data;
+    },
     onSuccess: () => {
       toast.success('Utilisateur supprimé avec succès');
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      queryClient.invalidateQueries({ queryKey: ['userStats'] });
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: userKeys.stats() });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Erreur lors de la suppression de l\'utilisateur');
+      const message = error.response?.data?.message || 
+        'Erreur lors de la suppression de l\'utilisateur';
+      toast.error(message);
     },
   });
 
+  // Mutation: Changer le statut
   const changeStatusMutation = useMutation({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mutationFn: ({ id, statusData }: { id: string; statusData: any }) => 
-      apiClient.patch(`/users/${id}/status`, statusData),
-    onSuccess: () => {
+    mutationFn: async ({ 
+      id, 
+      statusData 
+    }: { 
+      id: string; 
+      statusData: ChangeStatusForm 
+    }) => {
+      const response = await apiClient.patch<User>(
+        usersEndpoints.changeStatus(id),
+        statusData
+      );
+      return response.data;
+    },
+    onSuccess: (data, variables) => {
       toast.success('Statut de l\'utilisateur modifié avec succès');
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      queryClient.invalidateQueries({ queryKey: ['userStats'] });
+      // Mise à jour optimiste
+      queryClient.setQueryData<User>(
+        userKeys.detail(variables.id),
+        data
+      );
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: userKeys.stats() });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Erreur lors de la modification du statut');
+      const message = error.response?.data?.message || 
+        'Erreur lors de la modification du statut';
+      toast.error(message);
     },
   });
 
+  // Mutation: Action en masse
   const bulkActionMutation = useMutation({
-    mutationFn: (bulkData: BulkActionForm) => 
-      apiClient.post('/users/bulk-action', bulkData),
+    mutationFn: async (bulkData: BulkActionForm) => {
+      const response = await apiClient.post(
+        usersEndpoints.bulkAction,
+        bulkData
+      );
+      return response.data;
+    },
     onSuccess: (data) => {
-      toast.success(data.data.message);
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      queryClient.invalidateQueries({ queryKey: ['userStats'] });
+      toast.success(data.message);
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: userKeys.stats() });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Erreur lors de l\'action en masse');
+      const message = error.response?.data?.message || 
+        'Erreur lors de l\'action en masse';
+      toast.error(message);
     },
   });
 
   return {
+    // Données
     users: usersData?.data || [],
     pagination: usersData ? {
       total: usersData.total,
       page: usersData.page,
       limit: usersData.limit,
       totalPages: usersData.totalPages,
-    } : { total: 0, page: 1, limit: 10, totalPages: 0 },
+    } : { 
+      total: 0, 
+      page: 1, 
+      limit: 10, 
+      totalPages: 0 
+    },
+    
+    // États de chargement
     isLoading,
     error,
+    
+    // Actions
     refetch,
     createUser: createMutation.mutate,
+    createUserAsync: createMutation.mutateAsync,
     updateUser: updateMutation.mutate,
+    updateUserAsync: updateMutation.mutateAsync,
     deleteUser: deleteMutation.mutate,
+    deleteUserAsync: deleteMutation.mutateAsync,
     changeStatus: changeStatusMutation.mutate,
+    changeStatusAsync: changeStatusMutation.mutateAsync,
     bulkAction: bulkActionMutation.mutate,
+    bulkActionAsync: bulkActionMutation.mutateAsync,
+    
+    // États des mutations
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
@@ -122,7 +240,11 @@ export function useUsers(params: PaginationParams & UserFilters = {}) {
   };
 }
 
-export function useUser(id: string) {
+// ============================================
+// HOOK: useUser (Détail d'un utilisateur)
+// ============================================
+
+export function useUser(id: string | undefined) {
   const queryClient = useQueryClient();
 
   const {
@@ -130,24 +252,35 @@ export function useUser(id: string) {
     isLoading,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['user', id],
-    queryFn: () => 
-      apiClient.get(`/users/${id}`).then(res => res.data),
+  } = useQuery<User>({
+    queryKey: userKeys.detail(id!),
+    queryFn: async () => {
+      const response = await apiClient.get<User>(
+        usersEndpoints.getById(id!)
+      );
+      return response.data;
+    },
     enabled: !!id,
   });
 
   const updateMutation = useMutation({
-    mutationFn: (userData: UpdateUserForm) => 
-      apiClient.patch(`/users/${id}`, userData),
-    onSuccess: () => {
+    mutationFn: async (userData: UpdateUserForm) => {
+      const response = await apiClient.patch<User>(
+        usersEndpoints.update(id!),
+        userData
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
       toast.success('Utilisateur mis à jour avec succès');
-      queryClient.invalidateQueries({ queryKey: ['user', id] });
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.setQueryData<User>(userKeys.detail(id!), data);
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour de l\'utilisateur');
+      const message = error.response?.data?.message || 
+        'Erreur lors de la mise à jour de l\'utilisateur';
+      toast.error(message);
     },
   });
 
@@ -157,9 +290,14 @@ export function useUser(id: string) {
     error,
     refetch,
     updateUser: updateMutation.mutate,
+    updateUserAsync: updateMutation.mutateAsync,
     isUpdating: updateMutation.isPending,
   };
 }
+
+// ============================================
+// HOOK: useUserProfile (Profil connecté)
+// ============================================
 
 export function useUserProfile() {
   const queryClient = useQueryClient();
@@ -169,34 +307,35 @@ export function useUserProfile() {
     isLoading,
     error,
     refetch,
-  } = useQuery({
+  } = useQuery<User>({
     queryKey: ['userProfile'],
-    queryFn: () => 
-      apiClient.get('/users/profile').then(res => res.data),
+    queryFn: async () => {
+      const response = await apiClient.get<User>(
+        usersEndpoints.getMyProfile // ✅ CORRECTION: /users/me
+      );
+      return response.data;
+    },
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: (profileData: UpdateProfileForm) => 
-      apiClient.patch('/users/profile', profileData),
-    onSuccess: () => {
+    mutationFn: async (profileData: UpdateUserForm) => {
+      const response = await apiClient.patch<User>(
+        usersEndpoints.updateMyProfile, // ✅ CORRECTION: /users/me
+        profileData
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
       toast.success('Profil mis à jour avec succès');
-      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+      queryClient.setQueryData<User>(['userProfile'], data);
+      // Aussi mettre à jour dans authContext si nécessaire
+      queryClient.invalidateQueries({ queryKey: ['auth', 'profile'] });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour du profil');
-    },
-  });
-
-  const changePasswordMutation = useMutation({
-    mutationFn: (passwordData: ChangePasswordForm) => 
-      apiClient.post('/auth/change-password', passwordData),
-    onSuccess: () => {
-      toast.success('Mot de passe changé avec succès');
-    },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Erreur lors du changement de mot de passe');
+      const message = error.response?.data?.message || 
+        'Erreur lors de la mise à jour du profil';
+      toast.error(message);
     },
   });
 
@@ -206,49 +345,158 @@ export function useUserProfile() {
     error,
     refetch,
     updateProfile: updateProfileMutation.mutate,
-    changePassword: changePasswordMutation.mutate,
+    updateProfileAsync: updateProfileMutation.mutateAsync,
     isUpdatingProfile: updateProfileMutation.isPending,
-    isChangingPassword: changePasswordMutation.isPending,
   };
 }
 
+// ============================================
+// HOOK: useUserStats
+// ============================================
+
 export function useUserStats() {
   return useQuery({
-    queryKey: ['userStats'],
-    queryFn: () => 
-      apiClient.get('/users/stats').then(res => res.data),
+    queryKey: userKeys.stats(),
+    queryFn: async () => {
+      const response = await apiClient.get(usersEndpoints.stats);
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000, // Cache 5 minutes
   });
 }
+
+// ============================================
+// HOOK: useUserPerformance
+// ============================================
 
 export function useUserPerformance() {
   return useQuery({
-    queryKey: ['userPerformance'],
-    queryFn: () => 
-      apiClient.get('/users/performance').then(res => res.data),
+    queryKey: userKeys.performance(),
+    queryFn: async () => {
+      const response = await apiClient.get(usersEndpoints.performance);
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000, // Cache 5 minutes
   });
 }
+
+// ============================================
+// HOOK: useUserRoles
+// ============================================
 
 export function useUserRoles() {
   return useQuery({
-    queryKey: ['userRoles'],
-    queryFn: () => 
-      apiClient.get('/users/roles').then(res => res.data),
+    queryKey: userKeys.roles(),
+    queryFn: async () => {
+      const response = await apiClient.get(usersEndpoints.roles);
+      return response.data;
+    },
+    staleTime: Infinity, // Ces données changent rarement
   });
 }
+
+// ============================================
+// HOOK: useUserStatuses
+// ============================================
 
 export function useUserStatuses() {
   return useQuery({
-    queryKey: ['userStatuses'],
-    queryFn: () => 
-      apiClient.get('/users/statuses').then(res => res.data),
+    queryKey: userKeys.statuses(),
+    queryFn: async () => {
+      const response = await apiClient.get(usersEndpoints.statuses);
+      return response.data;
+    },
+    staleTime: Infinity, // Ces données changent rarement
   });
 }
 
-export function useUserSearch(query: string) {
+// ============================================
+// HOOK: useUserSearch
+// ============================================
+
+export function useUserSearch(query: string, limit: number = 10) {
   return useQuery({
-    queryKey: ['userSearch', query],
-    queryFn: () => 
-      apiClient.get('/users/search', { params: { q: query } }).then(res => res.data),
-    enabled: !!query && query.length > 2,
+    queryKey: userKeys.search(query),
+    queryFn: async () => {
+      const response = await apiClient.get(usersEndpoints.search, {
+        params: { q: query, limit },
+      });
+      return response.data;
+    },
+    enabled: !!query && query.length >= 2,
+    staleTime: 30 * 1000, // Cache 30 secondes
   });
+}
+
+// ============================================
+// HOOK: useUserForm (Gestion de formulaire)
+// ============================================
+
+export function useUserForm(
+  userId?: string,
+  onSuccess?: (user: User) => void
+) {
+  const queryClient = useQueryClient();
+  const isEditMode = !!userId;
+
+  // Charger l'utilisateur si en mode édition
+  const { data: existingUser } = useQuery<User>({
+    queryKey: userKeys.detail(userId!),
+    queryFn: async () => {
+      const response = await apiClient.get<User>(
+        usersEndpoints.getById(userId!)
+      );
+      return response.data;
+    },
+    enabled: isEditMode,
+  });
+
+  // Mutation unifiée
+  const mutation = useMutation({
+    mutationFn: async (userData: CreateUserForm | UpdateUserForm) => {
+      if (isEditMode) {
+        const response = await apiClient.patch<User>(
+          usersEndpoints.update(userId),
+          userData
+        );
+        return response.data;
+      } else {
+        const response = await apiClient.post<User>(
+          usersEndpoints.create,
+          userData as CreateUserForm
+        );
+        return response.data;
+      }
+    },
+    onSuccess: (data) => {
+      const message = isEditMode 
+        ? 'Utilisateur mis à jour avec succès'
+        : 'Utilisateur créé avec succès';
+      toast.success(message);
+      
+      if (isEditMode) {
+        queryClient.setQueryData<User>(userKeys.detail(userId!), data);
+      }
+      
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: userKeys.stats() });
+      
+      onSuccess?.(data);
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 
+        `Erreur lors de ${isEditMode ? 'la mise à jour' : 'la création'} de l'utilisateur`;
+      toast.error(message);
+    },
+  });
+
+  return {
+    existingUser,
+    isEditMode,
+    submit: mutation.mutate,
+    submitAsync: mutation.mutateAsync,
+    isSubmitting: mutation.isPending,
+    error: mutation.error,
+  };
 }

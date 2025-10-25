@@ -1,76 +1,75 @@
-// src/components/ui/Input.tsx
-import { forwardRef } from 'react'
-import { cn } from '@/lib/utils'
+// components/ui/Input.tsx
+import * as React from 'react';
+import { cn } from '@/lib/utils';
 
-export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string
-  error?: string
-  icon?: React.ReactNode
-  iconPosition?: 'left' | 'right'
-  actionIcon?: React.ReactNode
-  onActionClick?: () => void
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  error?: string;
+  icon?: React.ReactNode;
+  helperText?: string;
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ 
-    className, 
-    type, 
-    label, 
-    error, 
-    icon, 
-    iconPosition = 'left',
-    actionIcon,
-    onActionClick,
-    ...props 
-  }, ref) => {
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, label, error, icon, helperText, ...props }, ref) => {
     return (
       <div className="w-full">
+        {/* Label */}
         {label && (
-          <label className="block text-sm font-medium text-slate-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {label}
           </label>
         )}
+
+        {/* Input Container avec icon optionnel */}
         <div className="relative">
-          {icon && iconPosition === 'left' && (
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <div className="text-slate-400">{icon}</div>
+          {/* Icon à gauche */}
+          {icon && (
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+              {icon}
             </div>
           )}
+          
+          {/* Input */}
           <input
             type={type}
             className={cn(
-              'flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-              icon && iconPosition === 'left' && 'pl-10',
-              (icon && iconPosition === 'right' || actionIcon) && 'pr-10',
-              error && 'border-danger focus-visible:ring-danger',
+              'flex h-10 w-full rounded-lg border bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-950 dark:ring-offset-gray-950 dark:placeholder:text-gray-400',
+              // Styles conditionnels pour l'erreur
+              error 
+                ? 'border-red-500 focus-visible:ring-red-500 dark:border-red-500' 
+                : 'border-gray-200 dark:border-gray-800',
+              // Padding si icon présent
+              icon && 'pl-10',
               className
             )}
             ref={ref}
+            aria-invalid={!!error}
+            aria-describedby={error ? `${props.id}-error` : undefined}
             {...props}
           />
-          {actionIcon && (
-            <button
-              type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
-              onClick={onActionClick}
-            >
-              <div className="text-slate-400 hover:text-slate-600">{actionIcon}</div>
-            </button>
-          )}
-          {icon && iconPosition === 'right' && !actionIcon && (
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              <div className="text-slate-400">{icon}</div>
-            </div>
-          )}
         </div>
+
+        {/* Message d'erreur */}
         {error && (
-          <p className="mt-1 text-sm text-danger">{error}</p>
+          <p 
+            id={`${props.id}-error`}
+            className="mt-1.5 text-sm text-red-600 dark:text-red-400"
+          >
+            {error}
+          </p>
+        )}
+
+        {/* Texte d'aide */}
+        {helperText && !error && (
+          <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+            {helperText}
+          </p>
         )}
       </div>
-    )
+    );
   }
-)
-Input.displayName = 'Input'
+);
 
-export { Input }
+Input.displayName = 'Input';
+
+export { Input };
