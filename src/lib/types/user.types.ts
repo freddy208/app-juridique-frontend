@@ -325,3 +325,10 @@ export interface ApiError {
   statusCode: number;
   errors?: UserError[];
 }
+
+// src/lib/types/user.types.ts ou utils.ts
+export const statusBadges: Record<StatutUtilisateur, "default" | "destructive" | "success" | "warning" | "secondary" | "blue" | "purple" | "orange" | "teal" | "outline"> = {
+  [StatutUtilisateur.ACTIF]: "success",
+  [StatutUtilisateur.INACTIF]: "secondary",
+  [StatutUtilisateur.SUSPENDU]: "destructive",
+};
