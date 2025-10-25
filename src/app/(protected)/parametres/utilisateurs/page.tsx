@@ -1,28 +1,85 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { 
   Users, 
   Search, 
   Filter, 
   UserPlus, 
+  MoreVertical,
+  Edit,
+  Trash2,
   Shield,
   Mail,
   Phone,
   Calendar,
   CheckCircle,
   XCircle,
-  AlertCircle,
-  MoreVertical,
+  AlertCircle
 } from 'lucide-react';
-import { useUsers } from '@/lib/hooks/useUsers';
-import { RoleUtilisateur, StatutUtilisateur } from '@/lib/types/user.types';
 
-// ============================================
-// PAGE UTILISATEURS - version avec hook useUsers
-// ============================================
+// Types
+interface User {
+  id: string;
+  nom: string;
+  prenom: string;
+  email: string;
+  telephone: string;
+  role: 'admin' | 'avocat' | 'assistant' | 'stagiaire';
+  statut: 'actif' | 'inactif' | 'suspendu';
+  dateCreation: string;
+  dernierAcces: string;
+  avatar?: string;
+}
+
+// Données de démonstration
+const mockUsers: User[] = [
+  {
+    id: '1',
+    nom: 'Dubois',
+    prenom: 'Jean',
+    email: 'jean.dubois@cabinet.com',
+    telephone: '+33 6 12 34 56 78',
+    role: 'admin',
+    statut: 'actif',
+    dateCreation: '2024-01-15',
+    dernierAcces: '2025-10-25 09:30'
+  },
+  {
+    id: '2',
+    nom: 'Martin',
+    prenom: 'Sophie',
+    email: 'sophie.martin@cabinet.com',
+    telephone: '+33 6 23 45 67 89',
+    role: 'avocat',
+    statut: 'actif',
+    dateCreation: '2024-03-20',
+    dernierAcces: '2025-10-25 08:15'
+  },
+  {
+    id: '3',
+    nom: 'Bernard',
+    prenom: 'Marie',
+    email: 'marie.bernard@cabinet.com',
+    telephone: '+33 6 34 56 78 90',
+    role: 'assistant',
+    statut: 'actif',
+    dateCreation: '2024-06-10',
+    dernierAcces: '2025-10-24 17:45'
+  },
+  {
+    id: '4',
+    nom: 'Petit',
+    prenom: 'Lucas',
+    email: 'lucas.petit@cabinet.com',
+    telephone: '+33 6 45 67 89 01',
+    role: 'stagiaire',
+    statut: 'inactif',
+    dateCreation: '2024-09-01',
+    dernierAcces: '2025-10-20 14:20'
+  }
+];
 
 export default function UsersListPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,55 +88,28 @@ export default function UsersListPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
-  // ✅ Hook pour charger les utilisateurs depuis l'API
-  const roleMap: Record<string, RoleUtilisateur> = {
-    admin: RoleUtilisateur.ADMIN,
-    avocat: RoleUtilisateur.AVOCAT,
-    assistant: RoleUtilisateur.ASSISTANT,
-    stagiaire: RoleUtilisateur.STAGIAIRE,
+  // Filtrer les utilisateurs
+  const filteredUsers = mockUsers.filter(user => {
+    const matchesSearch = 
+      user.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.prenom.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesRole = selectedRole === 'tous' || user.role === selectedRole;
+    const matchesStatut = selectedStatut === 'tous' || user.statut === selectedStatut;
+    
+    return matchesSearch && matchesRole && matchesStatut;
+  });
+
+  // Statistiques
+  const stats = {
+    total: mockUsers.length,
+    actifs: mockUsers.filter(u => u.statut === 'actif').length,
+    admins: mockUsers.filter(u => u.role === 'admin').length,
+    avocats: mockUsers.filter(u => u.role === 'avocat').length
   };
 
-  const statutMap: Record<string, StatutUtilisateur> = {
-    actif: StatutUtilisateur.ACTIF,
-    inactif: StatutUtilisateur.INACTIF,
-    suspendu: StatutUtilisateur.SUSPENDU,
-  };
-
-  const filters = {
-    search: searchQuery.trim() || undefined,
-    role: selectedRole !== 'tous' ? roleMap[selectedRole] : undefined,
-    statut: selectedStatut !== 'tous' ? statutMap[selectedStatut] : undefined,
-    page: 1,
-    limit: 50,
-  };
-
-
-  // ✅ Charger les utilisateurs depuis l'API avec filtres
-  const { users, isLoading, error } = useUsers(filters);
-
-  // ✅ Filtrage en mémoire (local)
-  const filteredUsers = useMemo(() => {
-    return users.filter(user => {
-      const matchesSearch =
-        user.nom?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.prenom?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchesRole = selectedRole === 'tous' || user.role === selectedRole;
-      const matchesStatut = selectedStatut === 'tous' || user.statut === selectedStatut;
-
-      return matchesSearch && matchesRole && matchesStatut;
-    });
-  }, [users, searchQuery, selectedRole, selectedStatut]);
-
-  // ✅ Statistiques basées sur les données réelles
-  const stats = useMemo(() => ({
-    total: users.length,
-    actifs: users.filter(u => u.statut === StatutUtilisateur.ACTIF).length,
-    admins: users.filter(u => u.role === RoleUtilisateur.ADMIN).length,
-    avocats: users.filter(u => u.role === RoleUtilisateur.AVOCAT).length
-  }), [users]);
-
+  // Fonction pour obtenir la couleur du badge de rôle
   const getRoleBadgeClass = (role: string) => {
     const classes = {
       admin: 'bg-bordeaux-50 text-bordeaux-600 border-bordeaux-200',
@@ -90,30 +120,15 @@ export default function UsersListPage() {
     return classes[role as keyof typeof classes] || classes.stagiaire;
   };
 
+  // Fonction pour obtenir l'icône de statut
   const getStatutIcon = (statut: string) => {
-    switch (statut) {
+    switch(statut) {
       case 'actif': return <CheckCircle className="w-4 h-4 text-success" />;
       case 'inactif': return <XCircle className="w-4 h-4 text-slate-400" />;
       case 'suspendu': return <AlertCircle className="w-4 h-4 text-warning" />;
       default: return null;
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-[60vh] text-slate-500">
-        Chargement des utilisateurs...
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex justify-center items-center h-[60vh] text-red-500">
-        Erreur lors du chargement des utilisateurs.
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-primary-50/30">
@@ -142,39 +157,59 @@ export default function UsersListPage() {
 
         {/* Statistiques */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            label="Total Utilisateurs"
-            value={stats.total}
-            icon={<Users className="w-6 h-6 text-primary-600" />}
-            iconBg="bg-primary-100"
-            valueColor="text-primary-900"
-          />
-          <StatCard
-            label="Utilisateurs Actifs"
-            value={stats.actifs}
-            icon={<CheckCircle className="w-6 h-6 text-success" />}
-            iconBg="bg-green-100"
-            valueColor="text-success"
-          />
-          <StatCard
-            label="Administrateurs"
-            value={stats.admins}
-            icon={<Shield className="w-6 h-6 text-bordeaux-600" />}
-            iconBg="bg-bordeaux-50"
-            valueColor="text-bordeaux-600"
-          />
-          <StatCard
-            label="Avocats"
-            value={stats.avocats}
-            icon={<Users className="w-6 h-6 text-primary-600" />}
-            iconBg="bg-primary-100"
-            valueColor="text-primary-700"
-          />
+          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-elegant transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-body-sm text-slate-600 mb-1">Total Utilisateurs</p>
+                <p className="text-h2 font-bold text-primary-900">{stats.total}</p>
+              </div>
+              <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+                <Users className="w-6 h-6 text-primary-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-elegant transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-body-sm text-slate-600 mb-1">Utilisateurs Actifs</p>
+                <p className="text-h2 font-bold text-success">{stats.actifs}</p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-success" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-elegant transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-body-sm text-slate-600 mb-1">Administrateurs</p>
+                <p className="text-h2 font-bold text-bordeaux-600">{stats.admins}</p>
+              </div>
+              <div className="w-12 h-12 bg-bordeaux-50 rounded-lg flex items-center justify-center">
+                <Shield className="w-6 h-6 text-bordeaux-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-elegant transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-body-sm text-slate-600 mb-1">Avocats</p>
+                <p className="text-h2 font-bold text-primary-700">{stats.avocats}</p>
+              </div>
+              <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+                <Users className="w-6 h-6 text-primary-600" />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Barre de recherche et filtres */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
           <div className="flex flex-col lg:flex-row gap-4">
+            {/* Recherche */}
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
@@ -186,6 +221,7 @@ export default function UsersListPage() {
               />
             </div>
 
+            {/* Bouton filtres */}
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="inline-flex items-center gap-2 px-6 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
@@ -195,161 +231,209 @@ export default function UsersListPage() {
             </button>
           </div>
 
+          {/* Filtres avancés */}
           {showFilters && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-200">
-              <SelectFilter
-                label="Rôle"
-                value={selectedRole}
-                onChange={setSelectedRole}
-                options={[
-                  { value: 'tous', label: 'Tous les rôles' },
-                  { value: 'admin', label: 'Administrateur' },
-                  { value: 'avocat', label: 'Avocat' },
-                  { value: 'assistant', label: 'Assistant' },
-                  { value: 'stagiaire', label: 'Stagiaire' }
-                ]}
-              />
-              <SelectFilter
-                label="Statut"
-                value={selectedStatut}
-                onChange={setSelectedStatut}
-                options={[
-                  { value: 'tous', label: 'Tous les statuts' },
-                  { value: 'actif', label: 'Actif' },
-                  { value: 'inactif', label: 'Inactif' },
-                  { value: 'suspendu', label: 'Suspendu' }
-                ]}
-              />
+              <div>
+                <label className="block text-body-sm font-medium text-slate-700 mb-2">
+                  Rôle
+                </label>
+                <select
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  <option value="tous">Tous les rôles</option>
+                  <option value="admin">Administrateur</option>
+                  <option value="avocat">Avocat</option>
+                  <option value="assistant">Assistant</option>
+                  <option value="stagiaire">Stagiaire</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-body-sm font-medium text-slate-700 mb-2">
+                  Statut
+                </label>
+                <select
+                  value={selectedStatut}
+                  onChange={(e) => setSelectedStatut(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  <option value="tous">Tous les statuts</option>
+                  <option value="actif">Actif</option>
+                  <option value="inactif">Inactif</option>
+                  <option value="suspendu">Suspendu</option>
+                </select>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Liste */}
+        {/* Liste des utilisateurs */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="px-6 py-4 text-left text-body-sm font-semibold text-slate-700">Utilisateur</th>
-                  <th className="px-6 py-4 text-left text-body-sm font-semibold text-slate-700">Contact</th>
-                  <th className="px-6 py-4 text-left text-body-sm font-semibold text-slate-700">Rôle</th>
-                  <th className="px-6 py-4 text-left text-body-sm font-semibold text-slate-700">Statut</th>
-                  <th className="px-6 py-4 text-left text-body-sm font-semibold text-slate-700">Dernier accès</th>
-                  <th className="px-6 py-4 text-right text-body-sm font-semibold text-slate-700">Actions</th>
+                  <th className="px-6 py-4 text-left text-body-sm font-semibold text-slate-700">
+                    Utilisateur
+                  </th>
+                  <th className="px-6 py-4 text-left text-body-sm font-semibold text-slate-700">
+                    Contact
+                  </th>
+                  <th className="px-6 py-4 text-left text-body-sm font-semibold text-slate-700">
+                    Rôle
+                  </th>
+                  <th className="px-6 py-4 text-left text-body-sm font-semibold text-slate-700">
+                    Statut
+                  </th>
+                  <th className="px-6 py-4 text-left text-body-sm font-semibold text-slate-700">
+                    Dernier accès
+                  </th>
+                  <th className="px-6 py-4 text-right text-body-sm font-semibold text-slate-700">
+                    Actions
+                  </th>
                 </tr>
               </thead>
-
               <tbody className="divide-y divide-slate-200">
                 {filteredUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold">
-                          {user.prenom?.[0]}{user.nom?.[0]}
+                          {user.prenom[0]}{user.nom[0]}
                         </div>
                         <div>
-                          <p className="font-semibold text-slate-900">{user.prenom} {user.nom}</p>
-                          <p className="text-body-sm text-slate-500">ID: {user.id}</p>
+                          <p className="font-semibold text-slate-900">
+                            {user.prenom} {user.nom}
+                          </p>
+                          <p className="text-body-sm text-slate-500">
+                            ID: {user.id}
+                          </p>
                         </div>
                       </div>
                     </td>
-
+                    
                     <td className="px-6 py-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 text-body-sm text-slate-600">
-                          <Mail className="w-4 h-4" />{user.email}
+                          <Mail className="w-4 h-4" />
+                          {user.email}
                         </div>
                         <div className="flex items-center gap-2 text-body-sm text-slate-600">
-                          <Phone className="w-4 h-4" />{user.telephone}
+                          <Phone className="w-4 h-4" />
+                          {user.telephone}
                         </div>
                       </div>
                     </td>
-
+                    
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-body-sm font-medium border ${getRoleBadgeClass(user.role)}`}>
-                        {user.role?.charAt(0).toUpperCase() + user.role?.slice(1)}
+                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                       </span>
                     </td>
-
+                    
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         {getStatutIcon(user.statut)}
-                        <span className="text-body-sm font-medium text-slate-700 capitalize">{user.statut}</span>
+                        <span className="text-body-sm font-medium text-slate-700 capitalize">
+                          {user.statut}
+                        </span>
                       </div>
                     </td>
-
+                    
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-body-sm text-slate-600">
                         <Calendar className="w-4 h-4" />
-                        {user.derniereConnexion
-                          ? new Date(user.derniereConnexion).toLocaleDateString('fr-FR', {
-                              day: '2-digit',
-                              month: 'short',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })
-                          : '—'}
+                        {new Date(user.dernierAcces).toLocaleDateString('fr-FR', {
+                          day: '2-digit',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
                       </div>
                     </td>
-
-                    <td className="px-6 py-4 text-right">
-                      <button className="text-slate-500 hover:text-primary-600 transition-colors">
-                        <MoreVertical className="w-5 h-5" />
-                      </button>
+                    
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link
+                          href={`/parametres/utilisateurs/${user.id}/modifier`}
+                          className="p-2 hover:bg-primary-50 rounded-lg transition-colors group"
+                          title="Modifier"
+                        >
+                          <Edit className="w-5 h-5 text-slate-600 group-hover:text-primary-600" />
+                        </Link>
+                        
+                        <div className="relative">
+                          <button
+                            onClick={() => setActiveMenu(activeMenu === user.id ? null : user.id)}
+                            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                          >
+                            <MoreVertical className="w-5 h-5 text-slate-600" />
+                          </button>
+                          
+                          {activeMenu === user.id && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-premium border border-slate-200 py-1 z-10">
+                              <Link
+                                href={`/parametres/utilisateurs/${user.id}/modifier`}
+                                className="flex items-center gap-2 px-4 py-2 text-body-sm text-slate-700 hover:bg-slate-50"
+                              >
+                                <Edit className="w-4 h-4" />
+                                Modifier
+                              </Link>
+                              <button className="flex items-center gap-2 w-full px-4 py-2 text-body-sm text-red-600 hover:bg-red-50">
+                                <Trash2 className="w-4 h-4" />
+                                Supprimer
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 ))}
-
-                {filteredUsers.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="text-center py-8 text-slate-500">
-                      Aucun utilisateur trouvé.
-                    </td>
-                  </tr>
-                )}
               </tbody>
             </table>
           </div>
+
+          {/* Message si aucun résultat */}
+          {filteredUsers.length === 0 && (
+            <div className="text-center py-12">
+              <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <h3 className="text-h4 font-semibold text-slate-900 mb-2">
+                Aucun utilisateur trouvé
+              </h3>
+              <p className="text-body text-slate-600">
+                Essayez de modifier vos critères de recherche
+              </p>
+            </div>
+          )}
         </div>
 
+        {/* Pagination */}
+        <div className="mt-6 flex items-center justify-between">
+          <p className="text-body-sm text-slate-600">
+            Affichage de <span className="font-semibold">{filteredUsers.length}</span> sur{' '}
+            <span className="font-semibold">{mockUsers.length}</span> utilisateurs
+          </p>
+          
+          <div className="flex items-center gap-2">
+            <button className="px-4 py-2 border border-slate-200 rounded-lg text-body-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              Précédent
+            </button>
+            <button className="px-4 py-2 bg-primary-600 text-white rounded-lg text-body-sm font-medium hover:bg-primary-700 transition-colors">
+              1
+            </button>
+            <button className="px-4 py-2 border border-slate-200 rounded-lg text-body-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+              2
+            </button>
+            <button className="px-4 py-2 border border-slate-200 rounded-lg text-body-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+              Suivant
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
-  );
-}
-
-// ============================================
-// COMPOSANTS UTILITAIRES
-// ============================================
-
-function StatCard({ label, value, icon, iconBg, valueColor }: any) {
-  return (
-    <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-elegant transition-shadow">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-body-sm text-slate-600 mb-1">{label}</p>
-          <p className={`text-h2 font-bold ${valueColor}`}>{value}</p>
-        </div>
-        <div className={`w-12 h-12 ${iconBg} rounded-lg flex items-center justify-center`}>
-          {icon}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SelectFilter({ label, value, onChange, options }: any) {
-  return (
-    <div>
-      <label className="block text-body-sm font-medium text-slate-700 mb-2">{label}</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-      >
-        {options.map((opt: any) => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
-        ))}
-      </select>
     </div>
   );
 }
