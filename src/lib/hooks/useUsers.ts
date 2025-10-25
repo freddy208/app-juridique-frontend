@@ -1,16 +1,6 @@
-// src/lib/hooks/useUsers.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// src/lib/hooks/useUsers.tsx - VERSION FINALE CORRIGÉE
 'use client';
-
-/**
- * ============================================
- * HOOK: useUsers
- * ============================================
- * Gestion complète des utilisateurs avec React Query
- * - Liste avec pagination et filtres
- * - CRUD complet
- * - Actions en masse
- * - Gestion optimiste des mises à jour
- */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
@@ -27,10 +17,6 @@ import type {
   PaginatedResponse,
 } from '@/lib/types/user.types';
 
-// ============================================
-// QUERY KEYS
-// ============================================
-
 export const userKeys = {
   all: ['users'] as const,
   lists: () => [...userKeys.all, 'list'] as const,
@@ -45,14 +31,9 @@ export const userKeys = {
   search: (query: string) => [...userKeys.all, 'search', query] as const,
 };
 
-// ============================================
-// HOOK: useUsers (Liste avec pagination)
-// ============================================
-
 export function useUsers(params: PaginationParams & UserFilters = {}) {
   const queryClient = useQueryClient();
 
-  // Requête pour la liste des utilisateurs
   const {
     data: usersData,
     isLoading,
@@ -61,15 +42,26 @@ export function useUsers(params: PaginationParams & UserFilters = {}) {
   } = useQuery<PaginatedResponse<User>>({
     queryKey: userKeys.list(params),
     queryFn: async () => {
-      const response = await apiClient.get<PaginatedResponse<User>>(
+      const response = await apiClient.get(
         usersEndpoints.getAll,
         { params }
       );
+      
+      // ✅ DEBUG - Décommenter pour voir la structure
+      // console.log('🔍 API Response:', {
+      //   response,
+      //   data: response.data,
+      //   dataIsArray: Array.isArray(response.data),
+      //   hasDataProp: response.data && 'data' in response.data,
+      //   dataData: response.data?.data,
+      // });
+
+      // ✅ La réponse Axios est dans response.data
+      // Qui contient: { data: User[], total, page, limit, totalPages }
       return response.data;
     },
   });
 
-  // Mutation: Créer un utilisateur
   const createMutation = useMutation({
     mutationFn: async (userData: CreateUserForm) => {
       const response = await apiClient.post<User>(
@@ -80,11 +72,9 @@ export function useUsers(params: PaginationParams & UserFilters = {}) {
     },
     onSuccess: () => {
       toast.success('Utilisateur créé avec succès');
-      // Invalider les requêtes concernées
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
       queryClient.invalidateQueries({ queryKey: userKeys.stats() });
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       const message = error.response?.data?.message || 
         'Erreur lors de la création de l\'utilisateur';
@@ -92,15 +82,8 @@ export function useUsers(params: PaginationParams & UserFilters = {}) {
     },
   });
 
-  // Mutation: Mettre à jour un utilisateur
   const updateMutation = useMutation({
-    mutationFn: async ({ 
-      id, 
-      userData 
-    }: { 
-      id: string; 
-      userData: UpdateUserForm 
-    }) => {
+    mutationFn: async ({ id, userData }: { id: string; userData: UpdateUserForm }) => {
       const response = await apiClient.patch<User>(
         usersEndpoints.update(id),
         userData
@@ -109,15 +92,9 @@ export function useUsers(params: PaginationParams & UserFilters = {}) {
     },
     onSuccess: (data, variables) => {
       toast.success('Utilisateur mis à jour avec succès');
-      // Mise à jour optimiste
-      queryClient.setQueryData<User>(
-        userKeys.detail(variables.id),
-        data
-      );
-      // Invalider les listes
+      queryClient.setQueryData<User>(userKeys.detail(variables.id), data);
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       const message = error.response?.data?.message || 
         'Erreur lors de la mise à jour de l\'utilisateur';
@@ -125,7 +102,6 @@ export function useUsers(params: PaginationParams & UserFilters = {}) {
     },
   });
 
-  // Mutation: Supprimer un utilisateur
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await apiClient.delete(usersEndpoints.delete(id));
@@ -136,7 +112,6 @@ export function useUsers(params: PaginationParams & UserFilters = {}) {
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
       queryClient.invalidateQueries({ queryKey: userKeys.stats() });
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       const message = error.response?.data?.message || 
         'Erreur lors de la suppression de l\'utilisateur';
@@ -144,15 +119,8 @@ export function useUsers(params: PaginationParams & UserFilters = {}) {
     },
   });
 
-  // Mutation: Changer le statut
   const changeStatusMutation = useMutation({
-    mutationFn: async ({ 
-      id, 
-      statusData 
-    }: { 
-      id: string; 
-      statusData: ChangeStatusForm 
-    }) => {
+    mutationFn: async ({ id, statusData }: { id: string; statusData: ChangeStatusForm }) => {
       const response = await apiClient.patch<User>(
         usersEndpoints.changeStatus(id),
         statusData
@@ -161,15 +129,10 @@ export function useUsers(params: PaginationParams & UserFilters = {}) {
     },
     onSuccess: (data, variables) => {
       toast.success('Statut de l\'utilisateur modifié avec succès');
-      // Mise à jour optimiste
-      queryClient.setQueryData<User>(
-        userKeys.detail(variables.id),
-        data
-      );
+      queryClient.setQueryData<User>(userKeys.detail(variables.id), data);
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
       queryClient.invalidateQueries({ queryKey: userKeys.stats() });
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       const message = error.response?.data?.message || 
         'Erreur lors de la modification du statut';
@@ -177,7 +140,6 @@ export function useUsers(params: PaginationParams & UserFilters = {}) {
     },
   });
 
-  // Mutation: Action en masse
   const bulkActionMutation = useMutation({
     mutationFn: async (bulkData: BulkActionForm) => {
       const response = await apiClient.post(
@@ -191,7 +153,6 @@ export function useUsers(params: PaginationParams & UserFilters = {}) {
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
       queryClient.invalidateQueries({ queryKey: userKeys.stats() });
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       const message = error.response?.data?.message || 
         'Erreur lors de l\'action en masse';
@@ -200,13 +161,13 @@ export function useUsers(params: PaginationParams & UserFilters = {}) {
   });
 
   return {
-    // Données
-    users: usersData?.data || [],
+    // ✅ CORRECTION CRITIQUE : Protection robuste contre les erreurs .map
+    users: Array.isArray(usersData?.data) ? usersData.data : [],
     pagination: usersData ? {
-      total: usersData.total,
-      page: usersData.page,
-      limit: usersData.limit,
-      totalPages: usersData.totalPages,
+      total: usersData.total || 0,
+      page: usersData.page || 1,
+      limit: usersData.limit || 10,
+      totalPages: usersData.totalPages || 0,
     } : { 
       total: 0, 
       page: 1, 
@@ -214,11 +175,9 @@ export function useUsers(params: PaginationParams & UserFilters = {}) {
       totalPages: 0 
     },
     
-    // États de chargement
     isLoading,
     error,
     
-    // Actions
     refetch,
     createUser: createMutation.mutate,
     createUserAsync: createMutation.mutateAsync,
@@ -231,7 +190,6 @@ export function useUsers(params: PaginationParams & UserFilters = {}) {
     bulkAction: bulkActionMutation.mutate,
     bulkActionAsync: bulkActionMutation.mutateAsync,
     
-    // États des mutations
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
@@ -240,10 +198,7 @@ export function useUsers(params: PaginationParams & UserFilters = {}) {
   };
 }
 
-// ============================================
-// HOOK: useUser (Détail d'un utilisateur)
-// ============================================
-
+// Autres hooks (useUser, useUserProfile, etc.) restent identiques...
 export function useUser(id: string | undefined) {
   const queryClient = useQueryClient();
 
@@ -255,9 +210,7 @@ export function useUser(id: string | undefined) {
   } = useQuery<User>({
     queryKey: userKeys.detail(id!),
     queryFn: async () => {
-      const response = await apiClient.get<User>(
-        usersEndpoints.getById(id!)
-      );
+      const response = await apiClient.get<User>(usersEndpoints.getById(id!));
       return response.data;
     },
     enabled: !!id,
@@ -276,7 +229,6 @@ export function useUser(id: string | undefined) {
       queryClient.setQueryData<User>(userKeys.detail(id!), data);
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       const message = error.response?.data?.message || 
         'Erreur lors de la mise à jour de l\'utilisateur';
@@ -295,10 +247,6 @@ export function useUser(id: string | undefined) {
   };
 }
 
-// ============================================
-// HOOK: useUserProfile (Profil connecté)
-// ============================================
-
 export function useUserProfile() {
   const queryClient = useQueryClient();
 
@@ -310,9 +258,7 @@ export function useUserProfile() {
   } = useQuery<User>({
     queryKey: ['userProfile'],
     queryFn: async () => {
-      const response = await apiClient.get<User>(
-        usersEndpoints.getMyProfile // ✅ CORRECTION: /users/me
-      );
+      const response = await apiClient.get<User>(usersEndpoints.getMyProfile);
       return response.data;
     },
   });
@@ -320,7 +266,7 @@ export function useUserProfile() {
   const updateProfileMutation = useMutation({
     mutationFn: async (profileData: UpdateUserForm) => {
       const response = await apiClient.patch<User>(
-        usersEndpoints.updateMyProfile, // ✅ CORRECTION: /users/me
+        usersEndpoints.updateMyProfile,
         profileData
       );
       return response.data;
@@ -328,10 +274,8 @@ export function useUserProfile() {
     onSuccess: (data) => {
       toast.success('Profil mis à jour avec succès');
       queryClient.setQueryData<User>(['userProfile'], data);
-      // Aussi mettre à jour dans authContext si nécessaire
       queryClient.invalidateQueries({ queryKey: ['auth', 'profile'] });
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       const message = error.response?.data?.message || 
         'Erreur lors de la mise à jour du profil';
@@ -350,10 +294,6 @@ export function useUserProfile() {
   };
 }
 
-// ============================================
-// HOOK: useUserStats
-// ============================================
-
 export function useUserStats() {
   return useQuery({
     queryKey: userKeys.stats(),
@@ -361,13 +301,9 @@ export function useUserStats() {
       const response = await apiClient.get(usersEndpoints.stats);
       return response.data;
     },
-    staleTime: 5 * 60 * 1000, // Cache 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }
-
-// ============================================
-// HOOK: useUserPerformance
-// ============================================
 
 export function useUserPerformance() {
   return useQuery({
@@ -376,13 +312,9 @@ export function useUserPerformance() {
       const response = await apiClient.get(usersEndpoints.performance);
       return response.data;
     },
-    staleTime: 5 * 60 * 1000, // Cache 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }
-
-// ============================================
-// HOOK: useUserRoles
-// ============================================
 
 export function useUserRoles() {
   return useQuery({
@@ -391,13 +323,9 @@ export function useUserRoles() {
       const response = await apiClient.get(usersEndpoints.roles);
       return response.data;
     },
-    staleTime: Infinity, // Ces données changent rarement
+    staleTime: Infinity,
   });
 }
-
-// ============================================
-// HOOK: useUserStatuses
-// ============================================
 
 export function useUserStatuses() {
   return useQuery({
@@ -406,13 +334,9 @@ export function useUserStatuses() {
       const response = await apiClient.get(usersEndpoints.statuses);
       return response.data;
     },
-    staleTime: Infinity, // Ces données changent rarement
+    staleTime: Infinity,
   });
 }
-
-// ============================================
-// HOOK: useUserSearch
-// ============================================
 
 export function useUserSearch(query: string, limit: number = 10) {
   return useQuery({
@@ -424,13 +348,9 @@ export function useUserSearch(query: string, limit: number = 10) {
       return response.data;
     },
     enabled: !!query && query.length >= 2,
-    staleTime: 30 * 1000, // Cache 30 secondes
+    staleTime: 30 * 1000,
   });
 }
-
-// ============================================
-// HOOK: useUserForm (Gestion de formulaire)
-// ============================================
 
 export function useUserForm(
   userId?: string,
@@ -439,7 +359,6 @@ export function useUserForm(
   const queryClient = useQueryClient();
   const isEditMode = !!userId;
 
-  // Charger l'utilisateur si en mode édition
   const { data: existingUser } = useQuery<User>({
     queryKey: userKeys.detail(userId!),
     queryFn: async () => {
@@ -451,7 +370,6 @@ export function useUserForm(
     enabled: isEditMode,
   });
 
-  // Mutation unifiée
   const mutation = useMutation({
     mutationFn: async (userData: CreateUserForm | UpdateUserForm) => {
       if (isEditMode) {
@@ -483,7 +401,6 @@ export function useUserForm(
       
       onSuccess?.(data);
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       const message = error.response?.data?.message || 
         `Erreur lors de ${isEditMode ? 'la mise à jour' : 'la création'} de l'utilisateur`;
