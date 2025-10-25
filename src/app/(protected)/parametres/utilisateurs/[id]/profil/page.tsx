@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -135,8 +135,8 @@ const FormInput = ({
 
 function ProfilePageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const userId = searchParams.get('id');
+  const params = useParams();
+  const userId = params.id as string;
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState<Partial<UpdateUserForm>>({});
