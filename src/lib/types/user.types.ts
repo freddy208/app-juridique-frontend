@@ -332,3 +332,7 @@ export const statusBadges: Record<StatutUtilisateur, "default" | "destructive" |
   [StatutUtilisateur.INACTIF]: "secondary",
   [StatutUtilisateur.SUSPENDU]: "destructive",
 };
+
+export interface UpdateUserFormWithId extends UpdateUserForm {
+  id: string;
+}

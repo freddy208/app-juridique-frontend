@@ -22,7 +22,7 @@ import {
 import { useToast } from '@/lib/hooks/use-toast';
 import { useRouter, useParams } from 'next/navigation';
 import { useUserForm } from '@/lib/hooks/useUsers';
-import type { UpdateUserForm } from '@/lib/types/user.types';
+import type { UpdateUserForm, UpdateUserFormWithId } from '@/lib/types/user.types';
 import { 
   RoleUtilisateur, 
   StatutUtilisateur,
@@ -59,10 +59,11 @@ export default function ModificationUtilisateurPage() {
     isSubmitting,
   } = useUserForm(userId, (user) => {
     // Callback succès - redirection vers le profil
-    router.push(`/dashboard/users/${userId}`);
+    router.push(`/parametres/utilisateurs/${userId}/profil`);
   });
 
-  const [formData, setFormData] = useState<UpdateUserForm>({
+  const [formData, setFormData] = useState<UpdateUserFormWithId>({
+    id: userId,
     prenom: '',
     nom: '',
     email: '',
@@ -85,6 +86,7 @@ export default function ModificationUtilisateurPage() {
   useEffect(() => {
     if (existingUser) {
       setFormData({
+        id: existingUser.id,
         prenom: existingUser.prenom,
         nom: existingUser.nom,
         email: existingUser.email,
@@ -613,7 +615,7 @@ export default function ModificationUtilisateurPage() {
                     type="button"
                     variant="ghost"
                     className="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                    onClick={() => router.push(`/paramentres/utilisateur/profil`)}
+                    onClick={() => router.push(`/paramentres/utilisateur/${formData.id}/profil`)}
                     disabled={isSubmitting}
                   >
                     Voir le profil

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/app/(protected)/parametres/utilisateurs/profil/page.tsx - VERSION PREMIUM
+// src/app/(protected)/parametres/utilisateurs/profil/page.tsx - VERSION PREMIUM COHÉRENTE
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
@@ -15,27 +15,26 @@ import {
   Calendar,
   Clock,
   Edit,
-  Key,
   Save,
-  Briefcase,
   Scale,
   CheckCircle2,
   AlertCircle,
   Building,
   Hash,
   Loader2,
+  Info,
+  X,
 } from 'lucide-react';
 import { useUser } from '@/lib/hooks/useUsers';
 import {
   RoleUtilisateur,
   ROLE_LABELS,
-  STATUS_LABELS,
   type UpdateUserForm,
 } from '@/lib/types/user.types';
 import { toast } from 'react-hot-toast';
 import { statusBadges } from '@/lib/utils/badge-config';
 
-// Badge Component
+// Badge Component (même que la liste)
 const Badge = ({
   children,
   variant = 'default'
@@ -56,7 +55,7 @@ const Badge = ({
   };
 
   return (
-    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${variants[variant]}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${variants[variant]}`}>
       {children}
     </span>
   );
@@ -67,64 +66,31 @@ const InfoRow = ({
   icon: Icon,
   label,
   value,
-  color = 'text-slate-600'
+  iconColor = 'text-slate-400'
 }: {
   icon: any;
   label: string;
-  value: string | null | undefined;
-  color?: string;
+  value: string |  null | undefined;
+  iconColor?: string;
 }) => {
   if (!value) return null;
-  const displayValue = value || 'Non renseigné';
+   const displayValue = value || 'Non renseigné';
   return (
-    <div className="flex items-center space-x-3 py-3 border-b border-slate-100 last:border-0">
-      <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0">
-        <Icon className={`w-5 h-5 ${color}`} />
+    <div className="flex items-start space-x-3 py-3">
+      <div className={`mt-0.5 ${iconColor}`}>
+        <Icon className="w-5 h-5" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-slate-500">{label}</p>
-        <p className="text-base font-medium text-slate-900 truncate">{displayValue}</p>
+        <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
+          {label}
+        </p>
+        <p className="text-sm text-slate-900 break-words">
+          {displayValue}
+        </p>
       </div>
     </div>
   );
 };
-
-// Section Card Component
-const SectionCard = ({
-  title,
-  icon: Icon,
-  children,
-  delay = 0,
-  action,
-}: {
-  title: string;
-  icon: any;
-  children: React.ReactNode;
-  delay?: number;
-  action?: React.ReactNode;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay }}
-    className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden"
-  >
-    <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
-            <Icon className="w-5 h-5 text-white" />
-          </div>
-          <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-        </div>
-        {action}
-      </div>
-    </div>
-    <div className="p-6">
-      {children}
-    </div>
-  </motion.div>
-);
 
 // Form Input Component
 const FormInput = ({
@@ -172,8 +138,7 @@ function ProfilePageContent() {
   const searchParams = useSearchParams();
   const userId = searchParams.get('id');
 
-  const [activeTab, setActiveTab] = useState<'info' | 'edit'>('info');
-  const [showPassword, setShowPassword] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState<Partial<UpdateUserForm>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -226,10 +191,27 @@ function ProfilePageContent() {
 
     updateUser(formData as UpdateUserForm, {
       onSuccess: () => {
-        setActiveTab('info');
+        setIsEditMode(false);
         toast.success('Profil mis à jour avec succès');
       },
     });
+  };
+
+  const handleCancel = () => {
+    setIsEditMode(false);
+    if (user) {
+      setFormData({
+        prenom: user.prenom,
+        nom: user.nom,
+        email: user.email,
+        telephone: user.telephone || '',
+        adresse: user.adresse || '',
+        specialite: user.specialite || '',
+        barreau: user.barreau || '',
+        numeroPermis: user.numeroPermis || '',
+      });
+    }
+    setErrors({});
   };
 
   if (!userId) {
@@ -241,7 +223,7 @@ function ProfilePageContent() {
           <p className="text-slate-600 mb-6">Impossible de charger le profil sans ID</p>
           <button
             onClick={() => router.push('/parametres/utilisateurs')}
-            className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            className="px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 shadow-lg shadow-primary-500/30 transition-all"
           >
             Retour à la liste
           </button>
@@ -270,7 +252,7 @@ function ProfilePageContent() {
           <p className="text-slate-600 mb-6">Cet utilisateur n&apos;existe pas ou a été supprimé</p>
           <button
             onClick={() => router.push('/parametres/utilisateurs')}
-            className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            className="px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 shadow-lg shadow-primary-500/30 transition-all"
           >
             Retour à la liste
           </button>
@@ -281,9 +263,19 @@ function ProfilePageContent() {
 
   const isAvocat = user.role === RoleUtilisateur.AVOCAT || user.role === RoleUtilisateur.JURISTE;
 
+  const roleColors: Record<RoleUtilisateur, string> = {
+    [RoleUtilisateur.ADMIN]: 'blue',
+    [RoleUtilisateur.DG]: 'purple',
+    [RoleUtilisateur.AVOCAT]: 'blue',
+    [RoleUtilisateur.SECRETAIRE]: 'teal',
+    [RoleUtilisateur.ASSISTANT]: 'secondary',
+    [RoleUtilisateur.JURISTE]: 'orange',
+    [RoleUtilisateur.STAGIAIRE]: 'teal',
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-primary-50/20">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -300,7 +292,7 @@ function ProfilePageContent() {
 
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-primary-500/30">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-semibold text-2xl shadow-lg shadow-primary-500/30">
                 {user.prenom.charAt(0)}{user.nom.charAt(0)}
               </div>
               <div>
@@ -308,13 +300,7 @@ function ProfilePageContent() {
                   {user.prenom} {user.nom}
                 </h1>
                 <div className="flex items-center space-x-2">
-                  <Badge variant={
-                    user.role === RoleUtilisateur.ADMIN ? 'blue' :
-                    user.role === RoleUtilisateur.DG ? 'purple' :
-                    user.role === RoleUtilisateur.AVOCAT ? 'blue' :
-                    user.role === RoleUtilisateur.JURISTE ? 'orange' :
-                    'teal'
-                  }>
+                  <Badge variant={roleColors[user.role] as any}>
                     {ROLE_LABELS[user.role]}
                   </Badge>
                   <Badge variant={statusBadges[user.statut].color}>
@@ -324,11 +310,11 @@ function ProfilePageContent() {
               </div>
             </div>
 
-            {activeTab === 'info' && (
+            {!isEditMode && (
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => setActiveTab('edit')}
+                onClick={() => setIsEditMode(true)}
                 className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 shadow-lg shadow-primary-500/30 transition-all"
               >
                 <Edit className="w-5 h-5" />
@@ -338,33 +324,79 @@ function ProfilePageContent() {
           </div>
         </motion.div>
 
-        {activeTab === 'info' ? (
+        {!isEditMode ? (
           /* Vue Information */
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Informations principales */}
             <div className="lg:col-span-2 space-y-6">
-              <SectionCard title="Informations personnelles" icon={User} delay={0.1}>
-                <div className="space-y-1">
-                  <InfoRow icon={User} label="Prénom" value={user.prenom} color="text-primary-600" />
-                  <InfoRow icon={User} label="Nom" value={user.nom} color="text-primary-600" />
-                  <InfoRow icon={Mail} label="Email" value={user.email} color="text-blue-600" />
-                  <InfoRow icon={Phone} label="Téléphone" value={user.telephone} color="text-green-600" />
-                  <InfoRow icon={MapPin} label="Adresse" value={user.adresse} color="text-orange-600" />
-                </div>
-              </SectionCard>
-
-              {isAvocat && (user.specialite || user.barreau || user.numeroPermis) && (
-                <SectionCard title="Informations juridiques" icon={Scale} delay={0.2}>
-                  <div className="space-y-1">
-                    <InfoRow icon={Scale} label="Spécialité" value={user.specialite} color="text-purple-600" />
-                    <InfoRow icon={Building} label="Barreau" value={user.barreau} color="text-indigo-600" />
-                    <InfoRow icon={Hash} label="Numéro de permis" value={user.numeroPermis} color="text-slate-600" />
+              {/* Informations personnelles */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white rounded-xl border border-slate-200 shadow-sm"
+              >
+                <div className="px-6 py-4 border-b border-slate-200">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-slate-900">Informations personnelles</h2>
                   </div>
-                </SectionCard>
+                </div>
+                <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-x-6 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+                  <div className="space-y-1 pb-4 md:pb-0 md:pr-6">
+                    <InfoRow icon={User} label="Prénom" value={user.prenom} iconColor="text-primary-600" />
+                    <InfoRow icon={User} label="Nom" value={user.nom} iconColor="text-primary-600" />
+                    <InfoRow icon={Mail} label="Email" value={user.email} iconColor="text-blue-600" />
+                  </div>
+                  <div className="space-y-1 pt-4 md:pt-0 md:pl-6">
+                    <InfoRow icon={Phone} label="Téléphone" value={user.telephone || 'Non renseigné'} iconColor="text-green-600" />
+                    <InfoRow icon={MapPin} label="Adresse" value={user.adresse || 'Non renseignée'} iconColor="text-orange-600" />
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Informations juridiques */}
+              {isAvocat && (user.specialite || user.barreau || user.numeroPermis) && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-white rounded-xl border border-slate-200 shadow-sm"
+                >
+                  <div className="px-6 py-4 border-b border-slate-200">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
+                        <Scale className="w-5 h-5 text-white" />
+                      </div>
+                      <h2 className="text-lg font-semibold text-slate-900">Informations juridiques</h2>
+                    </div>
+                  </div>
+                  <div className="p-6 space-y-1">
+                    <InfoRow icon={Scale} label="Spécialité" value={user.specialite} iconColor="text-purple-600" />
+                    <InfoRow icon={Building} label="Barreau" value={user.barreau} iconColor="text-indigo-600" />
+                    <InfoRow icon={Hash} label="Numéro de permis" value={user.numeroPermis} iconColor="text-slate-600" />
+                  </div>
+                </motion.div>
               )}
 
-              <SectionCard title="Historique" icon={Clock} delay={0.3}>
-                <div className="space-y-1">
+              {/* Historique */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-white rounded-xl border border-slate-200 shadow-sm"
+              >
+                <div className="px-6 py-4 border-b border-slate-200">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-white" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-slate-900">Historique</h2>
+                  </div>
+                </div>
+                <div className="p-6 space-y-1">
                   <InfoRow
                     icon={Calendar}
                     label="Créé le"
@@ -375,7 +407,7 @@ function ProfilePageContent() {
                       hour: '2-digit',
                       minute: '2-digit'
                     })}
-                    color="text-slate-600"
+                    iconColor="text-slate-600"
                   />
                   <InfoRow
                     icon={Clock}
@@ -387,7 +419,7 @@ function ProfilePageContent() {
                       hour: '2-digit',
                       minute: '2-digit'
                     })}
-                    color="text-slate-600"
+                    iconColor="text-slate-600"
                   />
                   {user.derniereConnexion && (
                     <InfoRow
@@ -400,43 +432,51 @@ function ProfilePageContent() {
                         hour: '2-digit',
                         minute: '2-digit'
                       })}
-                      color="text-green-600"
+                      iconColor="text-green-600"
                     />
                   )}
                 </div>
-              </SectionCard>
+              </motion.div>
             </div>
 
             {/* Sidebar */}
             <div className="space-y-6">
+              {/* Informations de compte */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 }}
-                className="bg-gradient-to-br from-primary-50 to-blue-50 rounded-xl border border-primary-200 p-6"
+                className="bg-white rounded-xl border border-slate-200 shadow-sm"
               >
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-primary-600" />
+                <div className="px-6 py-4 border-b border-slate-200">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="font-semibold text-slate-900">Informations de compte</h3>
                   </div>
-                  <h3 className="font-semibold text-primary-900">Informations de compte</h3>
                 </div>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between items-center py-2 border-b border-primary-100">
-                    <span className="text-primary-700">Rôle</span>
-                    <span className="font-medium text-primary-900">{ROLE_LABELS[user.role]}</span>
+                <div className="p-6 space-y-3">
+                  <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                    <span className="text-sm text-slate-600">Rôle</span>
+                    <Badge variant={roleColors[user.role] as any}>
+                      {ROLE_LABELS[user.role]}
+                    </Badge>
                   </div>
-                  <div className="flex justify-between items-center py-2 border-b border-primary-100">
-                    <span className="text-primary-700">Statut</span>
-                    <span className="font-medium text-primary-900">{STATUS_LABELS[user.statut]}</span>
+                  <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                    <span className="text-sm text-slate-600">Statut</span>
+                    <Badge variant={statusBadges[user.statut].color}>
+                      {statusBadges[user.statut].label}
+                    </Badge>
                   </div>
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-primary-700">ID</span>
-                    <span className="font-mono text-xs text-primary-900">{user.id.slice(0, 8)}...</span>
+                    <span className="text-sm text-slate-600">ID</span>
+                    <span className="font-mono text-xs text-slate-900">{user.id.slice(0, 8)}...</span>
                   </div>
                 </div>
               </motion.div>
 
+              {/* Conseils */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -445,24 +485,24 @@ function ProfilePageContent() {
               >
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                    <Briefcase className="w-5 h-5 text-blue-600" />
+                    <Info className="w-5 h-5 text-blue-600" />
                   </div>
                   <h3 className="font-semibold text-blue-900">Actions rapides</h3>
                 </div>
                 <div className="space-y-2">
                   <button
-                    onClick={() => setActiveTab('edit')}
-                    className="w-full px-4 py-2 bg-white text-blue-700 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium flex items-center justify-center space-x-2"
+                    onClick={() => setIsEditMode(true)}
+                    className="w-full px-4 py-2 bg-white text-blue-700 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium flex items-center justify-center space-x-2 border border-blue-200"
                   >
                     <Edit className="w-4 h-4" />
                     <span>Modifier le profil</span>
                   </button>
                   <button
                     onClick={() => router.push(`/parametres/utilisateurs/${user.id}/modifier`)}
-                    className="w-full px-4 py-2 bg-white text-blue-700 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium flex items-center justify-center space-x-2"
+                    className="w-full px-4 py-2 bg-white text-blue-700 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium flex items-center justify-center space-x-2 border border-blue-200"
                   >
-                    <Key className="w-4 h-4" />
-                    <span>Réinitialiser mot de passe</span>
+                    <Shield className="w-4 h-4" />
+                    <span>Gérer les permissions</span>
                   </button>
                 </div>
               </motion.div>
@@ -473,92 +513,134 @@ function ProfilePageContent() {
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
-                <SectionCard title="Modifier les informations" icon={Edit} delay={0.1}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormInput
-                      label="Prénom"
-                      icon={User}
-                      required
-                      value={formData.prenom}
-                      onChange={(e: any) => handleChange('prenom', e.target.value)}
-                      error={errors.prenom}
-                      disabled={isUpdating}
-                    />
-                    <FormInput
-                      label="Nom"
-                      icon={User}
-                      required
-                      value={formData.nom}
-                      onChange={(e: any) => handleChange('nom', e.target.value)}
-                      error={errors.nom}
-                      disabled={isUpdating}
-                    />
+                {/* Modifier les informations */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-white rounded-xl border border-slate-200 shadow-sm"
+                >
+                  <div className="px-6 py-4 border-b border-slate-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
+                          <Edit className="w-5 h-5 text-white" />
+                        </div>
+                        <h2 className="text-lg font-semibold text-slate-900">Modifier les informations</h2>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCancel}
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
-                  <FormInput
-                    label="Email"
-                    icon={Mail}
-                    required
-                    type="email"
-                    value={formData.email}
-                    onChange={(e: any) => handleChange('email', e.target.value)}
-                    error={errors.email}
-                    disabled={isUpdating}
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="p-6 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormInput
+                        label="Prénom"
+                        icon={User}
+                        required
+                        value={formData.prenom}
+                        onChange={(e: any) => handleChange('prenom', e.target.value)}
+                        error={errors.prenom}
+                        disabled={isUpdating}
+                      />
+                      <FormInput
+                        label="Nom"
+                        icon={User}
+                        required
+                        value={formData.nom}
+                        onChange={(e: any) => handleChange('nom', e.target.value)}
+                        error={errors.nom}
+                        disabled={isUpdating}
+                      />
+                    </div>
                     <FormInput
-                      label="Téléphone"
-                      icon={Phone}
-                      value={formData.telephone}
-                      onChange={(e: any) => handleChange('telephone', e.target.value)}
-                      disabled={isUpdating}
-                    />
-                    <FormInput
-                      label="Adresse"
-                      icon={MapPin}
-                      value={formData.adresse}
-                      onChange={(e: any) => handleChange('adresse', e.target.value)}
-                      disabled={isUpdating}
-                    />
-                  </div>
-                </SectionCard>
-
-                {isAvocat && (
-                  <SectionCard title="Informations juridiques" icon={Scale} delay={0.2}>
-                    <FormInput
-                      label="Spécialité"
-                      icon={Scale}
-                      value={formData.specialite}
-                      onChange={(e: any) => handleChange('specialite', e.target.value)}
+                      label="Email"
+                      icon={Mail}
+                      required
+                      type="email"
+                      value={formData.email}
+                      onChange={(e: any) => handleChange('email', e.target.value)}
+                      error={errors.email}
                       disabled={isUpdating}
                     />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <FormInput
-                        label="Barreau"
-                        icon={Building}
-                        value={formData.barreau}
-                        onChange={(e: any) => handleChange('barreau', e.target.value)}
+                        label="Téléphone"
+                        icon={Phone}
+                        value={formData.telephone}
+                        onChange={(e: any) => handleChange('telephone', e.target.value)}
                         disabled={isUpdating}
                       />
                       <FormInput
-                        label="Numéro de permis"
-                        icon={Hash}
-                        value={formData.numeroPermis}
-                        onChange={(e: any) => handleChange('numeroPermis', e.target.value)}
+                        label="Adresse"
+                        icon={MapPin}
+                        value={formData.adresse}
+                        onChange={(e: any) => handleChange('adresse', e.target.value)}
                         disabled={isUpdating}
                       />
                     </div>
-                  </SectionCard>
+                  </div>
+                </motion.div>
+
+                {/* Informations juridiques (si avocat) */}
+                {isAvocat && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="bg-white rounded-xl border border-slate-200 shadow-sm"
+                  >
+                    <div className="px-6 py-4 border-b border-slate-200">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
+                          <Scale className="w-5 h-5 text-white" />
+                        </div>
+                        <h2 className="text-lg font-semibold text-slate-900">Informations juridiques</h2>
+                      </div>
+                    </div>
+                    <div className="p-6 space-y-6">
+                      <FormInput
+                        label="Spécialité"
+                        icon={Scale}
+                        value={formData.specialite}
+                        onChange={(e: any) => handleChange('specialite', e.target.value)}
+                        disabled={isUpdating}
+                      />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormInput
+                          label="Barreau"
+                          icon={Building}
+                          value={formData.barreau}
+                          onChange={(e: any) => handleChange('barreau', e.target.value)}
+                          disabled={isUpdating}
+                        />
+                        <FormInput
+                          label="Numéro de permis"
+                          icon={Hash}
+                          value={formData.numeroPermis}
+                          onChange={(e: any) => handleChange('numeroPermis', e.target.value)}
+                          disabled={isUpdating}
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
                 )}
               </div>
 
+              {/* Sidebar Actions */}
               <div className="space-y-6">
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden sticky top-6"
+                  className="bg-white rounded-xl border border-slate-200 shadow-sm sticky top-6"
                 >
-                  <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
+                  <div className="px-6 py-4 border-b border-slate-200">
                     <h2 className="text-lg font-semibold text-slate-900">Actions</h2>
                   </div>
                   <div className="p-6 space-y-3">
@@ -584,25 +666,41 @@ function ProfilePageContent() {
 
                     <button
                       type="button"
-                      onClick={() => {
-                        setActiveTab('info');
-                        setFormData({
-                          prenom: user.prenom,
-                          nom: user.nom,
-                          email: user.email,
-                          telephone: user.telephone || '',
-                          adresse: user.adresse || '',
-                          specialite: user.specialite || '',
-                          barreau: user.barreau || '',
-                          numeroPermis: user.numeroPermis || '',
-                        });
-                        setErrors({});
-                      }}
+                      onClick={handleCancel}
                       disabled={isUpdating}
                       className="w-full px-6 py-3 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Annuler
                     </button>
+                  </div>
+                </motion.div>
+
+                {/* Info pendant édition */}
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="bg-blue-50 rounded-xl border border-blue-200 p-6"
+                >
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                      <Info className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <h3 className="font-semibold text-blue-900">Conseils</h3>
+                  </div>
+                  <div className="space-y-3 text-sm text-blue-700">
+                    <div className="flex items-start space-x-2">
+                      <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <p>Les modifications seront enregistrées immédiatement</p>
+                    </div>
+                    <div className="flex items-start space-x-2">
+                      <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <p>Vérifiez bien les informations avant de valider</p>
+                    </div>
+                    <div className="flex items-start space-x-2">
+                      <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <p>L&apos;utilisateur sera notifié des changements</p>
+                    </div>
                   </div>
                 </motion.div>
               </div>
