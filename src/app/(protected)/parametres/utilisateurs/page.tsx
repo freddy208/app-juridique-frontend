@@ -623,7 +623,7 @@ export default function UsersPage() {
                     <UserCard
                       key={user.id}
                       user={user}
-                      onView={() => router.push(`/parametres/utilisateurs/profil?id=${user.id}`)}
+                      onView={() => router.push(`/parametres/utilisateurs/${user.id}/profil`)}
                       onEdit={() => router.push(`/parametres/utilisateurs/${user.id}/modifier`)}
                       onDelete={() => setUserToDelete(user)}
                     />
@@ -696,7 +696,7 @@ export default function UsersPage() {
                               </Badge>
                             </td>
                             <td className="px-6 py-4">
-                             <Badge variant={statusBadges[user.statut].color}>
+                            <Badge variant={statusBadges[user.statut].color}>
                               {statusBadges[user.statut].label}
                             </Badge>
                             </td>
@@ -709,7 +709,7 @@ export default function UsersPage() {
                               <div className="flex items-center justify-end space-x-2">
                                 {/* Bouton Voir */}
                                 <button
-                                  onClick={() => router.push(`/parametres/utilisateurs/profil?id=${user.id}`)}
+                                  onClick={() => router.push(`/parametres/utilisateurs/${user.id}/profil`)}
                                   className="p-2 text-slate-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                                   title="Voir les détails"
                                 >
