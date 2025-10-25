@@ -16,7 +16,7 @@ import {
 // ============================================
 
 export interface RoleBadgeConfig {
-  color: 'default' | 'secondary' | 'destructive' | 'success' | 'warning' | 'blue' | 'purple' | 'orange' | 'teal' | 'outline';
+  color: 'default' | 'secondary' | 'destructive' | 'success' | 'warning' | 'blue' | 'purple' | 'orange' | 'teal';
   icon: LucideIcon;
   label: string;
 }
