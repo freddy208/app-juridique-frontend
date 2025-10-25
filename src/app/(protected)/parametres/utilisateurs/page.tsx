@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/app/(protected)/parametres/utilisateurs/page.tsx
+// src/app/(protected)/parametres/utilisateurs/page.tsx - VERSION DEBUG
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Users, 
@@ -14,12 +14,9 @@ import {
   List, 
   Trash2, 
   Edit, 
-  Eye,
-  MoreVertical,
   UserCheck,
   UserX,
   AlertCircle,
-  Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUsers } from '@/lib/hooks/useUsers';
@@ -32,14 +29,9 @@ import {
 } from '@/lib/types/user.types';
 import { toast } from 'react-hot-toast';
 import * as XLSX from 'xlsx';
-import { roleBadges, statusBadges } from '@/lib/utils/badge-config';
+import { statusBadges } from '@/lib/utils/badge-config';
 
-
-
-// ============================================
-// TYPES
-// ============================================
-
+// Types
 type ViewMode = 'grid' | 'table';
 
 interface FilterState {
@@ -47,10 +39,6 @@ interface FilterState {
   role: RoleUtilisateur | 'ALL';
   statut: StatutUtilisateur | 'ALL';
 }
-
-// ============================================
-// COMPOSANTS
-// ============================================
 
 // Badge Component
 const Badge = ({ 
@@ -79,250 +67,68 @@ const Badge = ({
   );
 };
 
-// Card User Grid
-const UserCard = ({ 
-  user, 
-  onView, 
-  onEdit, 
-  onDelete 
-}: { 
-  user: User; 
-  onView: () => void; 
-  onEdit: () => void; 
-  onDelete: () => void;
-}) => {
-  const [showMenu, setShowMenu] = useState(false);
-  
-  const roleColors: Record<RoleUtilisateur, string> = {
-    [RoleUtilisateur.ADMIN]: 'blue',
-    [RoleUtilisateur.DG]: 'purple',
-    [RoleUtilisateur.AVOCAT]: 'blue',
-    [RoleUtilisateur.SECRETAIRE]: 'teal',
-    [RoleUtilisateur.ASSISTANT]: 'secondary',
-    [RoleUtilisateur.JURISTE]: 'orange',
-    [RoleUtilisateur.STAGIAIRE]: 'teal',
-  };
-
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      whileHover={{ y: -4 }}
-      className="group relative bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-elegant transition-all duration-300"
-    >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-semibold text-lg shadow-md">
-            {user.prenom.charAt(0)}{user.nom.charAt(0)}
-          </div>
-          <div>
-            <h3 className="font-semibold text-slate-900 group-hover:text-primary-600 transition-colors">
-              {user.prenom} {user.nom}
-            </h3>
-            <p className="text-sm text-slate-500">{user.email}</p>
-          </div>
-        </div>
-        
-        {/* Menu Actions */}
-        <div className="relative">
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-          >
-            <MoreVertical className="w-4 h-4 text-slate-400" />
-          </button>
-          
-          <AnimatePresence>
-            {showMenu && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-premium border border-slate-200 py-1 z-10"
-              >
-                <button
-                  onClick={() => { onView(); setShowMenu(false); }}
-                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center space-x-2"
-                >
-                  <Eye className="w-4 h-4" />
-                  <span>Voir</span>
-                </button>
-                <button
-                  onClick={() => { onEdit(); setShowMenu(false); }}
-                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center space-x-2"
-                >
-                  <Edit className="w-4 h-4" />
-                  <span>Modifier</span>
-                </button>
-                <button
-                  onClick={() => { onDelete(); setShowMenu(false); }}
-                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span>Supprimer</span>
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* Badges */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        <Badge variant={roleBadges[user.role].color}>
-          {roleBadges[user.role].label}
-        </Badge>
-
-        <Badge variant={statusBadges[user.statut].color}>
-          {statusBadges[user.statut].label}
-        </Badge>
-
-      </div>
-
-      {/* Info Supplémentaires */}
-      <div className="space-y-2 text-sm text-slate-600">
-        {user.telephone && (
-          <div className="flex items-center space-x-2">
-            <span className="text-slate-400">📞</span>
-            <span>{user.telephone}</span>
-          </div>
-        )}
-        {user.specialite && (
-          <div className="flex items-center space-x-2">
-            <span className="text-slate-400">⚖️</span>
-            <span>{user.specialite}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Footer */}
-      <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-        <span>Créé le {new Date(user.creeLe).toLocaleDateString('fr-FR')}</span>
-        {user.derniereConnexion && (
-          <span className="flex items-center space-x-1">
-            <Clock className="w-3 h-3" />
-            <span>Vu {new Date(user.derniereConnexion).toLocaleDateString('fr-FR')}</span>
-          </span>
-        )}
-      </div>
-    </motion.div>
-  );
-};
-
-// Confirmation Modal
-const ConfirmModal = ({ 
-  isOpen, 
-  onClose, 
-  onConfirm, 
-  title, 
-  message, 
-  confirmText = 'Confirmer',
-  isLoading = false 
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  title: string;
-  message: string;
-  confirmText?: string;
-  isLoading?: boolean;
-}) => {
-  if (!isOpen) return null;
-
-  return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative bg-white rounded-xl shadow-luxe max-w-md w-full p-6"
-        >
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-              <AlertCircle className="w-6 h-6 text-red-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-slate-900">{title}</h3>
-          </div>
-          <p className="text-slate-600 mb-6">{message}</p>
-          <div className="flex items-center justify-end space-x-3">
-            <button
-              onClick={onClose}
-              disabled={isLoading}
-              className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
-            >
-              Annuler
-            </button>
-            <button
-              onClick={onConfirm}
-              disabled={isLoading}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Suppression...</span>
-                </>
-              ) : (
-                <span>{confirmText}</span>
-              )}
-            </button>
-          </div>
-        </motion.div>
-      </div>
-    </AnimatePresence>
-  );
-};
-
-// ============================================
-// PAGE PRINCIPALE
-// ============================================
-
 export default function UsersPage() {
   const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     role: 'ALL',
-    statut: StatutUtilisateur.ACTIF, // Par défaut sur ACTIF
+    statut: StatutUtilisateur.ACTIF, // Par défaut ACTIF
   });
   const [showFilters, setShowFilters] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
-  // Fetch users avec les filtres
+  // Query params
   const queryParams = useMemo(() => {
     const params: any = {
       page: 1,
       limit: 100,
+      sortBy: 'nom',
+      sortOrder: 'asc',
     };
 
     if (filters.search) params.search = filters.search;
     if (filters.role !== 'ALL') params.role = filters.role;
     if (filters.statut !== 'ALL') params.statut = filters.statut;
 
+    console.log('🔧 [UsersPage] Query params calculés:', params);
     return params;
   }, [filters]);
 
   const { 
     users, 
+    pagination,
     isLoading, 
+    error,
     deleteUser, 
     isDeleting 
   } = useUsers(queryParams);
 
+  // Logs à chaque rendu
+  useEffect(() => {
+    console.group('🎨 [UsersPage] Rendu de la page');
+    console.log('État des filtres:', filters);
+    console.log('Query params:', queryParams);
+    console.log('Loading:', isLoading);
+    console.log('Error:', error);
+    console.log('Utilisateurs reçus:', {
+      count: users.length,
+      isArray: Array.isArray(users),
+      premiers3: users.slice(0, 3),
+    });
+    console.log('Pagination:', pagination);
+    console.groupEnd();
+  }, [filters, queryParams, isLoading, error, users, pagination]);
+
   // Export Excel
   const handleExport = () => {
+    console.log('📥 [UsersPage] Export Excel - Début');
     try {
+      if (!users || users.length === 0) {
+        toast.error('Aucune donnée à exporter');
+        return;
+      }
+
       const exportData = users.map(user => ({
         'Prénom': user.prenom,
         'Nom': user.nom,
@@ -334,35 +140,27 @@ export default function UsersPage() {
         'Barreau': user.barreau || '-',
         'N° Permis': user.numeroPermis || '-',
         'Date création': new Date(user.creeLe).toLocaleDateString('fr-FR'),
-        'Dernière connexion': user.derniereConnexion 
-          ? new Date(user.derniereConnexion).toLocaleDateString('fr-FR') 
-          : '-',
       }));
+
+      console.log('📥 [UsersPage] Données formatées pour export:', exportData.length, 'lignes');
 
       const ws = XLSX.utils.json_to_sheet(exportData);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Utilisateurs');
       
-      // Largeur des colonnes
       const colWidths = [
-        { wch: 15 }, // Prénom
-        { wch: 15 }, // Nom
-        { wch: 30 }, // Email
-        { wch: 15 }, // Rôle
-        { wch: 10 }, // Statut
-        { wch: 15 }, // Téléphone
-        { wch: 20 }, // Spécialité
-        { wch: 20 }, // Barreau
-        { wch: 15 }, // N° Permis
-        { wch: 15 }, // Date création
-        { wch: 18 }, // Dernière connexion
+        { wch: 15 }, { wch: 15 }, { wch: 30 }, { wch: 15 }, { wch: 10 },
+        { wch: 15 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 15 },
       ];
       ws['!cols'] = colWidths;
 
-      XLSX.writeFile(wb, `utilisateurs_${new Date().toISOString().split('T')[0]}.xlsx`);
-      toast.success('Export réussi !');
+      const filename = `utilisateurs_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, filename);
+      
+      console.log('✅ [UsersPage] Export réussi:', filename);
+      toast.success(`Export réussi ! ${users.length} utilisateurs exportés`);
     } catch (error) {
-      console.error('Export error:', error);
+      console.error('❌ [UsersPage] Erreur export:', error);
       toast.error('Erreur lors de l\'export');
     }
   };
@@ -371,16 +169,41 @@ export default function UsersPage() {
   const handleDelete = () => {
     if (!userToDelete) return;
     
+    console.log('🗑️ [UsersPage] Suppression utilisateur:', userToDelete.id);
     deleteUser(userToDelete.id, {
       onSuccess: () => {
+        console.log('✅ [UsersPage] Suppression réussie');
         toast.success('Utilisateur supprimé avec succès');
         setUserToDelete(null);
       },
-      onError: () => {
+      onError: (err: any) => {
+        console.error('❌ [UsersPage] Erreur suppression:', err);
         toast.error('Erreur lors de la suppression');
       },
     });
   };
+
+  // Debug panel (à retirer en production)
+  const DebugPanel = () => (
+    <div className="bg-slate-900 text-white p-4 rounded-lg mb-6 font-mono text-xs">
+      <div className="font-bold mb-2">🐛 DEBUG PANEL</div>
+      <div>Loading: {String(isLoading)}</div>
+      <div>Error: {error ? String(error) : 'null'}</div>
+      <div>Users count: {users.length}</div>
+      <div>Users isArray: {String(Array.isArray(users))}</div>
+      <div>Filters: {JSON.stringify(filters)}</div>
+      <div>Query params: {JSON.stringify(queryParams)}</div>
+      <div>Pagination: {JSON.stringify(pagination)}</div>
+      {users.length > 0 && (
+        <div className="mt-2">
+          <div>Premier utilisateur:</div>
+          <pre className="bg-slate-800 p-2 rounded mt-1 overflow-auto max-h-40">
+            {JSON.stringify(users[0], null, 2)}
+          </pre>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-primary-50/20">
@@ -412,6 +235,9 @@ export default function UsersPage() {
           </div>
         </motion.div>
 
+        {/* Debug Panel - RETIREZ EN PRODUCTION */}
+        <DebugPanel />
+
         {/* Stats Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -425,7 +251,6 @@ export default function UsersPage() {
               value: users.length, 
               icon: Users, 
               color: 'from-blue-500 to-blue-600',
-              bgColor: 'bg-blue-50',
               textColor: 'text-blue-700'
             },
             { 
@@ -433,7 +258,6 @@ export default function UsersPage() {
               value: users.filter(u => u.statut === StatutUtilisateur.ACTIF).length, 
               icon: UserCheck, 
               color: 'from-green-500 to-green-600',
-              bgColor: 'bg-green-50',
               textColor: 'text-green-700'
             },
             { 
@@ -441,7 +265,6 @@ export default function UsersPage() {
               value: users.filter(u => u.statut === StatutUtilisateur.INACTIF).length, 
               icon: UserX, 
               color: 'from-slate-500 to-slate-600',
-              bgColor: 'bg-slate-50',
               textColor: 'text-slate-700'
             },
             { 
@@ -449,7 +272,6 @@ export default function UsersPage() {
               value: users.filter(u => u.statut === StatutUtilisateur.SUSPENDU).length, 
               icon: AlertCircle, 
               color: 'from-red-500 to-red-600',
-              bgColor: 'bg-red-50',
               textColor: 'text-red-700'
             },
           ].map((stat, index) => (
@@ -523,7 +345,7 @@ export default function UsersPage() {
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                  showFilters || filters.role !== 'ALL' || filters.statut !== 'ACTIF'
+                  showFilters || filters.role !== 'ALL' || filters.statut !== StatutUtilisateur.ACTIF
                     ? 'bg-primary-50 text-primary-700 border border-primary-200'
                     : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
                 }`}
@@ -535,7 +357,8 @@ export default function UsersPage() {
               {/* Export */}
               <button
                 onClick={handleExport}
-                className="flex items-center space-x-2 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                disabled={users.length === 0}
+                className="flex items-center space-x-2 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Download className="w-5 h-5" />
                 <span className="hidden md:inline">Export</span>
@@ -553,7 +376,6 @@ export default function UsersPage() {
                 className="overflow-hidden"
               >
                 <div className="pt-4 mt-4 border-t border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Filtre Rôle */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
                       Rôle
@@ -570,7 +392,6 @@ export default function UsersPage() {
                     </select>
                   </div>
 
-                  {/* Filtre Statut */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
                       Statut
@@ -587,7 +408,6 @@ export default function UsersPage() {
                     </select>
                   </div>
 
-                  {/* Reset */}
                   <div className="flex items-end">
                     <button
                       onClick={() => setFilters({ search: '', role: 'ALL', statut: StatutUtilisateur.ACTIF })}
@@ -619,173 +439,129 @@ export default function UsersPage() {
               Aucun utilisateur trouvé
             </h3>
             <p className="text-slate-600 mb-6">
-              {filters.search || filters.role !== 'ALL' || filters.statut !== 'ALL'
+              {filters.search || filters.role !== 'ALL' || filters.statut !== StatutUtilisateur.ACTIF
                 ? 'Aucun utilisateur ne correspond à vos critères de recherche.'
                 : 'Commencez par créer votre premier utilisateur.'}
             </p>
-            {(filters.search || filters.role !== 'ALL' || filters.statut !== 'ALL') && (
-              <button
-                onClick={() => setFilters({ search: '', role: 'ALL', statut: StatutUtilisateur.ACTIF })}
-                className="px-6 py-2 text-primary-600 border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors"
-              >
-                Réinitialiser les filtres
-              </button>
-            )}
           </motion.div>
         ) : (
-          <>
-            {/* Grid View */}
-            {viewMode === 'grid' && (
-              <motion.div
-                layout
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              >
-                <AnimatePresence>
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                      Utilisateur
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                      Rôle
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                      Statut
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider hidden lg:table-cell">
+                      Contact
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
                   {users.map((user) => (
-                    <UserCard
-                      key={user.id}
-                      user={user}
-                      onView={() => router.push(`/parametres/utilisateurs/profil?id=${user.id}`)}
-                      onEdit={() => router.push(`/parametres/utilisateurs/${user.id}/modifier`)}
-                      onDelete={() => setUserToDelete(user)}
-                    />
-                  ))}
-                </AnimatePresence>
-              </motion.div>
-            )}
-
-            {/* Table View */}
-            {viewMode === 'table' && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden"
-              >
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-slate-50 border-b border-slate-200">
-                      <tr>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                          Utilisateur
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                          Rôle
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                          Statut
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider hidden lg:table-cell">
-                          Contact
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider hidden xl:table-cell">
-                          Dernière connexion
-                        </th>
-                        <th className="px-6 py-4 text-right text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      <AnimatePresence>
-                        {users.map((user, index) => (
-                          <motion.tr
-                            key={user.id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            transition={{ delay: index * 0.03 }}
-                            className="hover:bg-slate-50 transition-colors"
+                    <tr key={user.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-semibold text-sm shadow-md">
+                            {user.prenom.charAt(0)}{user.nom.charAt(0)}
+                          </div>
+                          <div>
+                            <div className="font-medium text-slate-900">
+                              {user.prenom} {user.nom}
+                            </div>
+                            <div className="text-sm text-slate-500">{user.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge variant="blue">
+                          {ROLE_LABELS[user.role]}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge variant={statusBadges[user.statut].color}>
+                          {statusBadges[user.statut].label}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 hidden lg:table-cell">
+                        <div className="text-sm text-slate-600">
+                          {user.telephone || '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end space-x-2">
+                          <button
+                            onClick={() => router.push(`/parametres/utilisateurs/${user.id}/modifier`)}
+                            className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Modifier"
                           >
-                            <td className="px-6 py-4">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-semibold text-sm shadow-md">
-                                  {user.prenom.charAt(0)}{user.nom.charAt(0)}
-                                </div>
-                                <div>
-                                  <div className="font-medium text-slate-900">
-                                    {user.prenom} {user.nom}
-                                  </div>
-                                  <div className="text-sm text-slate-500">{user.email}</div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <Badge variant={
-                                user.role === RoleUtilisateur.ADMIN ? 'blue' :
-                                user.role === RoleUtilisateur.DG ? 'purple' :
-                                user.role === RoleUtilisateur.AVOCAT ? 'blue' :
-                                user.role === RoleUtilisateur.JURISTE ? 'orange' :
-                                'teal'
-                              }>
-                                {ROLE_LABELS[user.role]}
-                              </Badge>
-                            </td>
-                            <td className="px-6 py-4">
-                            
-                            <Badge variant={statusBadges[user.statut].color}>
-                              {statusBadges[user.statut].label}
-                            </Badge>
-                            </td>
-                            <td className="px-6 py-4 hidden lg:table-cell">
-                              <div className="text-sm text-slate-600">
-                                {user.telephone || '-'}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 hidden xl:table-cell">
-                              <div className="text-sm text-slate-600">
-                                {user.derniereConnexion 
-                                  ? new Date(user.derniereConnexion).toLocaleDateString('fr-FR')
-                                  : 'Jamais'
-                                }
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <div className="flex items-center justify-end space-x-2">
-                                <button
-                                  onClick={() => router.push(`/parametres/utilisateurs/profil?id=${user.id}`)}
-                                  className="p-2 text-slate-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                                  title="Voir"
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => router.push(`/parametres/utilisateurs/${user.id}/modifier`)}
-                                  className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                  title="Modifier"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => setUserToDelete(user)}
-                                  className="p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                  title="Supprimer"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </td>
-                          </motion.tr>
-                        ))}
-                      </AnimatePresence>
-                    </tbody>
-                  </table>
-                </div>
-              </motion.div>
-            )}
-          </>
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setUserToDelete(user)}
+                            className="p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Supprimer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
-      <ConfirmModal
-        isOpen={!!userToDelete}
-        onClose={() => setUserToDelete(null)}
-        onConfirm={handleDelete}
-        title="Supprimer cet utilisateur ?"
-        message={`Êtes-vous sûr de vouloir supprimer ${userToDelete?.prenom} ${userToDelete?.nom} ? Cette action est irréversible.`}
-        confirmText="Supprimer"
-        isLoading={isDeleting}
-      />
+      {/* Delete Modal */}
+      {userToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            onClick={() => setUserToDelete(null)}
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative bg-white rounded-xl shadow-luxe max-w-md w-full p-6"
+          >
+            <h3 className="text-xl font-semibold text-slate-900 mb-4">
+              Supprimer cet utilisateur ?
+            </h3>
+            <p className="text-slate-600 mb-6">
+              Êtes-vous sûr de vouloir supprimer {userToDelete.prenom} {userToDelete.nom} ?
+            </p>
+            <div className="flex items-center justify-end space-x-3">
+              <button
+                onClick={() => setUserToDelete(null)}
+                disabled={isDeleting}
+                className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {isDeleting ? 'Suppression...' : 'Supprimer'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
