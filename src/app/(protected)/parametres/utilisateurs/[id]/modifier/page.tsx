@@ -33,7 +33,7 @@ import {
   type UpdateUserForm,
 } from '@/lib/types/user.types';
 import { toast } from 'react-hot-toast';
-import { statusBadges } from '@/lib/utils/badge-config';
+import { statusBadgesUtilisateur as statusBadges } from '@/lib/utils/badge-config';
 
 interface FormErrors {
   [key: string]: string;

@@ -32,7 +32,7 @@ import {
 } from '@/lib/types/user.types';
 import { toast } from 'react-hot-toast';
 import * as XLSX from 'xlsx';
-import { statusBadges } from '@/lib/utils/badge-config';
+import { statusBadgesUtilisateur as statusBadges } from '@/lib/utils/badge-config';
 
 // Types
 type ViewMode = 'grid' | 'table';
