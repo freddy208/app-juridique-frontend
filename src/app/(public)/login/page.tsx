@@ -42,7 +42,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
       console.log('👤 Utilisateur déjà authentifié, redirection...')
-      router.replace('/parametres/utilisateurs')
+      router.replace('/clients')
     }
   }, [isAuthenticated, authLoading, router])
 
@@ -62,7 +62,7 @@ export default function LoginPage() {
       toast.success('Connexion réussie')
       
       // ✅ Redirection immédiate après succès
-      router.push('/parametres/utilisateurs')
+      router.push('/clients')
       
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
