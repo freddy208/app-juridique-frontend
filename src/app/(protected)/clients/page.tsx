@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import type React from "react"
+
+import { useState, useMemo, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { useClients } from "@/lib/hooks/useClients"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card"
-import { Badge } from "@/components/ui/Badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select"
 import {
   Users,
   UserPlus,
@@ -26,18 +25,63 @@ import {
   Clock,
   Building2,
 } from "lucide-react"
-import {
-  StatutClient,
-  TypeClient,
-  STATUT_LABELS,
-  TYPE_CLIENT_LABELS,
-  statusBadges,
-  type Client,
-} from "@/lib/types/client.types"
-import { exportClientsToExcel } from "@/lib/utils/export-excel"
-import { toast } from "sonner"
+import { StatutClient, TypeClient, STATUT_LABELS, TYPE_CLIENT_LABELS, type Client } from "@/lib/types/client.types"
+import { toast } from "react-hot-toast"
+import * as XLSX from "xlsx"
 
 type ViewMode = "grid" | "table"
+
+const Badge = ({
+  children,
+  variant = "default",
+}: {
+  children: React.ReactNode
+  variant?:
+    | "default"
+    | "success"
+    | "warning"
+    | "destructive"
+    | "secondary"
+    | "blue"
+    | "purple"
+    | "orange"
+    | "teal"
+    | "outline"
+}) => {
+  const variants = {
+    default: "bg-slate-100 text-slate-700 border-slate-200",
+    success: "bg-green-50 text-green-700 border-green-200",
+    warning: "bg-yellow-50 text-yellow-700 border-yellow-200",
+    destructive: "bg-red-50 text-red-700 border-red-200",
+    secondary: "bg-slate-100 text-slate-600 border-slate-200",
+    blue: "bg-blue-50 text-blue-700 border-blue-200",
+    purple: "bg-purple-50 text-purple-700 border-purple-200",
+    orange: "bg-orange-50 text-orange-700 border-orange-200",
+    teal: "bg-teal-50 text-teal-700 border-teal-200",
+    outline: "bg-white text-slate-700 border-slate-300",
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${variants[variant]}`}
+    >
+      {children}
+    </span>
+  )
+}
+
+const getStatusBadgeVariant = (statut: StatutClient): "success" | "warning" | "destructive" | "secondary" => {
+  switch (statut) {
+    case StatutClient.ACTIF:
+      return "success"
+    case StatutClient.PROSPECT:
+      return "warning"
+    case StatutClient.INACTIF:
+      return "destructive"
+    default:
+      return "secondary"
+  }
+}
 
 const ClientCard = ({
   client,
@@ -139,7 +183,7 @@ const ClientCard = ({
       {/* Badges */}
       <div className="flex flex-wrap gap-2 mb-4">
         <Badge variant="outline">{TYPE_CLIENT_LABELS[client.typeClient]}</Badge>
-        <Badge variant={statusBadges[client.statut]}>{STATUT_LABELS[client.statut]}</Badge>
+        <Badge variant={getStatusBadgeVariant(client.statut)}>{STATUT_LABELS[client.statut]}</Badge>
       </div>
 
       {/* Info Supplémentaires */}
@@ -272,7 +316,7 @@ export default function ClientsPage() {
 
   const { clients, total, isLoading, error, deleteClient, getGlobalStats } = useClients({
     page: 1,
-    limit: 50,
+    limit: 100,
     filters,
   })
 
@@ -284,8 +328,7 @@ export default function ClientsPage() {
     vip: number
   } | null>(null)
 
-  // Load stats on mount
-  useState(() => {
+  useEffect(() => {
     getGlobalStats()
       .then((data) => {
         setStats(data)
@@ -293,17 +336,56 @@ export default function ClientsPage() {
       .catch(() => {
         toast.error("Erreur lors du chargement des statistiques")
       })
-  })
+  }, [getGlobalStats])
 
   const handleExport = () => {
-    if (!clients || clients.length === 0) {
-      toast.error("Aucune donnée à exporter")
-      return
+    try {
+      if (!clients || clients.length === 0) {
+        toast.error("Aucune donnée à exporter")
+        return
+      }
+
+      const exportData = clients.map((client) => ({
+        Prénom: client.prenom,
+        Nom: client.nom,
+        Email: client.email,
+        Type: TYPE_CLIENT_LABELS[client.typeClient],
+        Statut: STATUT_LABELS[client.statut],
+        Téléphone: client.telephone || "-",
+        Ville: client.ville || "-",
+        Pays: client.pays || "-",
+        "N° Client": client.numeroClient || "-",
+        VIP: client.estVip ? "Oui" : "Non",
+        "Date création": new Date(client.creeLe).toLocaleDateString("fr-FR"),
+      }))
+
+      const ws = XLSX.utils.json_to_sheet(exportData)
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, "Clients")
+
+      const colWidths = [
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 30 },
+        { wch: 15 },
+        { wch: 10 },
+        { wch: 15 },
+        { wch: 20 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 5 },
+        { wch: 15 },
+      ]
+      ws["!cols"] = colWidths
+
+      const filename = `clients_${new Date().toISOString().split("T")[0]}.xlsx`
+      XLSX.writeFile(wb, filename)
+
+      toast.success(`Export réussi ! ${clients.length} clients exportés`)
+    } catch (error) {
+      console.error("Erreur export:", error)
+      toast.error("Erreur lors de l'export")
     }
-    exportClientsToExcel(clients, "clients")
-    toast.success("Export réussi", {
-      description: `${clients.length} clients exportés avec succès`,
-    })
   }
 
   const handleDelete = () => {
@@ -322,15 +404,11 @@ export default function ClientsPage() {
   if (error) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-destructive">Erreur</CardTitle>
-            <CardDescription>Une erreur est survenue lors du chargement des clients</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">{error}</p>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-xl border border-slate-200 p-8 max-w-md">
+          <h3 className="text-xl font-semibold text-red-600 mb-2">Erreur</h3>
+          <p className="text-slate-600">Une erreur est survenue lors du chargement des clients</p>
+          <p className="text-sm text-slate-500 mt-2">{error}</p>
+        </div>
       </div>
     )
   }
@@ -501,39 +579,34 @@ export default function ClientsPage() {
                 <div className="pt-4 mt-4 border-t border-slate-200 grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">Statut</label>
-                    <Select
+                    <select
                       value={statutFilter}
-                      onValueChange={(value) => setStatutFilter(value as StatutClient | "ALL")}
+                      onChange={(e) => setStatutFilter(e.target.value as StatutClient | "ALL")}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Statut" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ALL">Tous les statuts</SelectItem>
-                        {Object.values(StatutClient).map((statut) => (
-                          <SelectItem key={statut} value={statut}>
-                            {STATUT_LABELS[statut]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <option value="ALL">Tous les statuts</option>
+                      {Object.values(StatutClient).map((statut) => (
+                        <option key={statut} value={statut}>
+                          {STATUT_LABELS[statut]}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">Type</label>
-                    <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as TypeClient | "ALL")}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ALL">Tous les types</SelectItem>
-                        {Object.values(TypeClient).map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {TYPE_CLIENT_LABELS[type]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <select
+                      value={typeFilter}
+                      onChange={(e) => setTypeFilter(e.target.value as TypeClient | "ALL")}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                    >
+                      <option value="ALL">Tous les types</option>
+                      {Object.values(TypeClient).map((type) => (
+                        <option key={type} value={type}>
+                          {TYPE_CLIENT_LABELS[type]}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="flex items-end">
@@ -672,7 +745,9 @@ export default function ClientsPage() {
                               <Badge variant="outline">{TYPE_CLIENT_LABELS[client.typeClient]}</Badge>
                             </td>
                             <td className="px-6 py-4">
-                              <Badge variant={statusBadges[client.statut]}>{STATUT_LABELS[client.statut]}</Badge>
+                              <Badge variant={getStatusBadgeVariant(client.statut)}>
+                                {STATUT_LABELS[client.statut]}
+                              </Badge>
                             </td>
                             <td className="px-6 py-4 hidden lg:table-cell">
                               <div className="text-sm text-slate-600">
