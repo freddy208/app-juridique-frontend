@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useClient, useClients } from "@/lib/hooks/useClients"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card"
-import { Badge } from "@/components/ui/Badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs"
 import { Separator } from "@/components/ui/Separator"
 import {
@@ -30,6 +29,8 @@ import {
   Plus,
   Upload,
   AlertCircle,
+  User,
+  Users,
 } from "lucide-react"
 import { STATUT_LABELS, TYPE_CLIENT_LABELS } from "@/lib/types/client.types"
 import { statusBadgesClient as statusBadges } from "@/lib/utils/badge-config"
@@ -46,6 +47,64 @@ import {
 } from "@/components/ui/Dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/Textarea"
+
+// Badge Component (aligné avec la page utilisateur)
+const Badge = ({
+  children,
+  variant = 'default'
+}: {
+  children: React.ReactNode;
+  variant?: 'default' | 'success' | 'warning' | 'destructive' | 'secondary' | 'blue' | 'purple' | 'orange' | 'teal';
+}) => {
+  const variants = {
+    default: 'bg-slate-100 text-slate-700 border-slate-200',
+    success: 'bg-green-50 text-green-700 border-green-200',
+    warning: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+    destructive: 'bg-red-50 text-red-700 border-red-200',
+    secondary: 'bg-slate-100 text-slate-600 border-slate-200',
+    blue: 'bg-blue-50 text-blue-700 border-blue-200',
+    purple: 'bg-purple-50 text-purple-700 border-purple-200',
+    orange: 'bg-orange-50 text-orange-700 border-orange-200',
+    teal: 'bg-teal-50 text-teal-700 border-teal-200',
+  };
+
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${variants[variant]}`}>
+      {children}
+    </span>
+  );
+};
+
+// Info Row Component (aligné avec la page utilisateur)
+const InfoRow = ({
+  icon: Icon,
+  label,
+  value,
+  iconColor = 'text-slate-400'
+}: {
+  icon: any;
+  label: string;
+  value: string | null | undefined;
+  iconColor?: string;
+}) => {
+  if (!value) return null;
+  const displayValue = value || 'Non renseigné';
+  return (
+    <div className="flex items-start space-x-3 py-3">
+      <div className={`mt-0.5 ${iconColor}`}>
+        <Icon className="w-5 h-5" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
+          {label}
+        </p>
+        <p className="text-sm text-slate-900 break-words">
+          {displayValue}
+        </p>
+      </div>
+    </div>
+  );
+};
 
 const ConfirmModal = ({
   isOpen,
@@ -134,14 +193,12 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
 
   useEffect(() => {
     if (id) {
-      // Load stats
       setLoadingStats(true)
       getClientStats(id)
         .then(setStats)
         .catch(() => toast.error("Erreur lors du chargement des statistiques"))
         .finally(() => setLoadingStats(false))
 
-      // Load activity
       setLoadingActivity(true)
       getClientActivity(id)
         .then(setActivity)
@@ -188,10 +245,10 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center gap-4"
+          className="text-center"
         >
-          <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
-          <p className="text-slate-600 font-medium">Chargement du client...</p>
+          <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-slate-600 font-medium">Chargement du profil client...</p>
         </motion.div>
       </div>
     )
@@ -199,23 +256,21 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
 
   if (error || !client) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-primary-50/20 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-primary-50/20 flex items-center justify-center">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-xl border border-slate-200 shadow-elegant p-12 text-center max-w-md w-full"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
         >
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-8 h-8 text-red-600" />
           </div>
-          <h3 className="text-xl font-semibold text-slate-900 mb-2">Client introuvable</h3>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">Client introuvable</h2>
           <p className="text-slate-600 mb-6">Le client que vous recherchez n&apos;existe pas ou a été supprimé.</p>
-          <Link href="/clients">
-            <Button className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour à la liste
-            </Button>
-          </Link>
+          <Button onClick={() => router.push("/clients")} className="bg-gradient-to-r from-primary-600 to-primary-700">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Retour aux clients
+          </Button>
         </motion.div>
       </div>
     )
@@ -223,279 +278,213 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-primary-50/20">
-      <div className="container mx-auto px-4 py-8">
-        <div className="space-y-6">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4"
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header avec navigation */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <button
+            onClick={() => router.back()}
+            className="group flex items-center space-x-2 text-slate-600 hover:text-primary-600 transition-colors mb-6"
           >
-            <div className="flex items-start gap-4">
-              <Link href="/clients">
-                <Button variant="ghost" size="sm" className="hover:bg-white/80">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Retour
-                </Button>
-              </Link>
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">Retour</span>
+          </button>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/30">
+                <User className="w-8 h-8 text-white" />
+              </div>
               <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-4xl font-serif font-bold text-slate-900">
-                    {client.prenom} {client.nom}
-                  </h1>
-                  {client.estVip && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 200 }}
-                    >
-                      <Star className="h-6 w-6 fill-gold text-gold" />
-                    </motion.div>
-                  )}
-                </div>
-                <div className="mt-2 flex items-center gap-3">
-                  <Badge variant={statusBadges[client.statut].variant as any}>
+                <h1 className="text-3xl font-bold text-slate-900 mb-2">
+                  {client.prenom} {client.nom}
+                </h1>
+                <div className="flex items-center space-x-3">
+                  <Badge variant={statusBadges[client.statut].variant}>
                     {STATUT_LABELS[client.statut]}
                   </Badge>
-                  <Badge variant="outline">{TYPE_CLIENT_LABELS[client.typeClient]}</Badge>
-                  {client.numeroClient && <span className="text-sm text-slate-500">N° {client.numeroClient}</span>}
+                  <Badge variant="secondary">
+                    {TYPE_CLIENT_LABELS[client.typeClient]}
+                  </Badge>
+                  {client.estVip && (
+                    <Badge variant="warning">
+                      <Star className="w-3 h-3 mr-1 fill-current" />
+                      VIP
+                    </Badge>
+                  )}
                 </div>
               </div>
             </div>
-            <div className="flex gap-2">
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Link href={`/clients/${id}/modifier`}>
-                  <Button variant="outline" className="border-slate-200 hover:bg-white bg-transparent">
-                    <Edit className="mr-2 h-4 w-4" />
-                    Modifier
-                  </Button>
-                </Link>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button
-                  variant="destructive"
-                  onClick={() => setShowDeleteModal(true)}
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Archiver
-                </Button>
-              </motion.div>
-            </div>
-          </motion.div>
 
-          {/* Quick Info Cards */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="grid gap-4 md:grid-cols-4"
-          >
-            {[
-              { icon: Mail, label: "Email", value: client.email, color: "from-blue-500 to-blue-600" },
-              { icon: Phone, label: "Téléphone", value: client.telephone, color: "from-green-500 to-green-600" },
-              {
-                icon: MapPin,
-                label: "Localisation",
-                value: `${client.ville || "Non renseignée"}${client.pays ? `, ${client.pays}` : ""}`,
-                color: "from-purple-500 to-purple-600",
-              },
-              {
-                icon: Calendar,
-                label: "Client depuis",
-                value: new Date(client.creeLe).toLocaleDateString("fr-FR"),
-                color: "from-orange-500 to-orange-600",
-              },
-            ].map((item, index) => (
+            <div className="flex items-center space-x-3">
+              <Link href={`/clients/${id}/edit`}>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 shadow-lg shadow-primary-500/30 transition-all"
+                >
+                  <Edit className="w-5 h-5" />
+                  <span className="font-medium">Modifier</span>
+                </motion.button>
+              </Link>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowDeleteModal(true)}
+                className="flex items-center space-x-2 px-6 py-3 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-all"
+              >
+                <Trash2 className="w-5 h-5" />
+                <span className="font-medium">Archiver</span>
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Grid Layout Principal */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Colonne Principale (2/3) */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Informations générales */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-xl border border-slate-200 shadow-sm"
+            >
+              <div className="px-6 py-4 border-b border-slate-200">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
+                    <User className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-slate-900">Informations générales</h2>
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                  <InfoRow icon={User} label="Prénom" value={client.prenom} />
+                  <InfoRow icon={User} label="Nom" value={client.nom} />
+                  <InfoRow icon={Mail} label="Email" value={client.email} iconColor="text-blue-500" />
+                  <InfoRow icon={Phone} label="Téléphone" value={client.telephone} iconColor="text-green-500" />
+                  <InfoRow icon={MapPin} label="Adresse" value={client.adresse} iconColor="text-red-500" />
+                  <InfoRow icon={MapPin} label="Ville" value={client.ville} />
+                  <InfoRow icon={MapPin} label="Code postal" value={client.codePostal} />
+                  <InfoRow icon={MapPin} label="Pays" value={client.pays} />
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Informations professionnelles */}
+            {(client.profession || client.entreprise) && (
               <motion.div
-                key={item.label}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + index * 0.05 }}
-                whileHover={{ y: -4 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white rounded-xl border border-slate-200 shadow-sm"
               >
-                <Card className="border-slate-200 shadow-sm hover:shadow-elegant transition-all duration-300">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center shadow-md`}
-                      >
-                        <item.icon className="h-5 w-5 text-white" />
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <p className="text-xs font-medium text-slate-500">{item.label}</p>
-                        <p className="text-sm font-semibold text-slate-900">{item.value}</p>
-                      </div>
+                <div className="px-6 py-4 border-b border-slate-200">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
+                      <Briefcase className="w-5 h-5 text-white" />
                     </div>
-                  </CardContent>
-                </Card>
+                    <h2 className="text-lg font-semibold text-slate-900">Informations professionnelles</h2>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                    <InfoRow icon={Briefcase} label="Profession" value={client.profession} iconColor="text-purple-500" />
+                    <InfoRow icon={Building2} label="Entreprise" value={client.entreprise} iconColor="text-orange-500" />
+                  </div>
+                </div>
               </motion.div>
-            ))}
-          </motion.div>
+            )}
 
-          {/* Tabs */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-5 bg-white border border-slate-200 shadow-sm">
-                <TabsTrigger value="overview">Vue d&apos;ensemble</TabsTrigger>
-                <TabsTrigger value="stats">Statistiques</TabsTrigger>
-                <TabsTrigger value="activity">Activité</TabsTrigger>
-                <TabsTrigger value="documents">Documents</TabsTrigger>
-                <TabsTrigger value="notes">Notes</TabsTrigger>
-              </TabsList>
-
-              {/* Overview Tab */}
-              <TabsContent value="overview" className="space-y-6">
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid gap-6 md:grid-cols-2">
-                  {/* Informations Personnelles */}
-                  <Card className="border-slate-200 shadow-sm hover:shadow-elegant transition-shadow">
-                    <CardHeader>
-                      <CardTitle className="font-serif">Informations Personnelles</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {client.profession && (
-                        <div className="flex items-center gap-3">
-                          <Briefcase className="h-4 w-4 text-slate-400" />
-                          <div>
-                            <p className="text-xs text-slate-500">Profession</p>
-                            <p className="text-sm font-medium text-slate-900">{client.profession}</p>
-                          </div>
-                        </div>
-                      )}
-                      {client.entreprise && (
-                        <div className="flex items-center gap-3">
-                          <Building2 className="h-4 w-4 text-slate-400" />
-                          <div>
-                            <p className="text-xs text-slate-500">Entreprise</p>
-                            <p className="text-sm font-medium text-slate-900">{client.entreprise}</p>
-                          </div>
-                        </div>
-                      )}
-                      {client.adresse && (
-                        <div className="flex items-start gap-3">
-                          <MapPin className="h-4 w-4 text-slate-400" />
-                          <div>
-                            <p className="text-xs text-slate-500">Adresse complète</p>
-                            <p className="text-sm font-medium text-slate-900">
-                              {client.adresse}
-                              {client.codePostal && `, ${client.codePostal}`}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                      {client.derniereVisite && (
-                        <div className="flex items-center gap-3">
-                          <Clock className="h-4 w-4 text-slate-400" />
-                          <div>
-                            <p className="text-xs text-slate-500">Dernière visite</p>
-                            <p className="text-sm font-medium text-slate-900">
-                              {new Date(client.derniereVisite).toLocaleDateString("fr-FR")}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Notes rapides */}
-                  {client.notes && (
-                    <Card className="border-slate-200 shadow-sm hover:shadow-elegant transition-shadow">
-                      <CardHeader>
-                        <CardTitle className="font-serif">Notes</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-slate-600">{client.notes}</p>
-                      </CardContent>
-                    </Card>
-                  )}
-                </motion.div>
-              </TabsContent>
-
-              {/* Stats Tab */}
-              <TabsContent value="stats" className="space-y-6">
+            {/* Statistiques */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-white rounded-xl border border-slate-200 shadow-sm"
+            >
+              <div className="px-6 py-4 border-b border-slate-200">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-slate-900">Statistiques</h2>
+                </div>
+              </div>
+              <div className="p-6">
                 {loadingStats ? (
-                  <div className="flex h-64 items-center justify-center">
-                    <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
                   </div>
                 ) : stats ? (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid gap-4 md:grid-cols-3">
-                    {[
-                      {
-                        label: "Dossiers",
-                        value: stats.nombreDossiers,
-                        subtitle: `${stats.dossiersActifs} actifs • ${stats.dossiersTermines} terminés`,
-                        icon: FileText,
-                        color: "from-blue-500 to-blue-600",
-                        borderColor: "border-l-blue-500",
-                      },
-                      {
-                        label: "Finances",
-                        value: `${stats.totalHonoraires.toLocaleString()} FCFA`,
-                        subtitle: `Taux de paiement: ${stats.tauxPaiement}%`,
-                        icon: DollarSign,
-                        color: "from-green-500 to-green-600",
-                        borderColor: "border-l-green-500",
-                      },
-                      {
-                        label: "Ancienneté",
-                        value: `${stats.anciennete} jours`,
-                        subtitle: `${stats.nombreDocuments} documents • ${stats.nombreNotes} notes`,
-                        icon: TrendingUp,
-                        color: "from-purple-500 to-purple-600",
-                        borderColor: "border-l-purple-500",
-                      },
-                    ].map((stat, index) => (
-                      <motion.div
-                        key={stat.label}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        whileHover={{ y: -4 }}
-                      >
-                        <Card
-                          className={`border-l-4 ${stat.borderColor} shadow-sm hover:shadow-elegant transition-all duration-300`}
-                        >
-                          <CardHeader className="pb-3">
-                            <CardTitle className="flex items-center justify-between text-sm font-medium text-slate-600">
-                              {stat.label}
-                              <div
-                                className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-md`}
-                              >
-                                <stat.icon className="h-5 w-5 text-white" />
-                              </div>
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
-                            <p className="text-xs text-slate-500 mt-1">{stat.subtitle}</p>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    ))}
-                  </motion.div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div className="text-center">
+                      <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mx-auto mb-2">
+                        <FileText className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <p className="text-2xl font-bold text-slate-900">{stats.nombreDossiers}</p>
+                      <p className="text-xs text-slate-500 mt-1">Dossiers</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center mx-auto mb-2">
+                        <DollarSign className="w-6 h-6 text-green-600" />
+                      </div>
+                      <p className="text-2xl font-bold text-slate-900">{stats.totalHonoraires.toLocaleString()} FCFA</p>
+                      <p className="text-xs text-slate-500 mt-1">Honoraires</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center mx-auto mb-2">
+                        <TrendingUp className="w-6 h-6 text-purple-600" />
+                      </div>
+                      <p className="text-2xl font-bold text-slate-900">{stats.tauxPaiement}%</p>
+                      <p className="text-xs text-slate-500 mt-1">Taux paiement</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center mx-auto mb-2">
+                        <Activity className="w-6 h-6 text-orange-600" />
+                      </div>
+                      <p className="text-2xl font-bold text-slate-900">{stats.dossiersActifs}</p>
+                      <p className="text-xs text-slate-500 mt-1">Actifs</p>
+                    </div>
+                  </div>
                 ) : (
-                  <Card className="border-slate-200 shadow-sm">
-                    <CardContent className="flex h-64 items-center justify-center">
-                      <p className="text-slate-500">Aucune statistique disponible</p>
-                    </CardContent>
-                  </Card>
+                  <p className="text-center text-slate-500 py-8">Aucune statistique disponible</p>
                 )}
-              </TabsContent>
+              </div>
+            </motion.div>
+
+            {/* Tabs pour Activité, Documents, Notes */}
+            <Tabs defaultValue="activity" className="space-y-6">
+              <TabsList className="bg-white border border-slate-200 p-1 rounded-lg">
+                <TabsTrigger value="activity" className="data-[state=active]:bg-primary-50 data-[state=active]:text-primary-700">
+                  <Activity className="w-4 h-4 mr-2" />
+                  Activité
+                </TabsTrigger>
+                <TabsTrigger value="documents" className="data-[state=active]:bg-primary-50 data-[state=active]:text-primary-700">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Documents
+                </TabsTrigger>
+                <TabsTrigger value="notes" className="data-[state=active]:bg-primary-50 data-[state=active]:text-primary-700">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Notes
+                </TabsTrigger>
+              </TabsList>
 
               {/* Activity Tab */}
               <TabsContent value="activity" className="space-y-6">
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <Card className="border-slate-200 shadow-sm">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 font-serif">
-                        <Activity className="h-5 w-5" />
-                        Historique d&apos;activité
-                      </CardTitle>
-                      <CardDescription>Toutes les actions liées à ce client</CardDescription>
+                      <CardTitle>Historique d&apos;activité</CardTitle>
+                      <CardDescription>Dernières actions et événements liés à ce client</CardDescription>
                     </CardHeader>
                     <CardContent>
                       {loadingActivity ? (
-                        <div className="flex h-64 items-center justify-center">
+                        <div className="flex justify-center py-12">
                           <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
                         </div>
                       ) : activity.length > 0 ? (
@@ -523,7 +512,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                                     )}
                                   </div>
                                 </div>
-                                <Badge variant="outline">{item.type}</Badge>
+                                <Badge variant="secondary">{item.type}</Badge>
                               </motion.div>
                             ))}
                           </AnimatePresence>
@@ -546,7 +535,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <div>
-                          <CardTitle className="font-serif">Documents d&apos;identité</CardTitle>
+                          <CardTitle>Documents d&apos;identité</CardTitle>
                           <CardDescription>Pièces d&apos;identité et documents officiels</CardDescription>
                         </div>
                         <Dialog>
@@ -585,7 +574,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <div>
-                          <CardTitle className="font-serif">Notes</CardTitle>
+                          <CardTitle>Notes</CardTitle>
                           <CardDescription>Notes et commentaires sur ce client</CardDescription>
                         </div>
                         <Dialog>
@@ -666,7 +655,69 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                 </motion.div>
               </TabsContent>
             </Tabs>
-          </motion.div>
+          </div>
+
+          {/* Sidebar (1/3) */}
+          <div className="space-y-6">
+            {/* Informations système */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="bg-white rounded-xl border border-slate-200 shadow-sm sticky top-6"
+            >
+              <div className="px-6 py-4 border-b border-slate-200">
+                <h2 className="text-lg font-semibold text-slate-900">Informations système</h2>
+              </div>
+              <div className="p-6 space-y-4">
+                <InfoRow 
+                  icon={Calendar} 
+                  label="Créé le" 
+                  value={new Date(client.creeLe).toLocaleDateString("fr-FR")} 
+                  iconColor="text-blue-500"
+                />
+                <InfoRow 
+                  icon={Clock} 
+                  label="Modifié le" 
+                  value={new Date(client.modifieLe).toLocaleDateString("fr-FR")} 
+                  iconColor="text-purple-500"
+                />
+                {client.derniereVisite && (
+                  <InfoRow 
+                    icon={Users} 
+                    label="Dernière visite" 
+                    value={new Date(client.derniereVisite).toLocaleDateString("fr-FR")} 
+                    iconColor="text-green-500"
+                  />
+                )}
+                {client.numeroClient && (
+                  <InfoRow 
+                    icon={FileText} 
+                    label="N° Client" 
+                    value={client.numeroClient} 
+                    iconColor="text-orange-500"
+                  />
+                )}
+              </div>
+            </motion.div>
+
+            {/* Notes internes */}
+            {client.notes && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-amber-50 rounded-xl border border-amber-200 p-6"
+              >
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <h3 className="font-semibold text-amber-900">Notes internes</h3>
+                </div>
+                <p className="text-sm text-amber-800 leading-relaxed">{client.notes}</p>
+              </motion.div>
+            )}
+          </div>
         </div>
       </div>
 
