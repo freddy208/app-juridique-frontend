@@ -106,15 +106,13 @@ export const statusBadgesUtilisateur: Record<StatutUtilisateur, StatusBadgeConfi
 // CONFIGURATION DES BADGES DE STATUTS CLIENTS
 // ============================================
 
-export const statusBadgesClient: Record<
-  StatutClient,
-  'default' | 'secondary' | 'destructive' | 'success' | 'blue' | 'warning'
-> = {
-  [StatutClient.ACTIF]: 'success',
-  [StatutClient.INACTIF]: 'secondary',
-  [StatutClient.PROSPECT]: 'blue',
-  [StatutClient.ARCHIVE]: 'destructive',
+export const statusBadgesClient: Record<StatutClient, StatusBadgeConfig> = {
+  [StatutClient.ACTIF]: { variant: 'success', label: 'Actif' },
+  [StatutClient.INACTIF]: { variant: 'secondary', label: 'Inactif' },
+  [StatutClient.PROSPECT]: { variant: 'blue', label: 'Prospect' },
+  [StatutClient.ARCHIVE]: { variant: 'destructive', label: 'Archivé' },
 };
+
 
 // ============================================
 // HELPERS

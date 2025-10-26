@@ -254,7 +254,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                   )}
                 </div>
                 <div className="mt-2 flex items-center gap-3">
-                  <Badge variant={statusBadges[client.statut]}>
+                  <Badge variant={statusBadges[client.statut].variant as any}>
                     {STATUT_LABELS[client.statut]}
                   </Badge>
                   <Badge variant="outline">{TYPE_CLIENT_LABELS[client.typeClient]}</Badge>
