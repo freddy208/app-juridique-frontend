@@ -1,14 +1,15 @@
 // lib/utils/badge-config.ts
 import { RoleUtilisateur, StatutUtilisateur } from '@/lib/types/user.types';
-import { 
-  Shield, 
-  Briefcase, 
+import { StatutClient } from '@/lib/types/client.types';
+import {
+  Shield,
+  Briefcase,
   Scale,
-  FileText, 
-  UserCog, 
+  FileText,
+  UserCog,
   Users,
   GraduationCap,
-  type LucideIcon
+  type LucideIcon,
 } from 'lucide-react';
 
 // ============================================
@@ -16,71 +17,103 @@ import {
 // ============================================
 
 export interface RoleBadgeConfig {
-  color: 'default' | 'secondary' | 'destructive' | 'success' | 'warning' | 'blue' | 'purple' | 'orange' | 'teal';
+  variant:
+    | 'default'
+    | 'secondary'
+    | 'destructive'
+    | 'success'
+    | 'warning'
+    | 'blue'
+    | 'purple'
+    | 'orange'
+    | 'teal';
   icon: LucideIcon;
   label: string;
 }
 
 export const roleBadges: Record<RoleUtilisateur, RoleBadgeConfig> = {
   [RoleUtilisateur.ADMIN]: {
-    color: 'destructive',
+    variant: 'destructive',
     icon: Shield,
     label: 'Administrateur',
   },
   [RoleUtilisateur.DG]: {
-    color: 'purple',
+    variant: 'purple',
     icon: Briefcase,
     label: 'Directeur Général',
   },
   [RoleUtilisateur.AVOCAT]: {
-    color: 'blue',
+    variant: 'blue',
     icon: Scale,
     label: 'Avocat',
   },
   [RoleUtilisateur.SECRETAIRE]: {
-    color: 'success',
+    variant: 'success',
     icon: FileText,
     label: 'Secrétaire',
   },
   [RoleUtilisateur.ASSISTANT]: {
-    color: 'secondary',
+    variant: 'secondary',
     icon: UserCog,
     label: 'Assistant',
   },
   [RoleUtilisateur.JURISTE]: {
-    color: 'orange',
+    variant: 'orange',
     icon: Scale,
     label: 'Juriste',
   },
   [RoleUtilisateur.STAGIAIRE]: {
-    color: 'teal',
+    variant: 'teal',
     icon: GraduationCap,
     label: 'Stagiaire',
   },
 };
 
 // ============================================
-// CONFIGURATION DES BADGES DE STATUTS
+// CONFIGURATION DES BADGES DE STATUTS UTILISATEURS
 // ============================================
 
 export interface StatusBadgeConfig {
-  color: 'success' | 'secondary' | 'destructive';
+  variant:
+    | 'default'
+    | 'secondary'
+    | 'destructive'
+    | 'success'
+    | 'warning'
+    | 'blue'
+    | 'purple'
+    | 'orange'
+    | 'teal';
   label: string;
 }
 
-export const statusBadges: Record<StatutUtilisateur, StatusBadgeConfig> = {
+export const statusBadgesUtilisateur: Record<StatutUtilisateur, StatusBadgeConfig> = {
   [StatutUtilisateur.ACTIF]: {
-    color: 'success',
+    variant: 'success',
     label: 'Actif',
   },
   [StatutUtilisateur.INACTIF]: {
-    color: 'secondary',
+    variant: 'secondary',
     label: 'Inactif',
   },
   [StatutUtilisateur.SUSPENDU]: {
-    color: 'destructive',
+    variant: 'destructive',
     label: 'Suspendu',
   },
+};
+
+// ============================================
+// CONFIGURATION DES BADGES DE STATUTS CLIENTS
+// ============================================
+
+export const statusBadgesClient: Record<
+  StatutClient,
+  'default' | 'secondary' | 'destructive' | 'success' | 'blue' | 'warning'
+> = {
+  [StatutClient.ACTIF]: 'success',
+  [StatutClient.INACTIF]: 'secondary',
+  [StatutClient.PROSPECT]: 'blue',
+  [StatutClient.ARCHIVE]: 'destructive',
 };
 
 // ============================================
@@ -88,16 +121,22 @@ export const statusBadges: Record<StatutUtilisateur, StatusBadgeConfig> = {
 // ============================================
 
 export const getRoleBadge = (role: RoleUtilisateur): RoleBadgeConfig => {
-  return roleBadges[role] || {
-    color: 'default',
-    icon: Users,
-    label: role,
-  };
+  return (
+    roleBadges[role] || {
+      variant: 'default',
+      icon: Users,
+      label: role,
+    }
+  );
 };
 
-export const getStatusBadge = (statut: StatutUtilisateur): StatusBadgeConfig => {
-  return statusBadges[statut] || {
-    color: 'secondary',
-    label: statut,
-  };
+export const getStatusBadgeUtilisateur = (
+  statut: StatutUtilisateur
+): StatusBadgeConfig => {
+  return (
+    statusBadgesUtilisateur[statut] || {
+      variant: 'secondary',
+      label: statut,
+    }
+  );
 };

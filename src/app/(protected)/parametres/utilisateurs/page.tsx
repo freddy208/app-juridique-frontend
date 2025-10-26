@@ -176,7 +176,7 @@ const UserCard = ({
         <Badge variant={roleColors[user.role] as any}>
           {ROLE_LABELS[user.role]}
         </Badge>
-       <Badge variant={statusBadges[user.statut].color}>
+       <Badge variant={statusBadges[user.statut].variant}>
           {statusBadges[user.statut].label}
         </Badge>
       </div>
@@ -696,7 +696,7 @@ export default function UsersPage() {
                               </Badge>
                             </td>
                             <td className="px-6 py-4">
-                            <Badge variant={statusBadges[user.statut].color}>
+                            <Badge variant={statusBadges[user.statut].variant}>
                               {statusBadges[user.statut].label}
                             </Badge>
                             </td>

@@ -303,7 +303,7 @@ function ProfilePageContent() {
                   <Badge variant={roleColors[user.role] as any}>
                     {ROLE_LABELS[user.role]}
                   </Badge>
-                  <Badge variant={statusBadges[user.statut].color}>
+                  <Badge variant={statusBadges[user.statut].variant}>
                     {statusBadges[user.statut].label}
                   </Badge>
                 </div>
@@ -465,7 +465,7 @@ function ProfilePageContent() {
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-slate-100">
                     <span className="text-sm text-slate-600">Statut</span>
-                    <Badge variant={statusBadges[user.statut].color}>
+                    <Badge variant={statusBadges[user.statut].variant}>
                       {statusBadges[user.statut].label}
                     </Badge>
                   </div>
