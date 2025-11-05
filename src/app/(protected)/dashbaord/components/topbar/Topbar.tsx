@@ -3,7 +3,7 @@
 
 import { Bell, Search, Menu, Scale } from "lucide-react"
 import { motion } from "framer-motion"
-import { useSidebar } from "../..//hooks/useSidebar"
+import { useSidebar } from "../../hooks/useSidebar"
 import { UserDropdown } from "./UserDropdown"
 import { topbarVariants } from "../../utils/animations"
 

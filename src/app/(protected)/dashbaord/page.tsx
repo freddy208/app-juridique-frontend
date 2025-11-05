@@ -1,7 +1,7 @@
-// protected/dashboard/index.tsx
+// protected/dashboard/page.tsx
 "use client"
 
-import { DashboardLayout } from "./layout/DashboardLayout"
+import { DashboardLayout } from "./layout"
 import { useUserRole } from "../../../lib/hooks/useUserRole"
 import {
   AdminDashboard,

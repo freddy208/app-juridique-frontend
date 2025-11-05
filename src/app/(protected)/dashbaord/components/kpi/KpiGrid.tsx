@@ -3,7 +3,7 @@
 
 import { motion } from "framer-motion"
 import { KpiCard } from "./KpiCard"
-import { containerVariants } from "../..//utils/animations"
+import { containerVariants } from "../../utils/animations"
 import { useDashboardStats } from "../../../../../lib/hooks/useDashboardStats"
 import {
   FileText,

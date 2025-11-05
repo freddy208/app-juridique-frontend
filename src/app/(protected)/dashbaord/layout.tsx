@@ -2,10 +2,10 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Sidebar } from "../components/sidebar/Sidebar"
-import { Topbar } from "../components/topbar/Topbar"
-import { useSidebar } from "../hooks/useSidebar"
-import { sidebarVariants, contentVariants } from "../utils/animations"
+import { Sidebar } from "./components/sidebar/Sidebar"
+import { Topbar } from "./components/topbar/Topbar"
+import { useSidebar } from "./hooks/useSidebar"
+import { sidebarVariants, contentVariants } from "./utils/animations"
 
 interface DashboardLayoutProps {
   children: React.ReactNode

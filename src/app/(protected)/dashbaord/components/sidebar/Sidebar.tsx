@@ -22,7 +22,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useUserRole } from "../../../../../lib/hooks/useUserRole"
-import { useSidebar } from "../..//hooks/useSidebar"
+import { useSidebar } from "../../hooks/useSidebar"
 import { SidebarItem } from "./SidebarItem"
 
 const navigationItems = [
