@@ -1,4 +1,5 @@
-// protected/dashboard/layout/DashboardLayout.tsx
+// src/app/(protected)/dashboard/layout.tsx (le nom et l'emplacement corrects)
+
 "use client"
 
 import { motion } from "framer-motion"
@@ -11,7 +12,8 @@ interface DashboardLayoutProps {
   children: React.ReactNode
 }
 
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+// Changement ici : utilisez "export default" au lieu de "export"
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { isOpen, toggleSidebar } = useSidebar()
 
   return (

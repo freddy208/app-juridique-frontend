@@ -308,6 +308,7 @@ export default function ModifyUserPage() {
   // Remplacer useUser par useUserForm
   const {
     submit,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } = useUserForm(userId, (user) => {
     // Callback de succès - redirection automatique
     router.push('/parametres/utilisateurs');
