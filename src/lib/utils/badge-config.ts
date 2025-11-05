@@ -1,6 +1,5 @@
 // lib/utils/badge-config.ts
 import { RoleUtilisateur, StatutUtilisateur } from '@/lib/types/user.types';
-import { StatutClient } from '@/lib/types/client.types';
 import {
   Shield,
   Briefcase,
@@ -101,18 +100,6 @@ export const statusBadgesUtilisateur: Record<StatutUtilisateur, StatusBadgeConfi
     label: 'Suspendu',
   },
 };
-
-// ============================================
-// CONFIGURATION DES BADGES DE STATUTS CLIENTS
-// ============================================
-
-export const statusBadgesClient: Record<StatutClient, StatusBadgeConfig> = {
-  [StatutClient.ACTIF]: { variant: 'success', label: 'Actif' },
-  [StatutClient.INACTIF]: { variant: 'secondary', label: 'Inactif' },
-  [StatutClient.PROSPECT]: { variant: 'blue', label: 'Prospect' },
-  [StatutClient.ARCHIVE]: { variant: 'destructive', label: 'Archivé' },
-};
-
 
 // ============================================
 // HELPERS
