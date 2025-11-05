@@ -85,7 +85,16 @@ export const clientsEndpoints = {
   bulkAction: "/clients/bulk-action",
 } as const
 
+// src/lib/endpoints.ts (ajout à la fin du fichier)
 
+// ============================================
+// DASHBOARD ENDPOINTS
+// ============================================
+
+export const dashboardEndpoints = {
+  get: "/dashboard",
+  invalidateCache: "/dashboard/invalidate-cache",
+} as const
 
 // ============================================
 // TYPE EXPORTS
