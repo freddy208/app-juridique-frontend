@@ -1,4 +1,4 @@
-// src/types/dashboard.types.ts
+// src/lib/types/dashboard.types.ts
 
 export enum RoleUtilisateur {
   ADMIN = 'ADMIN',

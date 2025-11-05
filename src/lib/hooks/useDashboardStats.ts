@@ -1,4 +1,4 @@
-// src/hooks/useDashboardStats.ts
+// src/lib/hooks/useDashboardStats.ts
 
 import { useMemo } from "react"
 import { useDashboard } from "./useDashboard"

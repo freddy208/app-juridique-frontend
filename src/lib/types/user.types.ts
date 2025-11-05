@@ -45,6 +45,7 @@ export interface User {
   creeLe: string;
   modifieLe: string;
   derniereConnexion?: string | null;
+  avatar?: string | null // ✅ champ optionnel
 }
 
 export type UserProfile = User;

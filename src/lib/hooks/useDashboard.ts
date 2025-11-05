@@ -1,4 +1,4 @@
-// src/hooks/useDashboard.ts
+// src/lib/hooks/useDashboard.ts
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { dashboardService } from "../../lib/api/dashboard.service"

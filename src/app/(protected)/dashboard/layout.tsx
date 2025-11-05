@@ -1,49 +1,65 @@
-// src/app/(protected)/dashboard/layout.tsx (le nom et l'emplacement corrects)
+/**
+ * ============================================
+ * DASHBOARD LAYOUT
+ * ============================================
+ * Layout global pour toutes les pages du dashboard
+ * Intègre AuthProvider, React Query et protection d'accès
+ */
 
-"use client"
+'use client';
 
-import { motion } from "framer-motion"
-import { Sidebar } from "./components/sidebar/Sidebar"
-import { Topbar } from "./components/topbar/Topbar"
-import { useSidebar } from "./hooks/useSidebar"
-import { sidebarVariants, contentVariants } from "./utils/animations"
+import React from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '@/lib/hooks/useAuth';
+import { DashboardLayout } from '@/components/dashboard/layout/DashboardLayout';
+import { useRequireAuth } from '@/lib/hooks/useAuth';
 
-interface DashboardLayoutProps {
-  children: React.ReactNode
-}
+// ============================================
+// REACT QUERY CLIENT
+// ============================================
 
-// Changement ici : utilisez "export default" au lieu de "export"
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { isOpen, toggleSidebar } = useSidebar()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
+// ============================================
+// COMPOSANT DE PROTECTION
+// ============================================
+
+const ProtectedContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isLoading } = useRequireAuth('/login');
+
+  // Afficher un loader pendant la vérification d'authentification
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-[#4169e1] border-r-transparent mb-4" />
+          <p className="text-gray-600 font-medium">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <DashboardLayout>{children}</DashboardLayout>;
+};
+
+// ============================================
+// LAYOUT PRINCIPAL
+// ============================================
+
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      <motion.div
-        variants={sidebarVariants}
-        animate={isOpen ? "open" : "closed"}
-        className="fixed lg:relative z-30 h-full"
-      >
-        <Sidebar />
-      </motion.div>
-      
-      {/* Overlay pour mobile */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
-          onClick={toggleSidebar}
-        />
-      )}
-      
-      <motion.div
-        variants={contentVariants}
-        animate={isOpen ? "sidebarOpen" : "sidebarClosed"}
-        className="flex-1 flex flex-col overflow-hidden"
-      >
-        <Topbar />
-        <main className="flex-1 overflow-y-auto bg-white p-4 md:p-6 lg:p-8">
-          {children}
-        </main>
-      </motion.div>
-    </div>
-  )
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <ProtectedContent>{children}</ProtectedContent>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
 }

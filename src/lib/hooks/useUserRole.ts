@@ -1,4 +1,4 @@
-// src/hooks/useUserRole.ts
+// src/lib/hooks/useUserRole.ts
 
 import { useQuery } from "@tanstack/react-query"
 import apiClient from "@/lib/api/client"

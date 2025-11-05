@@ -8,7 +8,7 @@
 // ============================================
 // AUTH ENDPOINTS
 // ============================================
-
+// src/lib/api/endpoints
 export const authEndpoints = {
   login: "/auth/login",
   register: "/auth/register",
