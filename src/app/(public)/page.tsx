@@ -1,7 +1,7 @@
 'use client'
 
 import AnimatedBackground from '@/components/ui/AnimatedBackground'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
 import Image from "next/image"
 import { 
