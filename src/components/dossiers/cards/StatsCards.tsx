@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useDossierStats } from '@/lib/hooks/dossier/useDossierActions';
 import { Card, CardContent } from '@/components/ui/Card';
-import { Skeleton } from '@/components/ui/LoadingSpinner';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 // ============================================

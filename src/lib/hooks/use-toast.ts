@@ -9,7 +9,7 @@ interface ToastProps {
 }
 
 export const useToast = () => {
-  const toast = ({ 
+  const showToast = ({ 
     title, 
     description, 
     variant = 'default',
@@ -75,7 +75,7 @@ export const useToast = () => {
     }
   };
 
-  return { toast };
+  return { showToast };
 };
 
 // Export également le toast de sonner pour les cas avancés
