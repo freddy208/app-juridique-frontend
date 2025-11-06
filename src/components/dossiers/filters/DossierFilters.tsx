@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, X, ChevronDown } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
