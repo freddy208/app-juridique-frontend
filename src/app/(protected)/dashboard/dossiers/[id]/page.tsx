@@ -70,6 +70,38 @@ import {
 } from '@/lib/dossiers/constants';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/lib/api/client';
+import { 
+  StatutDossier, 
+  Client as DossierClient,
+  Document as DossierDocument,
+  Facture as DossierFacture,
+  Tache as DossierTache,
+  Note as DossierNote
+} from '../../../../../lib/types/dossier';
+
+// Import des types pour les composants
+import { 
+  Client as ClientType, 
+  TypeClient, 
+  StatutClient 
+} from '@/lib/types/client.types';
+import { 
+  Document as DocumentType, 
+  StatutDocument 
+} from '@/lib/types/documents.types';
+import { 
+  Facture as FactureType, 
+  StatutFacture 
+} from '@/lib/types/factures.types';
+import { 
+  TacheResponse, 
+  StatutTache, 
+  TachePriorite 
+} from '@/lib/types/tache.types';
+import { 
+  Note as NoteType, 
+  StatutNote 
+} from '@/lib/types/note.types';
 
 // Import des composants de détails
 import {
@@ -80,6 +112,102 @@ import {
   FacturesTabContent,
   NotesTabContent,
 } from '@/components/dossiers/details';
+
+// ============================================
+// FONCTIONS D'ADAPTATION DES TYPES
+// ============================================
+
+// Adapter le type Client du Dossier vers le type attendu par ClientTabContent
+const adaptClientForTab = (client: DossierClient): ClientType => {
+  // Créer un objet avec les propriétés requises par ClientType
+  const adaptedClient: ClientType = {
+    id: client.id,
+    prenom: client.prenom,
+    nom: client.nom,
+    entreprise: client.entreprise,
+    // Ajouter les propriétés manquantes avec des valeurs par défaut
+    typeClient: TypeClient.PARTICULIER, // Valeur par défaut
+    statut: StatutClient.ACTIF, // Valeur par défaut
+    creeLe: new Date(), // Valeur par défaut
+    modifieLe: new Date(), // Valeur par défaut
+    estVIP: false, // Valeur par défaut
+  };
+  
+  return adaptedClient;
+};
+
+// Adapter le type Document du Dossier vers le type attendu par DocumentsTabContent
+const adaptDocumentsForTab = (documents: DossierDocument[]): DocumentType[] => {
+  return documents.map(doc => ({
+    id: doc.id,
+    titre: doc.titre,
+    type: doc.type,
+    creeLe: new Date(doc.creeLe),
+    // Ajouter les propriétés manquantes avec des valeurs par défaut
+    dossierId: '', // Valeur par défaut
+    televersePar: '', // Valeur par défaut
+    url: '', // Valeur par défaut
+    version: 1, // Valeur par défaut
+    statut: StatutDocument.ACTIF, // Valeur par défaut
+    modifieLe: new Date(), // Valeur par défaut
+  }));
+};
+
+// Adapter le type Facture du Dossier vers le type attendu par FacturesTabContent
+const adaptFacturesForTab = (factures: DossierFacture[]): FactureType[] => {
+  return factures.map(facture => ({
+    id: facture.id,
+    numero: facture.numero,
+    montantTotal: facture.montantTotal,
+    statut: facture.statut as StatutFacture,
+    creeLe: new Date(facture.creeLe),
+    // Ajouter les propriétés manquantes avec des valeurs par défaut
+    clientId: '', // Valeur par défaut
+    dateEmission: new Date(facture.creeLe), // Utiliser creeLe comme date d'émission par défaut
+    montantPaye: 0, // Valeur par défaut
+    modifieLe: new Date(), // Valeur par défaut
+  }));
+};
+
+// Adapter le type Tache du Dossier vers le type attendu par TachesTabContent
+const adaptTachesForTab = (taches: DossierTache[]): TacheResponse[] => {
+  return taches.map(tache => ({
+    id: tache.id,
+    titre: tache.titre,
+    statut: tache.statut as StatutTache,
+    dateLimite: new Date(tache.dateLimite),
+    // Ajouter les propriétés manquantes avec des valeurs par défaut
+    priorite: TachePriorite.MOYENNE, // Valeur par défaut
+    creeLe: new Date(), // Valeur par défaut
+    modifieLe: new Date(), // Valeur par défaut
+    enRetard: false, // Valeur par défaut
+    createur: {
+      id: '',
+      prenom: '',
+      nom: '',
+      role: ''
+    }
+  }));
+};
+
+// Adapter le type Note du Dossier vers le type attendu par NotesTabContent
+const adaptNotesForTab = (notes: DossierNote[]): NoteType[] => {
+  return notes.map(note => ({
+    id: note.id,
+    titre: note.titre,
+    creeLe: new Date(note.creeLe),
+    // Ajouter les propriétés manquantes avec des valeurs par défaut
+    contenu: '', // Valeur par défaut
+    utilisateurId: '', // Valeur par défaut
+    statut: StatutNote.ACTIF, // Valeur par défaut
+    modifieLe: new Date(), // Valeur par défaut
+    utilisateur: {
+      id: '',
+      prenom: '',
+      nom: ''
+    }
+  }));
+};
 
 // ============================================
 // COMPOSANT PRINCIPAL
@@ -177,11 +305,19 @@ export default function DossierDetailsPage({ params }: { params: { id: string } 
     );
   }
 
-  const typeConfig = TYPE_DOSSIER_CONFIG[dossier.type];
-  const statutConfig = STATUT_DOSSIER_CONFIG[dossier.statut];
+  // Utiliser une assertion de type pour accéder à la configuration
+  const typeConfig = TYPE_DOSSIER_CONFIG[dossier.type as keyof typeof TYPE_DOSSIER_CONFIG];
+  const statutConfig = STATUT_DOSSIER_CONFIG[dossier.statut as keyof typeof STATUT_DOSSIER_CONFIG];
   const risqueConfig = dossier.risqueJuridique
-    ? NIVEAU_RISQUE_CONFIG[dossier.risqueJuridique]
+    ? NIVEAU_RISQUE_CONFIG[dossier.risqueJuridique as keyof typeof NIVEAU_RISQUE_CONFIG]
     : null;
+
+  // Adapter les données pour les composants d'onglets
+  const adaptedClient = dossier.client ? adaptClientForTab(dossier.client) : undefined;
+  const adaptedDocuments = dossier.documents ? adaptDocumentsForTab(dossier.documents) : undefined;
+  const adaptedFactures = dossier.factures ? adaptFacturesForTab(dossier.factures) : undefined;
+  const adaptedTaches = dossier.taches ? adaptTachesForTab(dossier.taches) : undefined;
+  const adaptedNotes = dossier.notes ? adaptNotesForTab(dossier.notes) : undefined;
 
   return (
     <div className="space-y-8">
@@ -258,7 +394,7 @@ export default function DossierDetailsPage({ params }: { params: { id: string } 
           <Select
             value={dossier.statut}
             onValueChange={(value) =>
-              changeStatutMutation.mutate({ id: dossier.id, statut: value })
+              changeStatutMutation.mutate({ id: dossier.id, statut: value as StatutDossier })
             }
             disabled={changeStatutMutation.isPending}
           >
@@ -279,7 +415,7 @@ export default function DossierDetailsPage({ params }: { params: { id: string } 
           </Select>
 
           <Select
-            value={dossier.responsable?.id || ''}
+            value={dossier.responsableId || ''}
             onValueChange={(value) =>
               assignResponsableMutation.mutate({ id: dossier.id, responsableId: value })
             }
@@ -342,13 +478,13 @@ export default function DossierDetailsPage({ params }: { params: { id: string } 
 
           {/* Onglet Client */}
           <TabsContent value="client">
-            <ClientTabContent client={dossier.client} />
+            {adaptedClient && <ClientTabContent client={adaptedClient} />}
           </TabsContent>
 
           {/* Onglet Documents */}
           <TabsContent value="documents">
             <DocumentsTabContent 
-              documents={dossier.documents} 
+              documents={adaptedDocuments} 
               dossierId={dossier.id} 
             />
           </TabsContent>
@@ -356,7 +492,7 @@ export default function DossierDetailsPage({ params }: { params: { id: string } 
           {/* Onglet Tâches */}
           <TabsContent value="taches">
             <TachesTabContent 
-              taches={dossier.taches} 
+              taches={adaptedTaches} 
               dossierId={dossier.id} 
             />
           </TabsContent>
@@ -364,7 +500,7 @@ export default function DossierDetailsPage({ params }: { params: { id: string } 
           {/* Onglet Factures */}
           <TabsContent value="factures">
             <FacturesTabContent 
-              factures={dossier.factures} 
+              factures={adaptedFactures} 
               dossierId={dossier.id} 
             />
           </TabsContent>
@@ -372,7 +508,7 @@ export default function DossierDetailsPage({ params }: { params: { id: string } 
           {/* Onglet Notes */}
           <TabsContent value="notes">
             <NotesTabContent 
-              notes={dossier.notes} 
+              notes={adaptedNotes} 
               dossierId={dossier.id} 
             />
           </TabsContent>
