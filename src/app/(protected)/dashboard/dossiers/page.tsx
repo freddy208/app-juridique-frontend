@@ -13,7 +13,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Plus, FolderX } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { useDossiers } from '@/lib/hooks/dossier/useDossiers';
 import { StatsCards } from '@/components/dossiers/cards/StatsCards';
 import { DossierFilters } from '@/components/dossiers/filters/DossierFilters';
