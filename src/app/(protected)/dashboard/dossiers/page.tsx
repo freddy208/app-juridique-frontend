@@ -27,7 +27,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { Dossier } from '@/lib/types/dossier';
+import { Dossier, TypeDossier, StatutDossier, NiveauRisque, QueryDossiersParams } from '@/lib/types/dossier';
 
 // ============================================
 // SKELETON LOADING
@@ -56,6 +56,28 @@ const DossierCardSkeleton = () => (
 );
 
 // ============================================
+// FONCTION UTILITAIRE POUR CONVERTIR LES VALEURS
+// ============================================
+
+// Fonction pour convertir une chaîne en TypeDossier
+const stringToTypeDossier = (value: string | null | undefined): TypeDossier | undefined => {
+  if (!value) return undefined;
+  return Object.values(TypeDossier).includes(value as TypeDossier) ? value as TypeDossier : undefined;
+};
+
+// Fonction pour convertir une chaîne en StatutDossier
+const stringToStatutDossier = (value: string | null | undefined): StatutDossier | undefined => {
+  if (!value) return undefined;
+  return Object.values(StatutDossier).includes(value as StatutDossier) ? value as StatutDossier : undefined;
+};
+
+// Fonction pour convertir une chaîne en NiveauRisque
+const stringToNiveauRisque = (value: string | null | undefined): NiveauRisque | undefined => {
+  if (!value) return undefined;
+  return Object.values(NiveauRisque).includes(value as NiveauRisque) ? value as NiveauRisque : undefined;
+};
+
+// ============================================
 // COMPOSANT PRINCIPAL
 // ============================================
 
@@ -63,14 +85,14 @@ export default function DossiersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Construire les paramètres de requête depuis l'URL
-  const params = {
+  // Construire les paramètres de requête depuis l'URL avec conversion de type appropriée
+  const params: QueryDossiersParams = {
     page: Number(searchParams.get('page')) || 1,
     limit: 12,
     titre: searchParams.get('titre') || undefined,
-    type: searchParams.get('type') || undefined,
-    statut: searchParams.get('statut') || undefined,
-    risqueJuridique: searchParams.get('risqueJuridique') || undefined,
+    type: stringToTypeDossier(searchParams.get('type')),
+    statut: stringToStatutDossier(searchParams.get('statut')),
+    risqueJuridique: stringToNiveauRisque(searchParams.get('risqueJuridique')),
   };
 
   // Récupérer les dossiers via le hook
