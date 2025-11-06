@@ -96,6 +96,40 @@ export const dashboardEndpoints = {
   invalidateCache: "/dashboard/invalidate-cache",
 } as const
 
+// src/lib/api/endpoints.ts (ajout à la fin du fichier)
+
+// ============================================
+// DOSSIERS ENDPOINTS
+// ============================================
+
+export const dossiersEndpoints = {
+  // CRUD de base
+  create: "/dossiers",
+  getAll: "/dossiers",
+  getById: (id: string) => `/dossiers/${id}`,
+  update: (id: string) => `/dossiers/${id}`,
+  delete: (id: string) => `/dossiers/${id}`,
+
+  // Actions spécifiques
+  getStats: "/dossiers/stats",
+  changeStatut: (id: string) => `/dossiers/${id}/statut`,
+  assignerResponsable: (id: string) => `/dossiers/${id}/responsable`,
+
+  // Requêtes filtrées
+  getByClient: (clientId: string) => `/dossiers/client/${clientId}`,
+  getByResponsable: (responsableId: string) => `/dossiers/responsable/${responsableId}`,
+  getByType: (type: string) => `/dossiers/type/${type}`,
+  getByStatut: (statut: string) => `/dossiers/statut/${statut}`,
+  getEnCours: "/dossiers/en-cours",
+  getClos: "/dossiers/clos",
+  getArchives: "/dossiers/archives",
+} as const
+
+// ============================================
+// TYPE EXPORTS (ajout à la fin du fichier)
+// ============================================
+
+export type DossiersEndpoint = (typeof dossiersEndpoints)[keyof typeof dossiersEndpoints]
 // ============================================
 // TYPE EXPORTS
 // ============================================

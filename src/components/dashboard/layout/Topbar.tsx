@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 // ✅ Correct
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { dropdownVariants } from '@/lib/dashboard/animations';
 import { TOPBAR_CONFIG } from '@/lib/dashboard/constants';
@@ -139,88 +139,91 @@ export const Topbar: React.FC<TopbarProps> = ({ onMenuClick, isMobile }) => {
           </button>
 
           {/* Avatar avec dropdown */}
-          <div className="relative" ref={dropdownRef}>
+            {/* Avatar avec dropdown */}
+            <div className="relative" ref={dropdownRef}>
             <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-2 lg:gap-3 p-1.5 lg:p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 lg:gap-3 p-1.5 lg:p-2 rounded-lg hover:bg-gray-100 transition-colors"
             >
-             <Avatar className="h-9 w-9 lg:h-10 lg:w-10">
-                <AvatarImage src={user?.avatar ?? undefined} alt={user?.prenom} />
-                <AvatarFallback className="bg-[#4169e1] text-white font-semibold">
+                <Avatar className="h-9 w-9 lg:h-10 lg:w-10">
+                <AvatarFallback className="bg-gradient-to-br from-[#4169e1] to-[#d4af37] text-white font-semibold text-sm">
                     {getUserInitials()}
                 </AvatarFallback>
-            </Avatar>
+                </Avatar>
 
-              <div className="hidden lg:block text-left">
+                <div className="hidden lg:block text-left">
                 <p className="text-sm font-semibold text-gray-900">
-                  {user?.prenom} {user?.nom}
+                    {user?.prenom} {user?.nom}
                 </p>
-                <p className="text-xs text-gray-500 capitalize">{user?.role?.toLowerCase()}</p>
-              </div>
-              <ChevronDown
+                <p className="text-xs text-gray-500 capitalize">
+                    {user?.role?.toLowerCase()}
+                </p>
+                </div>
+                
+                <ChevronDown
                 className={`hidden lg:block h-4 w-4 text-gray-500 transition-transform ${
-                  isDropdownOpen ? 'rotate-180' : ''
+                    isDropdownOpen ? 'rotate-180' : ''
                 }`}
-              />
+                />
             </button>
 
             {/* Dropdown menu */}
             <AnimatePresence>
-              {isDropdownOpen && (
+                {isDropdownOpen && (
                 <motion.div
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  variants={dropdownVariants}
-                  className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 overflow-hidden"
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    variants={dropdownVariants}
+                    className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 overflow-hidden"
                 >
-                  {/* Info utilisateur */}
-                  <div className="px-4 py-3 border-b border-gray-100">
+                    {/* Info utilisateur */}
+                    <div className="px-4 py-3 border-b border-gray-100">
                     <p className="text-sm font-semibold text-gray-900">
-                      {user?.prenom} {user?.nom}
+                        {user?.prenom} {user?.nom}
                     </p>
                     <p className="text-xs text-gray-500 mt-0.5">{user?.email}</p>
                     <span className="inline-block mt-2 px-2 py-1 bg-[#4169e1] bg-opacity-10 text-[#4169e1] text-xs font-medium rounded">
-                      {user?.role}
+                        {user?.role}
                     </span>
-                  </div>
+                    </div>
 
-                  {/* Menu items */}
-                  <button
+                    {/* Menu items */}
+                    <button
                     onClick={() => {
-                      router.push('/dashboard/profil');
-                      setIsDropdownOpen(false);
+                        router.push('/dashboard/profil');
+                        setIsDropdownOpen(false);
                     }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
+                    >
                     <User className="h-4 w-4" />
                     Mon Profil
-                  </button>
+                    </button>
 
-                  <button
+                    <button
                     onClick={() => {
-                      router.push('/dashboard/parametres');
-                      setIsDropdownOpen(false);
+                        router.push('/dashboard/parametres');
+                        setIsDropdownOpen(false);
                     }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
+                    >
                     <Settings className="h-4 w-4" />
                     Paramètres
-                  </button>
+                    </button>
 
-                  <hr className="my-2 border-gray-100" />
+                    <hr className="my-2 border-gray-100" />
 
-                  <button
+                    <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#ef4444] hover:bg-red-50 transition-colors"
-                  >
+                    >
                     <LogOut className="h-4 w-4" />
                     Déconnexion
-                  </button>
+                    </button>
                 </motion.div>
-              )}
+                )}
             </AnimatePresence>
-          </div>
+            </div>
         </div>
       </div>
     </motion.header>
