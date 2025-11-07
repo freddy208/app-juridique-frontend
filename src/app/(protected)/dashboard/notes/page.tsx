@@ -149,11 +149,11 @@ export default function NotesPage() {
         </div>
       </div>
 
-      {/*<NoteFilters
+      <NoteFilters
         filters={filters}
         onFiltersChange={handleFiltersChange}
         onReset={handleResetFilters}
-      />*/}
+      />
 
       <NoteList
         notes={notes}

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // src/app/(dashboard)/notes/components/note-filters.tsx
 "use client";
@@ -26,15 +27,38 @@ export const NoteFilters: React.FC<NoteFiltersProps> = ({
   onFiltersChange,
   onReset
 }) => {
-  // ✅ Ajouter un état pour l'hydratation
   const [isMounted, setIsMounted] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [datePopoverOpen, setDatePopoverOpen] = useState(false);
 
-  // ✅ Marquer le composant comme monté
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // ✅ CORRIGÉ : Utilisation de Partial<DateRange>
+  useEffect(() => {
+    if (!isMounted) return;
+
+    // On déclare l'objet comme "partiellement" complet pour la construction
+    const newDateRange: Partial<DateRange> = {};
+    
+    if (filters.dateDebut) {
+      newDateRange.from = new Date(filters.dateDebut);
+    }
+    
+    if (filters.dateFin) {
+      newDateRange.to = new Date(filters.dateFin);
+    }
+
+    const hasChanged = 
+      (newDateRange.from?.getTime() !== dateRange?.from?.getTime()) ||
+      (newDateRange.to?.getTime() !== dateRange?.to?.getTime());
+
+    if (hasChanged) {
+      // On s'assure de passer un DateRange complet ou undefined à l'état
+      setDateRange((newDateRange.from || newDateRange.to) ? newDateRange as DateRange : undefined);
+    }
+  }, [filters.dateDebut, filters.dateFin, isMounted]);
 
   const handleFilterChange = (key: keyof NotesQuery, value: any) => {
     onFiltersChange({
@@ -63,7 +87,6 @@ export const NoteFilters: React.FC<NoteFiltersProps> = ({
     return value !== undefined && value !== '' && key !== 'page' && key !== 'limit';
   });
 
-  // ✅ Rendu simplifié pendant l'hydratation
   if (!isMounted) {
     return (
       <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
