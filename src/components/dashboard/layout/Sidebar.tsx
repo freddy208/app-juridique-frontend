@@ -24,6 +24,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Notebook,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -73,6 +74,11 @@ const navigationItems: NavItem[] = [
     href: '/dashboard/dossiers',
     icon: FileText,
     badge: 12,
+  },
+  {
+    name: 'Notes',
+    href: '/dashboard/notes',
+    icon: Notebook, // ✅ icône adaptée pour les notes
   },
   {
     name: 'Procédures',
