@@ -69,6 +69,21 @@ export const NoteList: React.FC<NoteListProps> = ({
       </div>
     );
   }
+    if (!Array.isArray(notes)) {
+    console.error("Erreur critique : les 'notes' ne sont pas un tableau !", notes);
+    return (
+      <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md">
+        <p>Erreur de format de données. Veuillez réessayer.</p>
+        <Button 
+          variant="outline" 
+          className="mt-2" 
+          onClick={() => window.location.reload()}
+        >
+          Réessayer
+        </Button>
+      </div>
+    );
+  }
 
   if (notes.length === 0) {
     return (
@@ -113,7 +128,8 @@ export const NoteList: React.FC<NoteListProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {notes.map((note) => (
+          
+          { notes.map((note) => (
             <div key={note.id}>
               <NoteCard
                 note={note}

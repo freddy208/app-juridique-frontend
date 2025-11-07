@@ -33,8 +33,9 @@ export default function NotesPage() {
     setIsMounted(true);
   }, []);
 
+  // ✅ DÉCLARATION DES HOOKS EN PREMIER
   const {
-    notes,
+    notes, // <-- 'notes' est maintenant déclaré ici
     pagination,
     isLoading,
     error,
@@ -44,6 +45,14 @@ export default function NotesPage() {
   const { stats, isLoading: statsLoading } = useNotesStats();
   
   const { deleteNote, isPending: isDeleting } = useDeleteNote();
+
+  // ✅ DÉPLACÉ ICI : l'effet qui dépend de 'notes' est placé après sa déclaration
+  useEffect(() => {
+    // Si les notes existent mais ne sont pas un tableau, on log l'erreur
+    if (notes && !Array.isArray(notes)) {
+      console.error("Dans NotesPage : les notes reçues du hook ne sont pas un tableau.", notes);
+    }
+  }, [notes]); // Se déclenche quand la variable 'notes' change
 
   const handleFiltersChange = (newFilters: NotesQuery) => {
     setFilters(prev => ({

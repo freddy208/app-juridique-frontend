@@ -16,6 +16,8 @@ import {
 import { toast } from 'sonner';
 
 // Hook pour récupérer toutes les notes avec filtres et pagination
+// Hook pour récupérer toutes les notes avec filtres et pagination
+// Hook pour récupérer toutes les notes avec filtres et pagination
 export const useNotes = (query: NotesQuery = {}) => {
   const [filters, setFilters] = useState<NotesQuery>(query);
 
@@ -38,6 +40,14 @@ export const useNotes = (query: NotesQuery = {}) => {
       const response = await apiClient.get(`${notesEndpoints.getAll}?${params.toString()}`);
       return response.data;
     },
+    // ✅ AJOUTER CETTE OPTION 'select'
+    select: (data) => {
+      // S'assurer que data.data est toujours un tableau, même si l'API renvoie null ou autre chose
+      return {
+        ...data,
+        data: Array.isArray(data?.data) ? data.data : []
+      };
+    }
   });
 
   const updateFilters = useCallback((newFilters: Partial<NotesQuery>) => {
@@ -45,7 +55,8 @@ export const useNotes = (query: NotesQuery = {}) => {
   }, []);
 
   return {
-    notes: notesData?.data || [],
+    // ✅ RENFORCER LA SÉCURITÉ ICI AUSSI
+    notes: Array.isArray(notesData?.data) ? notesData.data : [],
     pagination: notesData?.meta || {
       page: 1,
       limit: 10,
