@@ -1,203 +1,192 @@
 // src/app/(dashboard)/notes/components/note-details.tsx
 "use client";
 
-import React from 'react';
-import { Note } from '../../lib/types/note.types';
-import { Card } from '@/components/ui/Card';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/Badge';
+import { Separator } from '@/components/ui/Separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Edit, 
   Trash2, 
+  ArrowLeft, 
+  Calendar, 
   User, 
-  FolderOpen, 
-  Clock, 
-  Calendar,
-  Building2,
-  ArrowLeft
+  Building,
+  FileText,
+  Clock
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Note } from '../../lib/types/note.types';
+import { formatNoteDate, getNoteTargetInfo } from '../../lib/utils/notes';
 import { NoteStatusBadge } from './note-status-badge';
-import { formatNoteDate } from '../../lib/utils/notes';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 
 interface NoteDetailsProps {
-  note: Note;
-  onDelete?: () => void;
-  onEdit?: () => void;
+  note: Note | null; // Rendre la note optionnelle
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+  onBack: () => void;
+  loading?: boolean;
+  error?: string | null;
 }
 
-export const NoteDetails: React.FC<NoteDetailsProps> = ({ 
-  note, 
+export const NoteDetails: React.FC<NoteDetailsProps> = ({
+  note,
+  onEdit,
   onDelete,
-  onEdit 
+  onBack,
+  loading = false,
+  error = null
 }) => {
-  const router = useRouter();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  // Ne calculer targetInfo que si note existe
+  const targetInfo = note ? getNoteTargetInfo(note) : { type: 'général' };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>Erreur lors du chargement de la note: {error}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (!note) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>Note non trouvée</AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
+      transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-      {/* Bouton retour */}
-      <Button
-        variant="ghost"
-        onClick={() => router.back()}
-        className="gap-2 hover:bg-blue-50 text-blue-600"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Retour aux notes
-      </Button>
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" onClick={onBack} className="text-blue-600 hover:text-blue-800">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Retour aux notes
+        </Button>
+        
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            onClick={() => onEdit(note.id)}
+            className="text-blue-600 border-blue-200 hover:bg-blue-50"
+          >
+            <Edit className="w-4 h-4 mr-2" />
+            Modifier
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => setShowDeleteConfirm(true)}
+            className="text-red-600 border-red-200 hover:bg-red-50"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Supprimer
+          </Button>
+        </div>
+      </div>
 
-      {/* En-tête */}
-      <Card className="p-8 bg-white border-2 border-gray-200 shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-          <div className="flex-1 space-y-4">
-            {/* Titre */}
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'Playfair Display, serif' }}>
-                {note.titre || 'Note sans titre'}
-              </h1>
-              <NoteStatusBadge statut={note.statut} />
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <CardTitle className="text-2xl text-gray-800">
+                {note.titre || "Note sans titre"}
+              </CardTitle>
+              <div className="flex items-center mt-2 space-x-4">
+                <div className="flex items-center text-sm text-gray-500">
+                  <User className="w-4 h-4 mr-1" />
+                  {note.utilisateur.prenom} {note.utilisateur.nom}
+                </div>
+                <div className="flex items-center text-sm text-gray-500">
+                  <Calendar className="w-4 h-4 mr-1" />
+                  Créée le {formatNoteDate(note.creeLe)}
+                </div>
+                {note.modifieLe && (
+                  <div className="flex items-center text-sm text-gray-500">
+                    <Clock className="w-4 h-4 mr-1" />
+                    Modifiée le {formatNoteDate(note.modifieLe)}
+                  </div>
+                )}
+              </div>
             </div>
-
-            {/* Métadonnées */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Auteur */}
-              <div className="flex items-center gap-3">
-                <div className="bg-blue-50 p-3 rounded-lg border-2 border-blue-200">
-                  <User className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600">Auteur</p>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {note.utilisateur.prenom} {note.utilisateur.nom}
-                  </p>
-                </div>
+            <NoteStatusBadge status={note.statut} />
+          </div>
+        </CardHeader>
+        
+        <Separator />
+        
+        <CardContent className="pt-6">
+          {targetInfo.type !== 'général' && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Associée à:</h3>
+              <div className="flex items-center">
+                {targetInfo.type === 'client' ? (
+                  <Building className="w-5 h-5 mr-2 text-blue-600" />
+                ) : (
+                  <FileText className="w-5 h-5 mr-2 text-blue-600" />
+                )}
+                <span className="font-medium">{targetInfo.name}</span>
+                <Badge variant="outline" className="ml-2 capitalize">
+                  {targetInfo.type}
+                </Badge>
               </div>
-
-              {/* Date de création */}
-              <div className="flex items-center gap-3">
-                <div className="bg-emerald-50 p-3 rounded-lg border-2 border-emerald-200">
-                  <Calendar className="h-5 w-5 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600">Créé le</p>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {formatNoteDate(note.creeLe)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Date de modification */}
-              <div className="flex items-center gap-3">
-                <div className="bg-amber-50 p-3 rounded-lg border-2 border-amber-200">
-                  <Clock className="h-5 w-5 text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600">Modifié le</p>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {formatNoteDate(note.modifieLe)}
-                  </p>
-                </div>
+            </div>
+          )}
+          
+          <div>
+            <h3 className="text-lg font-medium text-gray-700 mb-4">Contenu</h3>
+            <div className="prose max-w-none">
+              <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
+                {note.contenu}
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Actions */}
-          <div className="flex lg:flex-col gap-3">
-            <Button
-              onClick={onEdit}
-              className="flex-1 lg:flex-initial gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+      {showDeleteConfirm && (
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader>
+            <CardTitle className="text-red-800">Confirmer la suppression</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-red-700">
+              Êtes-vous sûr de vouloir supprimer cette note ? Cette action est irréversible.
+            </p>
+          </CardContent>
+          <CardFooter className="flex justify-end space-x-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowDeleteConfirm(false)}
+              className="border-red-200 text-red-700 hover:bg-red-100"
             >
-              <Edit className="h-4 w-4" />
-              Modifier
+              Annuler
             </Button>
-            <Button
-              variant="outline"
-              onClick={onDelete}
-              className="flex-1 lg:flex-initial gap-2 border-2 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
+            <Button 
+              variant="destructive" 
+              onClick={() => onDelete(note.id)}
             >
-              <Trash2 className="h-4 w-4" />
               Supprimer
             </Button>
-          </div>
-        </div>
-      </Card>
-
-      {/* Associations (Client/Dossier) */}
-      {(note.client || note.dossier) && (
-        <Card className="p-6 bg-white border-2 border-gray-200 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Playfair Display, serif' }}>
-            Associations
-          </h2>
-          <div className="space-y-4">
-            {/* Client */}
-            {note.client && (
-              <Link href={`/dashboard/clients/${note.client.id}`}>
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="flex items-center gap-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg hover:shadow-md transition-all cursor-pointer"
-                >
-                  {note.client.entreprise ? (
-                    <Building2 className="h-6 w-6 text-blue-600 shrink-0" />
-                  ) : (
-                    <User className="h-6 w-6 text-blue-600 shrink-0" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-blue-700 font-medium mb-1">CLIENT</p>
-                    <p className="text-sm font-bold text-gray-900 truncate">
-                      {note.client.entreprise || `${note.client.prenom} ${note.client.nom}`}
-                    </p>
-                  </div>
-                  <Badge className="bg-blue-600 text-white">
-                    Voir le client
-                  </Badge>
-                </motion.div>
-              </Link>
-            )}
-
-            {/* Dossier */}
-            {note.dossier && (
-              <Link href={`/dashboard/dossiers/${note.dossier.id}`}>
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="flex items-center gap-4 p-4 bg-emerald-50 border-2 border-emerald-200 rounded-lg hover:shadow-md transition-all cursor-pointer"
-                >
-                  <FolderOpen className="h-6 w-6 text-emerald-600 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-emerald-700 font-medium mb-1">DOSSIER</p>
-                    <p className="font-mono text-xs font-semibold text-blue-600 mb-1">
-                      {note.dossier.numeroUnique}
-                    </p>
-                    <p className="text-sm font-bold text-gray-900 truncate">
-                      {note.dossier.titre}
-                    </p>
-                  </div>
-                  <Badge className="bg-emerald-600 text-white">
-                    Voir le dossier
-                  </Badge>
-                </motion.div>
-              </Link>
-            )}
-          </div>
+          </CardFooter>
         </Card>
       )}
-
-      {/* Contenu de la note */}
-      <Card className="p-8 bg-white border-2 border-gray-200 shadow-sm">
-        <h2 className="text-xl font-bold text-gray-900 mb-6" style={{ fontFamily: 'Playfair Display, serif' }}>
-          Contenu
-        </h2>
-        <div className="prose prose-lg max-w-none">
-          <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-            {note.contenu}
-          </p>
-        </div>
-      </Card>
     </motion.div>
   );
 };

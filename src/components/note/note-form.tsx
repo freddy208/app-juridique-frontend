@@ -1,219 +1,252 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/app/(dashboard)/notes/components/note-form.tsx
 "use client";
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { CreateNoteForm, UpdateNoteForm, Note } from '../../lib/types/note.types';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/Input';
-import { Textarea } from '@/components/ui/Textarea';
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/Card';
+import { Textarea } from '@/components/ui/Textarea';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, Eye, Edit3 } from 'lucide-react';
+import { Note, CreateNoteForm, UpdateNoteForm } from '../../lib/types/note.types';
 import { ClientSelector } from './client-selector';
 import { DossierSelector } from './dossier-selector';
-import { Save, X, Eye, EyeOff } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'sonner';
+import { generateDefaultTitle } from '../../lib/utils/notes';
 
-// Schéma de validation
-const noteSchema = z.object({
-  titre: z.string().optional(),
-  contenu: z.string().min(1, 'Le contenu est obligatoire'),
-  clientId: z.string().optional(),
-  dossierId: z.string().optional(),
-});
-
-type NoteFormData = z.infer<typeof noteSchema>;
-
-interface NoteFormProps {
-  initialData?: Note;
-  onSubmit: (data: CreateNoteForm | UpdateNoteForm) => Promise<void>;
+// Interface pour le mode création
+interface CreateNoteFormProps {
+  mode: 'create';
+  note?: never;
+  onSubmit: (data: CreateNoteForm) => Promise<void>;
   onCancel: () => void;
-  isSubmitting?: boolean;
+  loading?: boolean;
+  error?: string | null;
 }
 
-export const NoteForm: React.FC<NoteFormProps> = ({ 
-  initialData, 
-  onSubmit, 
-  onCancel,
-  isSubmitting = false 
-}) => {
-  const [showPreview, setShowPreview] = useState(false);
+// Interface pour le mode modification
+interface UpdateNoteFormProps {
+  mode: 'update';
+  note: Note;
+  onSubmit: (data: UpdateNoteForm) => Promise<void>;
+  onCancel: () => void;
+  loading?: boolean;
+  error?: string | null;
+}
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<NoteFormData>({
-    resolver: zodResolver(noteSchema),
-    defaultValues: {
-      titre: initialData?.titre || '',
-      contenu: initialData?.contenu || '',
-      clientId: initialData?.clientId,
-      dossierId: initialData?.dossierId,
-    },
-  });
+// Type union des props (avec intersection correcte)
+type NoteFormProps = CreateNoteFormProps | UpdateNoteFormProps;
 
-  const watchedFields = watch();
-
-  const handleFormSubmit = async (data: NoteFormData) => {
-    try {
-      await onSubmit(data);
-      toast.success(initialData ? 'Note modifiée avec succès' : 'Note créée avec succès');
-    } catch (error) {
-      toast.error('Une erreur est survenue');
-      console.error(error);
+export const NoteForm: React.FC<NoteFormProps> = (props) => {
+  // Extraction des props communs
+  const { mode, onCancel, loading = false, error = null } = props;
+  
+  // Détermination du type de formulaire en fonction du mode
+  const isCreateMode = mode === 'create';
+  const note = isCreateMode ? undefined : (props as UpdateNoteFormProps).note;
+  const onSubmit = isCreateMode 
+    ? (props as CreateNoteFormProps).onSubmit 
+    : (props as UpdateNoteFormProps).onSubmit;
+  
+  // Initialisation des données du formulaire en fonction du mode
+  const [formData, setFormData] = useState<CreateNoteForm | UpdateNoteForm>(() => {
+    if (isCreateMode) {
+      return {
+        titre: '',
+        contenu: '',
+        clientId: undefined,
+        dossierId: undefined,
+      } as CreateNoteForm;
+    } else {
+      return {
+        titre: note?.titre || '',
+        contenu: note?.contenu || '',
+        clientId: note?.clientId || undefined,
+        dossierId: note?.dossierId || undefined,
+      } as UpdateNoteForm;
     }
+  });
+  
+  const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
+  const [generatedTitle, setGeneratedTitle] = useState('');
+
+  useEffect(() => {
+    if (formData.contenu && !formData.titre) {
+      const title = generateDefaultTitle(formData.contenu);
+      setGeneratedTitle(title);
+    } else {
+      setGeneratedTitle('');
+    }
+  }, [formData.contenu, formData.titre]);
+
+  const handleChange = (field: keyof (CreateNoteForm | UpdateNoteForm), value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validation spécifique pour le mode création
+    if (isCreateMode && !(formData as CreateNoteForm).contenu) {
+      return;
+    }
+    
+    await onSubmit(formData as any);
+  };
+
+  const useGeneratedTitle = () => {
+    setFormData(prev => ({
+      ...prev,
+      titre: generatedTitle
+    }));
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-      <Card className="p-6 bg-white border-2 border-gray-200 shadow-sm">
-        <div className="space-y-6">
-          {/* Titre */}
-          <div className="space-y-2">
-            <Label htmlFor="titre" className="text-sm font-semibold text-gray-700">
-              Titre <span className="text-gray-500 font-normal">(optionnel)</span>
-            </Label>
-            <Input
-              id="titre"
-              placeholder="Titre de la note"
-              {...register('titre')}
-              className="bg-white border-2 border-gray-300 hover:border-blue-400 focus:border-blue-500 text-gray-900 h-12"
-            />
-            {errors.titre && (
-              <p className="text-xs text-red-600">{errors.titre.message}</p>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle className="text-xl">
+            {isCreateMode ? 'Créer une nouvelle note' : 'Modifier la note'}
+          </CardTitle>
+        </CardHeader>
+        
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-6">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
-          </div>
-
-          {/* Contenu */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="contenu" className="text-sm font-semibold text-gray-700">
-                Contenu <span className="text-red-500">*</span>
-              </Label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowPreview(!showPreview)}
-                className="gap-2 hover:bg-blue-50 text-blue-600"
-              >
-                {showPreview ? (
-                  <>
-                    <EyeOff className="h-4 w-4" />
-                    Masquer l&apos;aperçu
-                  </>
-                ) : (
-                  <>
-                    <Eye className="h-4 w-4" />
-                    Aperçu
-                  </>
-                )}
-              </Button>
-            </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Éditeur */}
-              <div>
-                <Textarea
-                  id="contenu"
-                  placeholder="Écrivez votre note ici..."
-                  rows={12}
-                  {...register('contenu')}
-                  className="bg-white border-2 border-gray-300 hover:border-blue-400 focus:border-blue-500 text-gray-900 resize-none"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="titre">Titre (optionnel)</Label>
+                <Input
+                  id="titre"
+                  value={formData.titre || ''}
+                  onChange={(e) => handleChange('titre', e.target.value)}
+                  placeholder="Entrez un titre pour cette note"
                 />
-                {errors.contenu && (
-                  <p className="text-xs text-red-600 mt-1">{errors.contenu.message}</p>
+                {generatedTitle && !formData.titre && (
+                  <div className="text-sm text-gray-500">
+                    Suggestion: &quot;{generatedTitle}&quot; 
+                    <Button 
+                      type="button" 
+                      variant="link" 
+                      className="p-0 h-auto text-blue-600"
+                      onClick={useGeneratedTitle}
+                    >
+                      Utiliser
+                    </Button>
+                  </div>
                 )}
               </div>
-
-              {/* Aperçu */}
-              <AnimatePresence>
-                {showPreview && (
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.2 }}
-                    className="bg-gray-50 border-2 border-gray-300 rounded-lg p-4 overflow-auto"
-                    style={{ minHeight: '300px', maxHeight: '300px' }}
-                  >
-                    <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                      <Eye className="h-4 w-4" />
-                      Aperçu
-                    </h4>
-                    {watchedFields.titre && (
-                      <h3 className="text-lg font-bold text-gray-900 mb-3" style={{ fontFamily: 'Playfair Display, serif' }}>
-                        {watchedFields.titre}
-                      </h3>
-                    )}
-                    <div className="prose prose-sm max-w-none">
-                      <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                        {watchedFields.contenu || 'Le contenu apparaîtra ici...'}
-                      </p>
+              
+              <div className="space-y-2">
+                <Label>Association</Label>
+                <Tabs defaultValue="none" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="none">Aucune</TabsTrigger>
+                    <TabsTrigger value="client">Client</TabsTrigger>
+                    <TabsTrigger value="dossier">Dossier</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="none" className="mt-2">
+                    <div className="text-sm text-gray-500 py-2">
+                      Cette note ne sera associée à aucun client ou dossier.
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  </TabsContent>
+                  
+                  <TabsContent value="client" className="mt-2">
+                    <ClientSelector
+                      value={formData.clientId}
+                      onChange={(clientId) => {
+                        handleChange('clientId', clientId);
+                        handleChange('dossierId', undefined); // Réinitialiser le dossier si un client est sélectionné
+                      }}
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="dossier" className="mt-2">
+                    <DossierSelector
+                      value={formData.dossierId}
+                      onChange={(dossierId) => {
+                        handleChange('dossierId', dossierId);
+                        handleChange('clientId', undefined); // Réinitialiser le client si un dossier est sélectionné
+                      }}
+                    />
+                  </TabsContent>
+                </Tabs>
+              </div>
             </div>
-          </div>
-
-          {/* Association Client/Dossier */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-6 border-t-2 border-gray-100">
-            {/* Client */}
+            
             <div className="space-y-2">
-              <Label className="text-sm font-semibold text-gray-700">
-                Client <span className="text-gray-500 font-normal">(optionnel)</span>
-              </Label>
-              <ClientSelector
-                value={watchedFields.clientId}
-                onChange={(clientId) => setValue('clientId', clientId)}
-                error={errors.clientId?.message}
-              />
+              <div className="flex justify-between items-center">
+                <Label htmlFor="contenu">Contenu {isCreateMode && '*'}</Label>
+                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'edit' | 'preview')}>
+                  <TabsList>
+                    <TabsTrigger value="edit" className="flex items-center">
+                      <Edit3 className="w-4 h-4 mr-1" />
+                      Éditer
+                    </TabsTrigger>
+                    <TabsTrigger value="preview" className="flex items-center">
+                      <Eye className="w-4 h-4 mr-1" />
+                      Aperçu
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+              
+              <Tabs value={activeTab} className="w-full">
+                <TabsContent value="edit" className="mt-0">
+                  <Textarea
+                    id="contenu"
+                    value={formData.contenu || ''}
+                    onChange={(e) => handleChange('contenu', e.target.value)}
+                    placeholder="Entrez le contenu de votre note..."
+                    className="min-h-[200px]"
+                    required={isCreateMode} // Obligatoire seulement en mode création
+                  />
+                </TabsContent>
+                
+                <TabsContent value="preview" className="mt-0">
+                  <div className="border rounded-md p-4 min-h-[200px] bg-gray-50 whitespace-pre-wrap">
+                    {formData.contenu || "Aucun contenu à afficher"}
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
-
-            {/* Dossier */}
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold text-gray-700">
-                Dossier <span className="text-gray-500 font-normal">(optionnel)</span>
-              </Label>
-              <DossierSelector
-                value={watchedFields.dossierId}
-                onChange={(dossierId) => setValue('dossierId', dossierId)}
-                error={errors.dossierId?.message}
-                clientId={watchedFields.clientId}
-              />
-            </div>
-          </div>
-        </div>
+          </CardContent>
+          
+          <CardFooter className="flex justify-between">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Annuler
+            </Button>
+            <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {isCreateMode ? 'Création...' : 'Modification...'}
+                </>
+              ) : (
+                <>
+                  {isCreateMode ? 'Créer' : 'Mettre à jour'} la note
+                </>
+              )}
+            </Button>
+          </CardFooter>
+        </form>
       </Card>
-
-      {/* Actions */}
-      <div className="flex items-center justify-end gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={isSubmitting}
-          className="gap-2 bg-white hover:bg-gray-50 border-2 border-gray-300 text-gray-700"
-        >
-          <X className="h-4 w-4" />
-          Annuler
-        </Button>
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="gap-2 bg-blue-600 hover:bg-blue-700 text-white border-2 border-blue-600"
-        >
-          <Save className="h-4 w-4" />
-          {isSubmitting ? 'Enregistrement...' : (initialData ? 'Modifier' : 'Créer')}
-        </Button>
-      </div>
-    </form>
+    </motion.div>
   );
 };

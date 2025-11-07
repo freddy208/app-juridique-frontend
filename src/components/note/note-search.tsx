@@ -2,35 +2,33 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/Input';
-import { Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Search, X } from 'lucide-react';
+import { useDebounce } from '../../lib/hooks/use-debounce';
 
 interface NoteSearchProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  className?: string;
 }
 
-export const NoteSearch: React.FC<NoteSearchProps> = ({ 
-  value, 
+export const NoteSearch: React.FC<NoteSearchProps> = ({
+  value,
   onChange,
-  placeholder = "Rechercher une note...",
-  className = ""
+  placeholder = "Rechercher une note..."
 }) => {
   const [localValue, setLocalValue] = useState(value);
-  const [isFocused, setIsFocused] = useState(false);
+  const debouncedValue = useDebounce(localValue, 300);
 
-  // Debounce pour la recherche
   useEffect(() => {
-    const timer = setTimeout(() => {
-      onChange(localValue);
-    }, 300);
+    onChange(debouncedValue);
+  }, [debouncedValue, onChange]);
 
-    return () => clearTimeout(timer);
-  }, [localValue, onChange]);
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
 
   const handleClear = () => {
     setLocalValue('');
@@ -38,84 +36,30 @@ export const NoteSearch: React.FC<NoteSearchProps> = ({
   };
 
   return (
-    <div className={`relative ${className}`}>
-      <div className={`
-        relative 
-        flex 
-        items-center 
-        transition-all 
-        duration-200
-        ${isFocused ? 'ring-2 ring-blue-400 ring-opacity-50' : ''}
-        rounded-lg
-      `}>
-        <Search className={`
-          absolute 
-          left-4 
-          h-5 
-          w-5 
-          transition-colors 
-          duration-200
-          ${isFocused ? 'text-blue-600' : 'text-gray-400'}
-        `} />
-        
-        <Input
-          type="text"
-          value={localValue}
-          onChange={(e: { target: { value: React.SetStateAction<string>; }; }) => setLocalValue(e.target.value)}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          placeholder={placeholder}
-          className={`
-            pl-12 
-            pr-12 
-            h-12
-            bg-white
-            border-2
-            border-gray-300
-            hover:border-blue-400
-            focus:border-blue-500
-            text-gray-900
-            placeholder:text-gray-500
-            text-sm
-            rounded-lg
-            transition-all
-            duration-200
-          `}
-        />
-
-        <AnimatePresence>
-          {localValue && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.15 }}
-              className="absolute right-2"
-            >
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleClear}
-                className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
-              >
-                <X className="h-4 w-4 text-gray-500 hover:text-red-600 transition-colors" />
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Indicateur de recherche active */}
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="relative w-full max-w-md"
+    >
+      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+      <Input
+        type="text"
+        placeholder={placeholder}
+        value={localValue}
+        onChange={(e: { target: { value: React.SetStateAction<string>; }; }) => setLocalValue(e.target.value)}
+        className="pl-10 pr-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+      />
       {localValue && (
-        <motion.p
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-xs text-gray-600 mt-2 ml-1"
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+          onClick={handleClear}
         >
-          Recherche de &quot;<span className="font-semibold text-blue-600">{localValue}</span>&quot;
-        </motion.p>
+          <X className="h-4 w-4" />
+        </Button>
       )}
-    </div>
+    </motion.div>
   );
 };

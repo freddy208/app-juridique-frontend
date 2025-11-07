@@ -37,6 +37,7 @@ type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 export function ResetPasswordForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -209,7 +210,7 @@ export function ResetPasswordForm() {
                 <Button
                   type="submit"
                   className="w-full"
-                  loading={isLoading}
+                  /*loading={isLoading}*/
                   disabled={passwordStrength.strength < 3}
                 >
                   Réinitialiser le mot de passe

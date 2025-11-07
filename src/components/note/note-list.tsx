@@ -1,170 +1,136 @@
 // src/app/(dashboard)/notes/components/note-list.tsx
 "use client";
 
-import React from 'react';
-import { Note } from '../../lib/types/note.types';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { NoteCard } from './note-card';
+import { EmptyState } from '../../components/ui/empty-state';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, FileText } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { Skeleton } from '@/components/ui/skeleton';
+import { FileText, Grid, List, Plus } from 'lucide-react';
+import { Note } from '../../lib/types/note.types';
+import { PaginationControls } from '../../components/ui/pagination-controls';
 
 interface NoteListProps {
   notes: Note[];
-  isLoading?: boolean;
-  onDelete?: (id: string) => void;
-  pagination?: {
+  loading: boolean;
+  error: string | null;
+  pagination: {
     page: number;
     limit: number;
     total: number;
     totalPages: number;
   };
-  onPageChange?: (page: number) => void;
+  onView: (id: string) => void;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+  onPageChange: (page: number) => void;
+  onCreateNew: () => void;
 }
 
-export const NoteList: React.FC<NoteListProps> = ({ 
-  notes, 
-  isLoading,
-  onDelete,
+export const NoteList: React.FC<NoteListProps> = ({
+  notes,
+  loading,
+  error,
   pagination,
-  onPageChange 
+  onView,
+  onEdit,
+  onDelete,
+  onPageChange,
+  onCreateNew
 }) => {
-  // État de chargement
-  if (isLoading) {
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  if (loading) {
     return (
-      <div className="space-y-4">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="p-6 bg-white border-2 border-gray-200 rounded-lg">
-            <Skeleton className="h-6 w-3/4 mb-4 bg-gray-200" />
-            <Skeleton className="h-4 w-full mb-2 bg-gray-200" />
-            <Skeleton className="h-4 w-full mb-2 bg-gray-200" />
-            <Skeleton className="h-4 w-2/3 bg-gray-200" />
-          </div>
-        ))}
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
-  // État vide
-  if (!notes || notes.length === 0) {
+  if (error) {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-        className="flex flex-col items-center justify-center py-16 px-4"
-      >
-        <div className="bg-blue-50 p-6 rounded-full mb-6 border-2 border-blue-200">
-          <FileText className="h-16 w-16 text-blue-600" />
-        </div>
-        <h3 className="text-2xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
-          Aucune note trouvée
-        </h3>
-        <p className="text-gray-600 text-center max-w-md mb-6">
-          Commencez par créer votre première note ou modifiez vos filtres de recherche.
-        </p>
-      </motion.div>
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+        <p>Erreur lors du chargement des notes: {error}</p>
+        <Button 
+          variant="outline" 
+          className="mt-2" 
+          onClick={() => window.location.reload()}
+        >
+          Réessayer
+        </Button>
+      </div>
+    );
+  }
+
+  if (notes.length === 0) {
+    return (
+      <EmptyState
+        title="Aucune note trouvée"
+        description="Créez votre première note pour commencer à organiser vos informations."
+        icon={<FileText className="h-12 w-12 text-gray-400" />}
+        action={
+          <Button onClick={onCreateNew} className="bg-blue-600 hover:bg-blue-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Créer une note
+          </Button>
+        }
+      />
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Liste des notes */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {Array.isArray(notes) && notes.map((note, index) => (
-        <NoteCard 
-          key={note.id} 
-          note={note} 
-          onDelete={onDelete}
-          index={index}
-        />
-      ))}
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <p className="text-sm text-gray-500">
+          {pagination.total} note{pagination.total > 1 ? 's' : ''} trouvée{pagination.total > 1 ? 's' : ''}
+        </p>
+        <div className="flex space-x-2">
+          <Button
+            variant={viewMode === 'grid' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('grid')}
+          >
+            <Grid className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('list')}
+          >
+            <List className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      {/* Pagination */}
-      {pagination && pagination.totalPages > 1 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-          className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t-2 border-gray-200"
-        >
-          {/* Informations de pagination */}
-          <div className="text-sm text-gray-600">
-            Affichage de <span className="font-semibold text-gray-900">
-              {((pagination.page - 1) * pagination.limit) + 1}
-            </span> à <span className="font-semibold text-gray-900">
-              {Math.min(pagination.page * pagination.limit, pagination.total)}
-            </span> sur <span className="font-semibold text-gray-900">
-              {pagination.total}
-            </span> notes
-          </div>
-
-          {/* Boutons de pagination */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onPageChange && onPageChange(pagination.page - 1)}
-              disabled={pagination.page === 1}
-              className="gap-2 bg-white hover:bg-blue-50 border-2 border-gray-300 hover:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
+      <AnimatePresence>
+        <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}>
+          {notes.map((note) => (
+            <motion.div
+              key={note.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              layout
             >
-              <ChevronLeft className="h-4 w-4" />
-              Précédent
-            </Button>
+              <NoteCard
+                note={note}
+                onView={onView}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            </motion.div>
+          ))}
+        </div>
+      </AnimatePresence>
 
-            {/* Numéros de page */}
-            <div className="flex items-center gap-1">
-              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
-                .filter(pageNum => {
-                  // Afficher les pages autour de la page actuelle
-                  const current = pagination.page;
-                  return (
-                    pageNum === 1 ||
-                    pageNum === pagination.totalPages ||
-                    (pageNum >= current - 1 && pageNum <= current + 1)
-                  );
-                })
-                .map((pageNum, index, array) => {
-                  // Ajouter des ellipses si nécessaire
-                  const showEllipsisBefore = index > 0 && pageNum - array[index - 1] > 1;
-                  
-                  return (
-                    <React.Fragment key={pageNum}>
-                      {showEllipsisBefore && (
-                        <span className="px-2 text-gray-500">...</span>
-                      )}
-                      <Button
-                        variant={pagination.page === pageNum ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => onPageChange && onPageChange(pageNum)}
-                        className={`
-                          h-9 w-9 p-0
-                          ${pagination.page === pageNum 
-                            ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600' 
-                            : 'bg-white hover:bg-blue-50 border-2 border-gray-300 hover:border-blue-400 text-gray-700'
-                          }
-                        `}
-                      >
-                        {pageNum}
-                      </Button>
-                    </React.Fragment>
-                  );
-                })}
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onPageChange && onPageChange(pagination.page + 1)}
-              disabled={pagination.page === pagination.totalPages}
-              className="gap-2 bg-white hover:bg-blue-50 border-2 border-gray-300 hover:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Suivant
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </motion.div>
+      {pagination.totalPages > 1 && (
+        <PaginationControls
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          onPageChange={onPageChange}
+        />
       )}
     </div>
   );

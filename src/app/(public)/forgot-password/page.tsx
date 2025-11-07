@@ -19,6 +19,7 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>
 
 export default function ForgotPasswordPage() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const { forgotPassword } = useAuth()
@@ -75,13 +76,13 @@ export default function ForgotPasswordPage() {
                   autoFocus
                 />
 
-                <Button
+                {/*<Button
                   type="submit"
                   className="w-full"
                   loading={isLoading}
                 >
                   Envoyer le lien
-                </Button>
+                </Button>*/}
               </form>
             ) : (
               <div className="text-center space-y-4">

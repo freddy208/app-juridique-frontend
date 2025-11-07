@@ -62,6 +62,8 @@ export interface NotesQuery {
   statut?: StatutNote;
   typeCible?: 'client' | 'dossier';
   search?: string;
+  dateDebut?: string;  // Ajout de cette propriété
+  dateFin?: string;    // Ajout de cette propriété
 }
 
 // Types pour les statistiques

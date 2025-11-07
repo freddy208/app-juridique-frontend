@@ -2,157 +2,126 @@
 "use client";
 
 import React from 'react';
-import { Note } from '../../lib/types/note.types';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/button';
-import { Eye, Edit, Trash2, User, FolderOpen, Clock, Building2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { NoteStatusBadge } from './note-status-badge';
-import { formatNoteDate, getNoteExcerpt, isRecentNote } from '../../lib/utils/notes';
-import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/button';
+import { 
+  Eye, 
+  Edit, 
+  Trash2, 
+  Calendar, 
+  User, 
+  FileText, 
+  Building,
+  Clock
+} from 'lucide-react';
+import { Note } from '../../lib/types/note.types';
+import { formatNoteDate, getNoteExcerpt, isRecentNote, getNoteTargetInfo } from '../../lib/utils/notes';
 
 interface NoteCardProps {
   note: Note;
-  onDelete?: (id: string) => void;
-  index?: number;
+  onView: (id: string) => void;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-export const NoteCard: React.FC<NoteCardProps> = ({ note, onDelete, index = 0 }) => {
-  const router = useRouter();
-
-  const handleView = () => {
-    router.push(`/dashboard/notes/${note.id}`);
-  };
-
-  const handleEdit = () => {
-    router.push(`/dashboard/notes/edit/${note.id}`);
-  };
-
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onDelete) {
-      onDelete(note.id);
-    }
-  };
-
+export const NoteCard: React.FC<NoteCardProps> = ({ 
+  note, 
+  onView, 
+  onEdit, 
+  onDelete 
+}) => {
+  const targetInfo = getNoteTargetInfo(note);
   const isRecent = isRecentNote(note.creeLe);
+  const excerpt = getNoteExcerpt(note.contenu, 150);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.05 }}
-      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+      whileHover={{ y: -4, boxShadow: "0 10px 20px rgba(0,0,0,0.1)" }}
+      transition={{ duration: 0.2 }}
+      className="h-full"
     >
-      <Card className="p-6 bg-white border-2 border-gray-200 hover:border-blue-400 hover:shadow-xl transition-all duration-300 cursor-pointer group">
-        {/* En-tête de la carte */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1 min-w-0 space-y-2">
-            {/* Titre */}
-            <div className="flex items-center gap-2">
-              <h3 
-                className="text-lg font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors"
-                onClick={handleView}
-              >
-                {note.titre || 'Note sans titre'}
+      <Card className="h-full flex flex-col border-gray-200 hover:border-blue-300 transition-colors">
+        <CardHeader className="pb-3">
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <h3 className="font-semibold text-lg text-gray-800 line-clamp-2">
+                {note.titre || "Note sans titre"}
               </h3>
               {isRecent && (
-                <Badge className="bg-amber-100 text-amber-700 border-amber-300 text-xs px-2 py-0.5">
+                <Badge variant="secondary" className="mt-1 bg-cyan-100 text-cyan-800 hover:bg-cyan-200">
+                  <Clock className="w-3 h-3 mr-1" />
                   Récent
                 </Badge>
               )}
             </div>
-
-            {/* Statut */}
-            <NoteStatusBadge statut={note.statut} />
+            <Badge 
+              variant={note.statut === 'ACTIF' ? 'default' : 'destructive'}
+              className="ml-2"
+            >
+              {note.statut}
+            </Badge>
           </div>
-        </div>
-
-        {/* Contenu - Extrait */}
-        <div className="mb-4">
-          <p className="text-sm text-gray-700 line-clamp-3 leading-relaxed">
-            {getNoteExcerpt(note.contenu, 150)}
+        </CardHeader>
+        
+        <CardContent className="flex-1 pb-3">
+          <p className="text-gray-600 text-sm line-clamp-3 mb-4">
+            {excerpt}
           </p>
-        </div>
-
-        {/* Cible (Client ou Dossier) */}
-        {(note.client || note.dossier) && (
-          <div className="mb-4 space-y-2">
-            {note.client && (
-              <div className="flex items-center gap-2 text-sm">
-                {note.client.entreprise ? (
-                  <Building2 className="h-4 w-4 text-blue-600 shrink-0" />
+          
+          <div className="space-y-2 text-xs text-gray-500">
+            <div className="flex items-center">
+              <User className="w-3 h-3 mr-1" />
+              {note.utilisateur.prenom} {note.utilisateur.nom}
+            </div>
+            
+            <div className="flex items-center">
+              <Calendar className="w-3 h-3 mr-1" />
+              {formatNoteDate(note.creeLe)}
+            </div>
+            
+            {targetInfo.type !== 'général' && (
+              <div className="flex items-center">
+                {targetInfo.type === 'client' ? (
+                  <Building className="w-3 h-3 mr-1" />
                 ) : (
-                  <User className="h-4 w-4 text-blue-600 shrink-0" />
+                  <FileText className="w-3 h-3 mr-1" />
                 )}
-                <span className="text-gray-600">Client:</span>
-                <span className="font-semibold text-gray-900 truncate">
-                  {note.client.entreprise || `${note.client.prenom} ${note.client.nom}`}
-                </span>
-              </div>
-            )}
-            {note.dossier && (
-              <div className="flex items-center gap-2 text-sm">
-                <FolderOpen className="h-4 w-4 text-blue-600 shrink-0" />
-                <span className="text-gray-600">Dossier:</span>
-                <span className="font-mono font-semibold text-blue-600 text-xs">
-                  {note.dossier.numeroUnique}
-                </span>
-                <span className="text-gray-900 truncate">
-                  - {note.dossier.titre}
-                </span>
+                <span className="truncate ml-1">{targetInfo.name}</span>
               </div>
             )}
           </div>
-        )}
-
-        {/* Footer - Informations et actions */}
-        <div className="flex items-center justify-between pt-4 border-t-2 border-gray-100">
-          <div className="flex items-center gap-4 text-xs text-gray-600">
-            {/* Auteur */}
-            <div className="flex items-center gap-1.5">
-              <User className="h-3.5 w-3.5 text-gray-500" />
-              <span className="font-medium">
-                {note.utilisateur.prenom} {note.utilisateur.nom}
-              </span>
-            </div>
-
-            {/* Date de création */}
-            <div className="flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5 text-gray-500" />
-              <span>{formatNoteDate(note.creeLe)}</span>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleView}
-              className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+        </CardContent>
+        
+        <CardFooter className="pt-2 flex justify-between">
+          <div className="flex space-x-1">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => onView(note.id)}
+              className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
             >
-              <Eye className="h-4 w-4" />
+              <Eye className="w-4 h-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleEdit}
-              className="h-8 w-8 p-0 hover:bg-amber-50 hover:text-amber-600 transition-colors"
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => onEdit(note.id)}
+              className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
             >
-              <Edit className="h-4 w-4" />
+              <Edit className="w-4 h-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleDelete}
-              className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 transition-colors"
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => onDelete(note.id)}
+              className="text-red-600 hover:text-red-800 hover:bg-red-50"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="w-4 h-4" />
             </Button>
           </div>
-        </div>
+        </CardFooter>
       </Card>
     </motion.div>
   );

@@ -317,9 +317,8 @@ export default function LoginPage() {
             >
               <Button
                 type="submit"
-                variant="primary"
+                 className="w-full bg-bordeaux-600 hover:bg-bordeaux-700 text-white" // Utilisation de classes CSS personnalisées
                 size="lg"
-                className="w-full"
                 disabled={isLoading}
               >
                 {isLoading ? (

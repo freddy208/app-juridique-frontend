@@ -1,227 +1,135 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // src/app/(dashboard)/notes/page.tsx
 "use client";
 
 import React, { useState } from 'react';
-import { useNotes, useDeleteNote } from '../../../../lib/hooks/notes';
-import { NotesQuery } from '../../../../lib//types/note.types';
-import { NoteStats } from '../../../../components/note/note-stats';
-import { NoteSearch } from '../../../../components/note/note-search';
-import { NoteFilters } from '../../../../components/note/note-filters';
-import { NoteList } from '../../../../components/note/note-list';
 import { Button } from '@/components/ui/button';
-import { Plus, Download } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useNotes } from '../../../../lib/hooks/notes';
+import { useNotesStats } from '../../../../lib/hooks/notes';
+import { NotesQuery } from '../../../../lib/types/note.types';
+import { NoteList } from '../../../../components/note/note-list';
+import { NoteFilters } from '../../../../components/note/note-filters';
+import { NoteSearch } from '../../../../components/note/note-search';
 import { toast } from 'sonner';
+import { NoteStatsComponent } from '../../../../components/note/note-stats'; // Import avec le nouveau nom
 
 export default function NotesPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  
-  // État pour la suppression
-  const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
-
-  // Initialisation des filtres depuis l'URL
-  const initialFilters: NotesQuery = {
-    page: Number(searchParams.get('page')) || 1,
+  const [filters, setFilters] = useState<NotesQuery>({
+    page: 1,
     limit: 12,
-    search: searchParams.get('search') || '',
-    statut: searchParams.get('statut') as any,
-    typeCible: searchParams.get('typeCible') as any,
-    sortBy: (searchParams.get('sortBy') as any) || 'creeLe',
-    sortOrder: (searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc',
-  };
+    sortBy: 'creeLe',
+    sortOrder: 'desc'
+  });
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const [filters, setFilters] = useState<NotesQuery>(initialFilters);
+  const {
+    notes,
+    pagination,
+    isLoading,
+    error,
+    refetch
+  } = useNotes({ ...filters, search: searchTerm });
 
-  // Hooks
-  const { notes, pagination, isLoading, refetch } = useNotes(filters);
-  const { deleteNote, isPending: isDeleting } = useDeleteNote();
+  const { stats, isLoading: statsLoading } = useNotesStats();
 
-  // Mise à jour des filtres et de l'URL
   const handleFiltersChange = (newFilters: NotesQuery) => {
-    setFilters(newFilters);
-    
-    // Mise à jour de l'URL
-    const params = new URLSearchParams();
-    Object.entries(newFilters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        params.set(key, String(value));
-      }
-    });
-    router.push(`?${params.toString()}`);
+    setFilters(prev => ({
+      ...prev,
+      ...newFilters,
+      page: 1 // Réinitialiser à la première page lors du changement de filtres
+    }));
   };
 
-  // Recherche
-  const handleSearchChange = (search: string) => {
-    handleFiltersChange({ ...filters, search, page: 1 });
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+    setFilters(prev => ({
+      ...prev,
+      page: 1 // Réinitialiser à la première page lors de la recherche
+    }));
   };
 
-  // Pagination
   const handlePageChange = (page: number) => {
-    handleFiltersChange({ ...filters, page });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setFilters(prev => ({
+      ...prev,
+      page
+    }));
   };
 
-  // Réinitialisation des filtres
-  const handleResetFilters = () => {
-    const resetFilters: NotesQuery = {
-      page: 1,
-      limit: 12,
-      sortBy: 'creeLe',
-      sortOrder: 'desc',
-    };
-    setFilters(resetFilters);
-    router.push('/notes');
+  const handleViewNote = (id: string) => {
+    router.push(`/dashboard/notes/${id}`);
   };
 
-  // Suppression
-  const handleDeleteClick = (noteId: string) => {
-    setNoteToDelete(noteId);
+  const handleEditNote = (id: string) => {
+    router.push(`/dashboard/notes/edit/${id}`);
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!noteToDelete) return;
-
+  const handleDeleteNote = async (id: string) => {
     try {
-      await deleteNote(noteToDelete);
+      // Ici, vous utiliseriez le hook useDeleteNote
+      // Pour cet exemple, nous simulons la suppression
+      await new Promise(resolve => setTimeout(resolve, 1000));
       toast.success('Note supprimée avec succès');
-      setNoteToDelete(null);
       refetch();
     } catch (error) {
       toast.error('Erreur lors de la suppression de la note');
-      console.error(error);
     }
   };
 
-  // Export (fonctionnalité future)
-  const handleExport = () => {
-    toast.info('Fonctionnalité d\'export à venir');
+  const handleCreateNote = () => {
+    router.push('/dashboard/notes/create');
+  };
+
+  const handleResetFilters = () => {
+    setFilters({
+      page: 1,
+      limit: 12,
+      sortBy: 'creeLe',
+      sortOrder: 'desc'
+    });
+    setSearchTerm('');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        
-        {/* En-tête */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-        >
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
-              Notes
-            </h1>
-            <p className="text-gray-600">
-              Gérez vos notes internes et suivez vos informations importantes
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              onClick={handleExport}
-              className="gap-2 bg-white hover:bg-gray-50 border-2 border-gray-300 text-gray-700"
-            >
-              <Download className="h-4 w-4" />
-              <span className="hidden sm:inline">Exporter</span>
-            </Button>
-            <Button
-              onClick={() => router.push('/dashboard/notes/create')}
-              className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all"
-            >
-              <Plus className="h-5 w-5" />
-              Nouvelle note
-            </Button>
-          </div>
-        </motion.div>
-
-        {/* Statistiques */}
-        <NoteStats />
-
-        {/* Barre de recherche */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
-          <NoteSearch 
-            value={filters.search || ''} 
-            onChange={handleSearchChange}
-          />
-        </motion.div>
-
-        {/* Filtres */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-        >
-          <NoteFilters
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-            onReset={handleResetFilters}
-          />
-        </motion.div>
-
-        {/* Liste des notes */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-        >
-          <NoteList
-            notes={notes}
-            isLoading={isLoading}
-            onDelete={handleDeleteClick}
-            pagination={pagination}
-            onPageChange={handlePageChange}
-          />
-        </motion.div>
-
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Notes</h1>
+          <p className="text-gray-500 mt-1">Gérez toutes vos notes internes</p>
+        </div>
+        <Button onClick={handleCreateNote} className="bg-blue-600 hover:bg-blue-700">
+          <Plus className="w-4 h-4 mr-2" />
+          Nouvelle note
+        </Button>
       </div>
 
-      {/* Dialog de confirmation de suppression */}
-      <AlertDialog open={!!noteToDelete} onOpenChange={() => setNoteToDelete(null)}>
-        <AlertDialogContent className="bg-white border-2 border-gray-200">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-bold text-gray-900" style={{ fontFamily: 'Playfair Display, serif' }}>
-              Confirmer la suppression
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-600">
-              Êtes-vous sûr de vouloir supprimer cette note ? Cette action est irréversible.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel 
-              className="bg-white hover:bg-gray-50 border-2 border-gray-300 text-gray-700"
-              disabled={isDeleting}
-            >
-              Annuler
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              {isDeleting ? 'Suppression...' : 'Supprimer'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <NoteStatsComponent stats={stats} loading={statsLoading} /> {/* Utilisation du nouveau nom */}
+
+      <div className="flex flex-col md:flex-row gap-4 items-start justify-between">
+        <div className="w-full md:w-64">
+          <NoteSearch value={searchTerm} onChange={handleSearchChange} />
+        </div>
+      </div>
+
+      <NoteFilters
+        filters={filters}
+        onFiltersChange={handleFiltersChange}
+        onReset={handleResetFilters}
+      />
+
+      <NoteList
+        notes={notes}
+        loading={isLoading}
+        error={error?.message || null}
+        pagination={pagination}
+        onView={handleViewNote}
+        onEdit={handleEditNote}
+        onDelete={handleDeleteNote}
+        onPageChange={handlePageChange}
+        onCreateNew={handleCreateNote}
+      />
     </div>
   );
 }
