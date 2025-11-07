@@ -5,11 +5,12 @@
  * Sidebar bleu royal avec navigation icônes + texte
  * États: expanded/collapsed desktop, slide in/out mobile
  * Glassmorphism subtil, animations Framer Motion fluides
+ * ✅ CORRIGÉ : Protection contre l'erreur d'hydratation React #185
  */
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -78,7 +79,7 @@ const navigationItems: NavItem[] = [
   {
     name: 'Notes',
     href: '/dashboard/notes',
-    icon: Notebook, // ✅ icône adaptée pour les notes
+    icon: Notebook,
   },
   {
     name: 'Procédures',
@@ -117,8 +118,15 @@ const navigationItems: NavItem[] = [
 // ============================================
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isMobile }) => {
+  // ✅ Protection contre l'hydratation
+  const [isMounted, setIsMounted] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
+
+  // ✅ Marquer le composant comme monté
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Toggle collapse (desktop uniquement)
   const toggleCollapse = () => {
@@ -135,8 +143,95 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isMobile }) =
     return pathname.startsWith(href);
   };
 
-  // Rendu desktop
-  if (!isMobile) {
+  // ✅ Rendu simplifié pendant l'hydratation (DESKTOP)
+  if (!isMobile && !isMounted) {
+    return (
+      <aside
+        className="fixed left-0 top-0 h-screen bg-[#4169e1] text-white z-30 flex flex-col"
+        style={{
+          width: isCollapsed ? '80px' : '280px',
+          backdropFilter: 'blur(8px)',
+          boxShadow: '4px 0 24px rgba(65, 105, 225, 0.15)',
+        }}
+      >
+        {/* Header avec logo */}
+        <div className="h-20 flex items-center justify-between px-6 border-b border-white/10">
+          {!isCollapsed && (
+            <div className="flex items-center gap-3">
+              <Scale className="h-8 w-8 text-[#d4af37]" />
+              <div>
+                <h1 className="text-lg font-bold font-['Playfair_Display']">
+                  Cabinet Juridique
+                </h1>
+                <p className="text-xs text-white/70">Excellence & Droit</p>
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={toggleCollapse}
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+          >
+            {isCollapsed ? (
+              <ChevronRight className="h-5 w-5" />
+            ) : (
+              <ChevronLeft className="h-5 w-5" />
+            )}
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto py-6 px-3 scrollbar-thin scrollbar-thumb-white/20">
+          {navigationItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.href);
+
+            return (
+              <div key={item.href}>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-3 rounded-lg mb-1 transition-all duration-200',
+                    'hover:bg-white/10',
+                    active && 'bg-white/15 shadow-lg',
+                    isCollapsed && 'justify-center'
+                  )}
+                >
+                  <Icon className={cn('h-5 w-5 flex-shrink-0', active && 'text-[#d4af37]')} />
+                  
+                  {!isCollapsed && (
+                    <div className="flex items-center justify-between flex-1 overflow-hidden">
+                      <span className={cn('text-sm font-medium', active && 'text-[#d4af37]')}>
+                        {item.name}
+                      </span>
+                      {item.badge && (
+                        <span className="bg-[#d4af37] text-[#4169e1] text-xs font-bold px-2 py-0.5 rounded-full">
+                          {item.badge}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </Link>
+              </div>
+            );
+          })}
+        </nav>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-white/10">
+          {!isCollapsed && (
+            <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+              <p className="text-xs text-white/80 mb-1">Version 2.0.0</p>
+              <p className="text-xs text-white/60">© 2025 Cabinet Juridique</p>
+            </div>
+          )}
+        </div>
+      </aside>
+    );
+  }
+
+  // ✅ Rendu desktop avec animations (après hydratation)
+  if (!isMobile && isMounted) {
     return (
       <motion.aside
         initial={false}
@@ -246,7 +341,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isMobile }) =
     );
   }
 
-  // Rendu mobile avec overlay
+  // ✅ Rendu mobile (inchangé car AnimatePresence gère déjà le montage)
   return (
     <>
       {/* Overlay */}
