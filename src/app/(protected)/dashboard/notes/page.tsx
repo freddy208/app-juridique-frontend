@@ -5,17 +5,20 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useNotes } from '@/lib/hooks/notes'; // CORRIGÉ
-import { useNotesStats } from '@/lib/hooks/notes'; // CORRIGÉ
-import { NotesQuery } from '@/lib/types/note.types'; // CORRIGÉ
-import { NoteList } from '@/components/note/note-list'; // CORRIGÉ
-import { NoteFilters } from '@/components/note/note-filters'; // CORRIGÉ
-import { NoteSearch } from '@/components/note/note-search'; // CORRIGÉ
+import { useNotes } from '@/lib/hooks/notes';
+import { useNotesStats } from '@/lib/hooks/notes';
+import { NotesQuery } from '@/lib/types/note.types';
+import { NoteList } from '@/components/note/note-list';
+import { NoteFilters } from '@/components/note/note-filters';
+import { NoteSearch } from '@/components/note/note-search';
 import { toast } from 'sonner';
-import { NoteStatsComponent } from '@/components/note/note-stats'; // CORRIGÉ
+import { NoteStatsComponent } from '@/components/note/note-stats';
+import { useIsMounted } from '@/lib/hooks/useIsMounted'; // ✅ Importer le hook
 
 export default function NotesPage() {
   const router = useRouter();
+  const isMounted = useIsMounted(); // ✅ Utiliser le hook
+  
   const [filters, setFilters] = useState<NotesQuery>({
     page: 1,
     limit: 12,
@@ -38,7 +41,7 @@ export default function NotesPage() {
     setFilters(prev => ({
       ...prev,
       ...newFilters,
-      page: 1 // Réinitialiser à la première page lors du changement de filtres
+      page: 1
     }));
   };
 
@@ -46,7 +49,7 @@ export default function NotesPage() {
     setSearchTerm(term);
     setFilters(prev => ({
       ...prev,
-      page: 1 // Réinitialiser à la première page lors de la recherche
+      page: 1
     }));
   };
 
@@ -67,13 +70,19 @@ export default function NotesPage() {
 
   const handleDeleteNote = async (id: string) => {
     try {
-      // Ici, vous utiliseriez le hook useDeleteNote
-      // Pour cet exemple, nous simulons la suppression
+      // Simulation de la suppression
       await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Note supprimée avec succès');
-      refetch();
+      
+      // ✅ Vérifier si le composant est toujours monté
+      if (isMounted()) {
+        toast.success('Note supprimée avec succès');
+        refetch(); // Le refetch est maintenant protégé
+      }
     } catch (error) {
-      toast.error('Erreur lors de la suppression de la note');
+      // ✅ Vérifier ici aussi au cas où
+      if (isMounted()) {
+        toast.error('Erreur lors de la suppression de la note');
+      }
     }
   };
 
