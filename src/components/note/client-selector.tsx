@@ -31,6 +31,8 @@ export const ClientSelector: React.FC<ClientSelectorProps> = ({
   onChange,
   placeholder = "Sélectionner un client..."
 }) => {
+  // ✅ Ajouter un état pour l'hydratation
+  const [isMounted, setIsMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [clients, setClients] = useState<Client[]>([]);
@@ -39,7 +41,14 @@ export const ClientSelector: React.FC<ClientSelectorProps> = ({
   
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
+  // ✅ Marquer le composant comme monté
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted) return;
+    
     const fetchClients = async () => {
       if (!debouncedSearchTerm) {
         setClients([]);
@@ -59,9 +68,11 @@ export const ClientSelector: React.FC<ClientSelectorProps> = ({
     };
 
     fetchClients();
-  }, [debouncedSearchTerm]);
+  }, [debouncedSearchTerm, isMounted]);
 
   useEffect(() => {
+    if (!isMounted) return;
+    
     if (value) {
       const fetchClient = async () => {
         try {
@@ -77,7 +88,7 @@ export const ClientSelector: React.FC<ClientSelectorProps> = ({
     } else {
       setSelectedClient(null);
     }
-  }, [value]);
+  }, [value, isMounted]);
 
   const handleSelect = (clientId: string) => {
     onChange(clientId);
@@ -95,6 +106,16 @@ export const ClientSelector: React.FC<ClientSelectorProps> = ({
     }
     return `${client.prenom} ${client.nom}`;
   };
+
+  // ✅ Rendu simplifié pendant l'hydratation
+  if (!isMounted) {
+    return (
+      <div className="space-y-2">
+        <Label htmlFor="client-selector">Client</Label>
+        <div className="h-10 bg-gray-100 animate-pulse rounded" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2">

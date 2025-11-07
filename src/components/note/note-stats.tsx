@@ -1,11 +1,11 @@
 // src/app/(dashboard)/notes/components/note-stats.tsx
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { FileText, Users, Folder, TrendingUp } from 'lucide-react';
-import { NoteStats as NoteStatsType } from '@/lib/types/note.types'; // Renommage de l'import
+import { NoteStats as NoteStatsType } from '@/lib/types/note.types';
 
 interface NoteStatsProps {
   stats: NoteStatsType | null;
@@ -13,6 +13,14 @@ interface NoteStatsProps {
 }
 
 export const NoteStatsComponent: React.FC<NoteStatsProps> = ({ stats, loading = false }) => {
+  // ✅ Ajouter un état pour l'hydratation
+  const [isMounted, setIsMounted] = useState(false);
+
+  // ✅ Marquer le composant comme monté
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -53,6 +61,54 @@ export const NoteStatsComponent: React.FC<NoteStatsProps> = ({ stats, loading = 
     show: { y: 0, opacity: 1 }
   };
 
+  // ✅ Rendu simplifié pendant l'hydratation (sans animations)
+  if (!isMounted) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total des notes</CardTitle>
+            <FileText className="h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.total}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Notes clients</CardTitle>
+            <Users className="h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.parType.client}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Notes dossiers</CardTitle>
+            <Folder className="h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.parType.dossier}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Notes actives</CardTitle>
+            <TrendingUp className="h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.parStatut.actif}</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // ✅ Rendu complet avec animations après hydratation
   return (
     <motion.div
       variants={container}
@@ -71,7 +127,7 @@ export const NoteStatsComponent: React.FC<NoteStatsProps> = ({ stats, loading = 
           </CardContent>
         </Card>
       </motion.div>
-      
+
       <motion.div variants={item}>
         <Card className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -83,7 +139,7 @@ export const NoteStatsComponent: React.FC<NoteStatsProps> = ({ stats, loading = 
           </CardContent>
         </Card>
       </motion.div>
-      
+
       <motion.div variants={item}>
         <Card className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -95,7 +151,7 @@ export const NoteStatsComponent: React.FC<NoteStatsProps> = ({ stats, loading = 
           </CardContent>
         </Card>
       </motion.div>
-      
+
       <motion.div variants={item}>
         <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

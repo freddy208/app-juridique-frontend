@@ -2,7 +2,7 @@
 // src/app/(dashboard)/notes/components/note-filters.tsx
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
@@ -13,7 +13,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { NotesQuery, StatutNote } from '@/lib/types/note.types';
-import { DateRange } from 'react-day-picker'; // Importer le type DateRange de react-day-picker
+import { DateRange } from 'react-day-picker';
 
 interface NoteFiltersProps {
   filters: NotesQuery;
@@ -26,8 +26,15 @@ export const NoteFilters: React.FC<NoteFiltersProps> = ({
   onFiltersChange,
   onReset
 }) => {
+  // ✅ Ajouter un état pour l'hydratation
+  const [isMounted, setIsMounted] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [datePopoverOpen, setDatePopoverOpen] = useState(false);
+
+  // ✅ Marquer le composant comme monté
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleFilterChange = (key: keyof NotesQuery, value: any) => {
     onFiltersChange({
@@ -55,6 +62,26 @@ export const NoteFilters: React.FC<NoteFiltersProps> = ({
     const value = filters[key as keyof NotesQuery];
     return value !== undefined && value !== '' && key !== 'page' && key !== 'limit';
   });
+
+  // ✅ Rendu simplifié pendant l'hydratation
+  if (!isMounted) {
+    return (
+      <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium text-gray-900 flex items-center">
+            <Filter className="w-5 h-5 mr-2 text-blue-600" />
+            Filtres
+          </h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="h-10 bg-gray-100 animate-pulse rounded" />
+          <div className="h-10 bg-gray-100 animate-pulse rounded" />
+          <div className="h-10 bg-gray-100 animate-pulse rounded" />
+          <div className="h-10 bg-gray-100 animate-pulse rounded" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">

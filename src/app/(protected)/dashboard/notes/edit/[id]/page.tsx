@@ -1,33 +1,39 @@
 // src/app/(dashboard)/notes/edit/[id]/page.tsx
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useNote } from '@/lib/hooks/notes'; // CORRIGÉ
-import { useUpdateNote } from '@/lib/hooks/notes'; // CORRIGÉ
-import { NoteForm } from '@/components/note/note-form'; // CORRIGÉ
-import { UpdateNoteForm } from '@/lib/types/note.types'; // CORRIGÉ
+import { useNote } from '@/lib/hooks/notes';
+import { useUpdateNote } from '@/lib/hooks/notes';
+import { NoteForm } from '@/components/note/note-form';
+import { UpdateNoteForm } from '@/lib/types/note.types';
 import { toast } from 'sonner';
-import { useIsMounted } from '@/lib/hooks/useIsMounted'; // AJOUTÉ pour la protection
 
 export default function EditNotePage({ params }: { params: { id: string } }) {
+  // ✅ Ajouter un état pour l'hydratation
+  const [isMounted, setIsMounted] = useState(false);
+  
   const router = useRouter();
   const { note, isLoading, error } = useNote(params.id);
   const { updateNote, isPending, error: updateError } = useUpdateNote();
-  const isMounted = useIsMounted(); // Utilisation du hook
+
+  // ✅ Marquer le composant comme monté
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleSubmit = async (data: UpdateNoteForm) => {
     try {
       await updateNote({ id: params.id, data });
       
-      // Vérifier si le composant est toujours monté avant de continuer
-      if (isMounted()) {
+      // ✅ Vérifier si le composant est toujours monté avant de continuer
+      if (isMounted) {
         toast.success('Note mise à jour avec succès');
         router.push(`/dashboard/notes/${params.id}`);
       }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      if (isMounted()) {
+      if (isMounted) {
         toast.error('Erreur lors de la mise à jour de la note');
       }
     }
@@ -49,6 +55,23 @@ export default function EditNotePage({ params }: { params: { id: string } }) {
     return (
       <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
         <p>Erreur lors du chargement de la note</p>
+      </div>
+    );
+  }
+
+  // ✅ Rendu simplifié pendant l'hydratation
+  if (!isMounted) {
+    return (
+      <div className="container mx-auto py-6">
+        <div className="w-full max-w-4xl mx-auto">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="space-y-4">
+              <div className="h-8 bg-gray-100 animate-pulse rounded w-1/3" />
+              <div className="h-10 bg-gray-100 animate-pulse rounded" />
+              <div className="h-32 bg-gray-100 animate-pulse rounded" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

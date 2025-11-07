@@ -13,6 +13,7 @@ import {
   UpdateNoteForm,
   NoteStats,
 } from '../types/note.types';
+import { toast } from 'sonner';
 
 // Hook pour récupérer toutes les notes avec filtres et pagination
 export const useNotes = (query: NotesQuery = {}) => {
@@ -150,8 +151,14 @@ export const useDeleteNote = () => {
       return id;
     },
     onSuccess: () => {
+      // ✅ C'est l'endroit idéal pour les effets de bord après un succès
+      toast.success('Note supprimée avec succès');
       queryClient.invalidateQueries({ queryKey: ['notes'] });
       queryClient.invalidateQueries({ queryKey: ['notes-stats'] });
+    },
+    onError: (error: any) => {
+      // ✅ Et ici pour les erreurs
+      toast.error(error.message || 'Erreur lors de la suppression de la note');
     },
   });
 

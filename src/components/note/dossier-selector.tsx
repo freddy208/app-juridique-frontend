@@ -31,6 +31,8 @@ export const DossierSelector: React.FC<DossierSelectorProps> = ({
   onChange,
   placeholder = "Sélectionner un dossier..."
 }) => {
+  // ✅ Ajouter un état pour l'hydratation
+  const [isMounted, setIsMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [dossiers, setDossiers] = useState<Dossier[]>([]);
@@ -39,7 +41,14 @@ export const DossierSelector: React.FC<DossierSelectorProps> = ({
   
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
+  // ✅ Marquer le composant comme monté
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted) return;
+    
     const fetchDossiers = async () => {
       if (!debouncedSearchTerm) {
         setDossiers([]);
@@ -59,9 +68,11 @@ export const DossierSelector: React.FC<DossierSelectorProps> = ({
     };
 
     fetchDossiers();
-  }, [debouncedSearchTerm]);
+  }, [debouncedSearchTerm, isMounted]);
 
   useEffect(() => {
+    if (!isMounted) return;
+    
     if (value) {
       const fetchDossier = async () => {
         try {
@@ -77,7 +88,7 @@ export const DossierSelector: React.FC<DossierSelectorProps> = ({
     } else {
       setSelectedDossier(null);
     }
-  }, [value]);
+  }, [value, isMounted]);
 
   const handleSelect = (dossierId: string) => {
     onChange(dossierId);
@@ -88,6 +99,16 @@ export const DossierSelector: React.FC<DossierSelectorProps> = ({
     onChange(undefined);
     setSelectedDossier(null);
   };
+
+  // ✅ Rendu simplifié pendant l'hydratation
+  if (!isMounted) {
+    return (
+      <div className="space-y-2">
+        <Label htmlFor="dossier-selector">Dossier</Label>
+        <div className="h-10 bg-gray-100 animate-pulse rounded" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2">

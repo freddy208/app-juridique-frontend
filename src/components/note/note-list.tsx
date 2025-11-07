@@ -1,7 +1,7 @@
 // src/app/(dashboard)/notes/components/note-list.tsx
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NoteCard } from './note-card';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -38,7 +38,14 @@ export const NoteList: React.FC<NoteListProps> = ({
   onPageChange,
   onCreateNew
 }) => {
+  // ✅ Ajouter un état pour l'hydratation
+  const [isMounted, setIsMounted] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // ✅ Marquer le composant comme monté
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   if (loading) {
     return (
@@ -79,6 +86,57 @@ export const NoteList: React.FC<NoteListProps> = ({
     );
   }
 
+  // ✅ Rendu simplifié pendant l'hydratation (sans animations)
+  if (!isMounted) {
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <p className="text-sm text-gray-500">
+            {pagination.total} note{pagination.total > 1 ? 's' : ''} trouvée{pagination.total > 1 ? 's' : ''}
+          </p>
+          <div className="flex space-x-2">
+            <Button
+              variant="default"
+              size="sm"
+              disabled
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {notes.map((note) => (
+            <div key={note.id}>
+              <NoteCard
+                note={note}
+                onView={onView}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            </div>
+          ))}
+        </div>
+
+        {pagination.totalPages > 1 && (
+          <PaginationControls
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            onPageChange={onPageChange}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // ✅ Rendu complet avec animations après hydratation
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -103,7 +161,7 @@ export const NoteList: React.FC<NoteListProps> = ({
         </div>
       </div>
 
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}>
           {notes.map((note) => (
             <motion.div

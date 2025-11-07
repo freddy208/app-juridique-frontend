@@ -41,6 +41,9 @@ interface UpdateNoteFormProps {
 type NoteFormProps = CreateNoteFormProps | UpdateNoteFormProps;
 
 export const NoteForm: React.FC<NoteFormProps> = (props) => {
+  // ✅ Ajouter un état pour l'hydratation
+  const [isMounted, setIsMounted] = useState(false);
+  
   // Extraction des props communs
   const { mode, onCancel, loading = false, error = null } = props;
   
@@ -73,14 +76,19 @@ export const NoteForm: React.FC<NoteFormProps> = (props) => {
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
   const [generatedTitle, setGeneratedTitle] = useState('');
 
+  // ✅ Marquer le composant comme monté
   useEffect(() => {
-    if (formData.contenu && !formData.titre) {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted && formData.contenu && !formData.titre) {
       const title = generateDefaultTitle(formData.contenu);
       setGeneratedTitle(title);
     } else {
       setGeneratedTitle('');
     }
-  }, [formData.contenu, formData.titre]);
+  }, [formData.contenu, formData.titre, isMounted]);
 
   const handleChange = (field: keyof (CreateNoteForm | UpdateNoteForm), value: any) => {
     setFormData(prev => ({
@@ -107,6 +115,34 @@ export const NoteForm: React.FC<NoteFormProps> = (props) => {
     }));
   };
 
+  // ✅ Rendu simplifié pendant l'hydratation
+  if (!isMounted) {
+    return (
+      <div className="w-full max-w-4xl mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">
+              {isCreateMode ? 'Créer une nouvelle note' : 'Modifier la note'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="h-10 bg-gray-100 animate-pulse rounded" />
+            <div className="h-32 bg-gray-100 animate-pulse rounded" />
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button type="button" variant="outline" disabled>
+              Annuler
+            </Button>
+            <Button type="button" disabled className="bg-blue-600">
+              {isCreateMode ? 'Créer' : 'Mettre à jour'} la note
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
+  // ✅ Rendu complet avec animations après hydratation
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -172,7 +208,7 @@ export const NoteForm: React.FC<NoteFormProps> = (props) => {
                       value={formData.clientId}
                       onChange={(clientId) => {
                         handleChange('clientId', clientId);
-                        handleChange('dossierId', undefined); // Réinitialiser le dossier si un client est sélectionné
+                        handleChange('dossierId', undefined);
                       }}
                     />
                   </TabsContent>
@@ -182,7 +218,7 @@ export const NoteForm: React.FC<NoteFormProps> = (props) => {
                       value={formData.dossierId}
                       onChange={(dossierId) => {
                         handleChange('dossierId', dossierId);
-                        handleChange('clientId', undefined); // Réinitialiser le client si un dossier est sélectionné
+                        handleChange('clientId', undefined);
                       }}
                     />
                   </TabsContent>
@@ -215,7 +251,7 @@ export const NoteForm: React.FC<NoteFormProps> = (props) => {
                     onChange={(e) => handleChange('contenu', e.target.value)}
                     placeholder="Entrez le contenu de votre note..."
                     className="min-h-[200px]"
-                    required={isCreateMode} // Obligatoire seulement en mode création
+                    required={isCreateMode}
                   />
                 </TabsContent>
                 
