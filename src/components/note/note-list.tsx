@@ -71,14 +71,14 @@ export const NoteList: React.FC<NoteListProps> = ({
     <div className="space-y-6">
       {/* Liste des notes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {notes.map((note, index) => (
-          <NoteCard 
-            key={note.id} 
-            note={note} 
-            onDelete={onDelete}
-            index={index}
-          />
-        ))}
+      {Array.isArray(notes) && notes.map((note, index) => (
+        <NoteCard 
+          key={note.id} 
+          note={note} 
+          onDelete={onDelete}
+          index={index}
+        />
+      ))}
       </div>
 
       {/* Pagination */}
