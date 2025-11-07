@@ -141,7 +141,7 @@ export default function NotesPage() {
         </Button>
       </div>
 
-      <NoteStatsComponent stats={stats} loading={statsLoading} />
+      {/*<NoteStatsComponent stats={stats} loading={statsLoading} />*/}
 
       <div className="flex flex-col md:flex-row gap-4 items-start justify-between">
         <div className="w-full md:w-64">
@@ -149,11 +149,11 @@ export default function NotesPage() {
         </div>
       </div>
 
-      <NoteFilters
+      {/*<NoteFilters
         filters={filters}
         onFiltersChange={handleFiltersChange}
         onReset={handleResetFilters}
-      />
+      />*/}
 
       <NoteList
         notes={notes}
