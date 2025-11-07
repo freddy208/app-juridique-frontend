@@ -15,7 +15,7 @@ import { Loader2, Eye, Edit3 } from 'lucide-react';
 import { Note, CreateNoteForm, UpdateNoteForm } from '../../lib/types/note.types';
 import { ClientSelector } from './client-selector';
 import { DossierSelector } from './dossier-selector';
-import { generateDefaultTitle } from '../../lib/utils/notes';
+import { generateDefaultTitle } from '@/lib/utils/notes';
 
 // Interface pour le mode création
 interface CreateNoteFormProps {

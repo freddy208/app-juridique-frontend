@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Building, Search, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useDebounce } from '../../lib//hooks/use-debounce';
+import { useDebounce } from '@/lib/hooks/use-debounce';
 import apiClient from '@/lib/api/client';
 
 interface Client {

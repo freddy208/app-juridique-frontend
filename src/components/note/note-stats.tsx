@@ -5,7 +5,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { FileText, Users, Folder, TrendingUp } from 'lucide-react';
-import { NoteStats as NoteStatsType } from '../../lib/types/note.types'; // Renommage de l'import
+import { NoteStats as NoteStatsType } from '@/lib/types/note.types'; // Renommage de l'import
 
 interface NoteStatsProps {
   stats: NoteStatsType | null;

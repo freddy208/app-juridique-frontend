@@ -3,9 +3,9 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { useCreateNote } from '../../../../../lib/hooks/notes';
-import { NoteForm } from '../../../../../components/note/note-form';
-import { CreateNoteForm } from '../../../../../lib/types/note.types';
+import { useCreateNote } from '@/lib/hooks/notes';
+import { NoteForm } from '@/components/note/note-form';
+import { CreateNoteForm } from '@/lib/types/note.types';
 import { toast } from 'sonner';
 
 export default function CreateNotePage() {

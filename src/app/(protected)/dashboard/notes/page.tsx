@@ -1,19 +1,18 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-// src/app/(dashboard)/notes/page.tsx
 "use client";
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useNotes } from '../../../../lib/hooks/notes';
-import { useNotesStats } from '../../../../lib/hooks/notes';
-import { NotesQuery } from '../../../../lib/types/note.types';
-import { NoteList } from '../../../../components/note/note-list';
-import { NoteFilters } from '../../../../components/note/note-filters';
-import { NoteSearch } from '../../../../components/note/note-search';
+import { useNotes } from '@/lib/hooks/notes'; // CORRIGÉ
+import { useNotesStats } from '@/lib/hooks/notes'; // CORRIGÉ
+import { NotesQuery } from '@/lib/types/note.types'; // CORRIGÉ
+import { NoteList } from '@/components/note/note-list'; // CORRIGÉ
+import { NoteFilters } from '@/components/note/note-filters'; // CORRIGÉ
+import { NoteSearch } from '@/components/note/note-search'; // CORRIGÉ
 import { toast } from 'sonner';
-import { NoteStatsComponent } from '../../../../components/note/note-stats'; // Import avec le nouveau nom
+import { NoteStatsComponent } from '@/components/note/note-stats'; // CORRIGÉ
 
 export default function NotesPage() {
   const router = useRouter();
@@ -105,7 +104,7 @@ export default function NotesPage() {
         </Button>
       </div>
 
-      <NoteStatsComponent stats={stats} loading={statsLoading} /> {/* Utilisation du nouveau nom */}
+      <NoteStatsComponent stats={stats} loading={statsLoading} />
 
       <div className="flex flex-col md:flex-row gap-4 items-start justify-between">
         <div className="w-full md:w-64">

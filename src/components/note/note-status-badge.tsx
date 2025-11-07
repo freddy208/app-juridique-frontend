@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/Badge';
-import { StatutNote } from '../../lib/types/note.types';
+import { StatutNote } from '@/lib/types/note.types';
 import { cn } from '@/lib/utils';
 
 interface NoteStatusBadgeProps {

@@ -4,11 +4,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NoteCard } from './note-card';
-import { EmptyState } from '../../components/ui/empty-state';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { FileText, Grid, List, Plus } from 'lucide-react';
-import { Note } from '../../lib/types/note.types';
-import { PaginationControls } from '../../components/ui/pagination-controls';
+import { Note } from '@/lib/types/note.types';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 
 interface NoteListProps {
   notes: Note[];

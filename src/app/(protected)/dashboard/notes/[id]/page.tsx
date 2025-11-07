@@ -3,8 +3,8 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { useNote } from '../../../../../lib/hooks/notes';
-import { NoteDetails } from '../../../../../components/note/note-details';
+import { useNote } from '@/lib/hooks/notes';
+import { NoteDetails } from '@/components/note/note-details';
 import { toast } from 'sonner';
 
 export default function NoteDetailPage({ params }: { params: { id: string } }) {

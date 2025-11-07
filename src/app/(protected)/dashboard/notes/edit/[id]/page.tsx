@@ -3,25 +3,33 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { useNote } from '../../../../../../lib/hooks/notes';
-import { useUpdateNote } from '../../../../../../lib/hooks/notes';
-import { NoteForm } from '../../../../../../components/note/note-form';
-import { UpdateNoteForm } from '../../../../../../lib/types/note.types';
+import { useNote } from '@/lib/hooks/notes'; // CORRIGÉ
+import { useUpdateNote } from '@/lib/hooks/notes'; // CORRIGÉ
+import { NoteForm } from '@/components/note/note-form'; // CORRIGÉ
+import { UpdateNoteForm } from '@/lib/types/note.types'; // CORRIGÉ
 import { toast } from 'sonner';
+import { useIsMounted } from '@/lib/hooks/useIsMounted'; // AJOUTÉ pour la protection
 
 export default function EditNotePage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { note, isLoading, error } = useNote(params.id);
   const { updateNote, isPending, error: updateError } = useUpdateNote();
+  const isMounted = useIsMounted(); // Utilisation du hook
 
   const handleSubmit = async (data: UpdateNoteForm) => {
     try {
       await updateNote({ id: params.id, data });
-      toast.success('Note mise à jour avec succès');
-      router.push(`/dashboard/notes/${params.id}`);
+      
+      // Vérifier si le composant est toujours monté avant de continuer
+      if (isMounted()) {
+        toast.success('Note mise à jour avec succès');
+        router.push(`/dashboard/notes/${params.id}`);
+      }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      toast.error('Erreur lors de la mise à jour de la note');
+      if (isMounted()) {
+        toast.error('Erreur lors de la mise à jour de la note');
+      }
     }
   };
 

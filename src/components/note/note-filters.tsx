@@ -12,7 +12,7 @@ import { CalendarIcon, Filter, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { NotesQuery, StatutNote } from '../../lib/types/note.types';
+import { NotesQuery, StatutNote } from '@/lib/types/note.types';
 import { DateRange } from 'react-day-picker'; // Importer le type DateRange de react-day-picker
 
 interface NoteFiltersProps {
