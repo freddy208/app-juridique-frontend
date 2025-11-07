@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/button';
 import { Search, X } from 'lucide-react';
-import { useDebounce } from '../../lib/hooks/use-debounce';
+import { useDebounce } from '@/lib/hooks/use-debounce';
 
 interface NoteSearchProps {
   value: string;
